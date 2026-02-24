@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "headers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/HeaderMatch"
+      },
+      "title": "Headers"
+    }
+  },
+  "additionalProperties": false,
+  "title": "LLM Route Match",
+  "$defs": {
+    "HeaderMatch": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "value": {
+          "$ref": "#/$defs/HeaderValueMatch",
+          "title": "Value"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "Header Match"
+    },
+    "HeaderValueMatch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "exact": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "exact"
+          ],
+          "additionalProperties": false,
+          "title": "Exact"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "additionalProperties": false,
+          "title": "Regex"
+        }
+      ],
+      "title": "Header Value Match"
+    }
+  },
+  "description": "LLM Route Match with matching conditions"
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "attempts": {
+      "type": "integer",
+      "format": "uint8",
+      "minimum": 1,
+      "maximum": 255,
+      "default": 1,
+      "title": "Attempts"
+    },
+    "backoff": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "title": "Backoff"
+    },
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint16",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "title": "Codes"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "codes"
+  ],
+  "title": "Policy3",
+  "description": "Policy3 configuration"
+}

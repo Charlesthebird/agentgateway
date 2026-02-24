@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "backendTLS": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalBackendTLS",
+          "title": "Local Backend TLS"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Backend TLS"
+    }
+  },
+  "additionalProperties": false,
+  "title": "TCP Filter Or Policy",
+  "$defs": {
+    "LocalBackendTLS": {
+      "type": "object",
+      "properties": {
+        "cert": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Cert"
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Key"
+        },
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Root"
+        },
+        "hostname": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Hostname"
+        },
+        "insecure": {
+          "type": "boolean",
+          "default": false,
+          "title": "Insecure"
+        },
+        "insecureHost": {
+          "type": "boolean",
+          "default": false,
+          "title": "Insecure Host"
+        },
+        "alpn": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null,
+          "title": "Alpn"
+        },
+        "subjectAltNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null,
+          "title": "Subject Alt Names"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local Backend TLS"
+    }
+  },
+  "description": "TCP Filter Or Policy configuration"
+}

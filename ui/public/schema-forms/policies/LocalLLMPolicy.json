@@ -1,0 +1,883 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "jwtAuth": {
+      "description": "Authenticate incoming JWT requests.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalJwtConfig",
+          "title": "Local Jwt Config"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Jwt Auth"
+    },
+    "extAuthz": {
+      "description": "Authenticate incoming requests by calling an external authorization server.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExtAuthz",
+          "title": "Ext Authz"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ext Authz"
+    },
+    "extProc": {
+      "description": "Extend agentgateway with an external processor",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExtProc",
+          "title": "Ext Proc"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ext Proc"
+    },
+    "transformations": {
+      "description": "Modify requests and responses",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalTransformationConfig",
+          "title": "Local Transformation Config"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transformations"
+    },
+    "basicAuth": {
+      "description": "Authenticate incoming requests using Basic Authentication with htpasswd.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalBasicAuth",
+          "title": "Local Basic Auth"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Basic Auth"
+    },
+    "apiKey": {
+      "description": "Authenticate incoming requests using API Keys",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalAPIKeys",
+          "title": "Local API Keys"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Api Key"
+    },
+    "authorization": {
+      "description": "Authorization policies for HTTP access.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Authorization",
+          "title": "Authorization"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Authorization"
+    }
+  },
+  "additionalProperties": false,
+  "title": "Local LLM Policy",
+  "$defs": {
+    "LocalJwtConfig": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "$ref": "#/$defs/Mode",
+              "default": "optional"
+            },
+            "providers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ProviderConfig"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "providers"
+          ],
+          "title": "Mode"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "$ref": "#/$defs/Mode",
+              "default": "optional"
+            },
+            "issuer": {
+              "type": "string"
+            },
+            "audiences": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "jwks": {
+              "$ref": "#/$defs/FileInlineOrRemote"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "issuer",
+            "jwks"
+          ],
+          "title": "Mode"
+        }
+      ],
+      "title": "Local Jwt Config"
+    },
+    "Mode": {
+      "oneOf": [
+        {
+          "description": "A valid token, issued by a configured issuer, must be present.",
+          "type": "string",
+          "const": "strict",
+          "title": "Strict"
+        },
+        {
+          "description": "If a token exists, validate it.\nThis is the default option.\nWarning: this allows requests without a JWT token!",
+          "type": "string",
+          "const": "optional",
+          "title": "Optional"
+        },
+        {
+          "description": "Requests are never rejected. This is useful for usage of claims in later steps (authorization, logging, etc).\nWarning: this allows requests without a JWT token!",
+          "type": "string",
+          "const": "permissive",
+          "title": "Permissive"
+        }
+      ],
+      "title": "Mode"
+    },
+    "ProviderConfig": {
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "title": "Issuer"
+        },
+        "audiences": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Audiences"
+        },
+        "jwks": {
+          "$ref": "#/$defs/FileInlineOrRemote",
+          "title": "Jwks"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "issuer",
+        "jwks"
+      ],
+      "title": "Provider Config"
+    },
+    "FileInlineOrRemote": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file"
+          ],
+          "title": "File"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "title": "Url"
+        }
+      ],
+      "title": "File Inline Or Remote"
+    },
+    "ExtAuthz": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "description": "The ext_authz protocol to use. Unless you need to integrate with an HTTP-only server, gRPC is recommended.",
+          "$ref": "#/$defs/Protocol2",
+          "default": {
+            "grpc": {}
+          },
+          "title": "Protocol"
+        },
+        "failureMode": {
+          "description": "Behavior when the authorization service is unavailable or returns an error",
+          "$ref": "#/$defs/FailureMode",
+          "default": "deny",
+          "title": "Failure Mode"
+        },
+        "includeRequestHeaders": {
+          "description": "Specific headers to include in the authorization request.\nIf unset, the gRPC protocol sends all request headers. The HTTP protocol sends only 'Authorization'.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HeaderOrPseudo"
+          },
+          "title": "Include Request Headers"
+        },
+        "includeRequestBody": {
+          "description": "Options for including the request body in the authorization request",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BodyOptions",
+              "title": "Body Options"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Include Request Body"
+        },
+        "timeout": {
+          "description": "Timeout for the authorization request (default: 200ms)",
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Timeout"
+        }
+      },
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "invalid"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "description": "Service reference. Service must be defined in the top level services list.",
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/NamespacedHostname"
+                },
+                "port": {
+                  "type": "integer",
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "port"
+              ]
+            }
+          },
+          "required": [
+            "service"
+          ],
+          "title": "Service"
+        },
+        {
+          "description": "Hostname or IP address",
+          "type": "object",
+          "properties": {
+            "host": {
+              "description": "Hostname or IP address",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host"
+          ],
+          "title": "Host"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "description": "Explicit backend reference. Backend must be defined in the top level backends list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "backend"
+          ],
+          "title": "Backend"
+        }
+      ],
+      "title": "Ext Authz"
+    },
+    "Protocol2": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "grpc": {
+              "type": "object",
+              "properties": {
+                "context": {
+                  "description": "Additional context to send to the authorization service.\nThis maps to the `context_extensions` field of the request, and only allows static values.",
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "metadata": {
+                  "description": "Additional metadata to send to the authorization service.\nThis maps to the `metadata_context.filter_metadata` field of the request, and allows dynamic CEL expressions.\nIf unset, by default the `envoy.filters.http.jwt_authn` key is set if the JWT policy is used as well, for compatibility.",
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "additionalProperties": {
+                    "$ref": "#/$defs/Expression"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "grpc"
+          ],
+          "additionalProperties": false,
+          "title": "Grpc"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "http": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Expression"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "redirect": {
+                  "description": "When using the HTTP protocol, and the server returns unauthorized, redirect to the URL resolved by\nthe provided expression rather than directly returning the error.",
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Expression"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "includeResponseHeaders": {
+                  "description": "Specific headers from the authorization response will be copied into the request to the backend.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "addRequestHeaders": {
+                  "description": "Specific headers to add in the authorization request (empty = all headers), based on the expression",
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/Expression"
+                  }
+                },
+                "metadata": {
+                  "description": "Metadata to include under the `extauthz` variable, based on the authorization response.",
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/Expression"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "http"
+          ],
+          "additionalProperties": false,
+          "title": "Http"
+        }
+      ],
+      "title": "Protocol2"
+    },
+    "Expression": {
+      "type": "string",
+      "title": "Expression"
+    },
+    "FailureMode": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "denyWithStatus": {
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "required": [
+            "denyWithStatus"
+          ],
+          "additionalProperties": false,
+          "title": "Deny With Status"
+        }
+      ],
+      "title": "Failure Mode"
+    },
+    "HeaderOrPseudo": {
+      "type": "string",
+      "title": "Header Or Pseudo"
+    },
+    "BodyOptions": {
+      "type": "object",
+      "properties": {
+        "maxRequestBytes": {
+          "description": "Maximum size of request body to buffer (default: 8192)",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 0,
+          "title": "Max Request Bytes"
+        },
+        "allowPartialMessage": {
+          "description": "If true, send partial body when max_request_bytes is reached",
+          "type": "boolean",
+          "default": false,
+          "title": "Allow Partial Message"
+        },
+        "packAsBytes": {
+          "description": "If true, pack body as raw bytes in gRPC",
+          "type": "boolean",
+          "default": false,
+          "title": "Pack As Bytes"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Body Options"
+    },
+    "NamespacedHostname": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "title": "Namespace"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname"
+        }
+      },
+      "required": [
+        "namespace",
+        "hostname"
+      ],
+      "title": "Namespaced Hostname"
+    },
+    "ExtProc": {
+      "type": "object",
+      "properties": {
+        "failureMode": {
+          "description": "Behavior when the ext_proc service is unavailable or returns an error",
+          "$ref": "#/$defs/FailureMode2",
+          "default": "failClosed",
+          "title": "Failure Mode"
+        },
+        "metadataContext": {
+          "description": "Additional metadata to send to the external processing service.\nMaps to the `metadata_context.filter_metadata` field in ProcessingRequest, and allows dynamic CEL expressions.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/Expression"
+            }
+          },
+          "title": "Metadata Context"
+        },
+        "requestAttributes": {
+          "description": "Maps to the request `attributes` field in ProcessingRequest, and allows dynamic CEL expressions.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          },
+          "title": "Request Attributes"
+        },
+        "responseAttributes": {
+          "description": "Maps to the response `attributes` field in ProcessingRequest, and allows dynamic CEL expressions.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          },
+          "title": "Response Attributes"
+        }
+      },
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "invalid"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "description": "Service reference. Service must be defined in the top level services list.",
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/NamespacedHostname"
+                },
+                "port": {
+                  "type": "integer",
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "port"
+              ]
+            }
+          },
+          "required": [
+            "service"
+          ],
+          "title": "Service"
+        },
+        {
+          "description": "Hostname or IP address",
+          "type": "object",
+          "properties": {
+            "host": {
+              "description": "Hostname or IP address",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host"
+          ],
+          "title": "Host"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "description": "Explicit backend reference. Backend must be defined in the top level backends list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "backend"
+          ],
+          "title": "Backend"
+        }
+      ],
+      "title": "Ext Proc"
+    },
+    "FailureMode2": {
+      "type": "string",
+      "enum": [
+        "failClosed",
+        "failOpen"
+      ],
+      "title": "Failure Mode2"
+    },
+    "LocalTransformationConfig": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalTransform",
+              "title": "Local Transform"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Request"
+        },
+        "response": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalTransform",
+              "title": "Local Transform"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Response"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local Transformation Config"
+    },
+    "LocalTransform": {
+      "type": "object",
+      "properties": {
+        "add": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Add"
+        },
+        "set": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Set"
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "title": "Remove"
+        },
+        "body": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "title": "Body"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local Transform"
+    },
+    "LocalBasicAuth": {
+      "type": "object",
+      "properties": {
+        "htpasswd": {
+          "description": ".htpasswd file contents/reference",
+          "$ref": "#/$defs/FileOrInline",
+          "title": "Htpasswd"
+        },
+        "realm": {
+          "description": "Realm name for the WWW-Authenticate header",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "title": "Realm"
+        },
+        "mode": {
+          "description": "Validation mode for basic authentication",
+          "$ref": "#/$defs/Mode2",
+          "default": "optional",
+          "title": "Mode"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "htpasswd"
+      ],
+      "title": "Local Basic Auth"
+    },
+    "FileOrInline": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file"
+          ],
+          "title": "File"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "File Or Inline"
+    },
+    "Mode2": {
+      "description": "Validation mode for basic authentication",
+      "oneOf": [
+        {
+          "description": "A valid username/password must be present.",
+          "type": "string",
+          "const": "strict",
+          "title": "Strict"
+        },
+        {
+          "description": "If credentials exist, validate them.\nThis is the default option.\nWarning: this allows requests without credentials!",
+          "type": "string",
+          "const": "optional",
+          "title": "Optional"
+        }
+      ],
+      "title": "Mode2"
+    },
+    "LocalAPIKeys": {
+      "type": "object",
+      "properties": {
+        "keys": {
+          "description": "List of API keys",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LocalAPIKey"
+          },
+          "title": "Keys"
+        },
+        "mode": {
+          "description": "Validation mode for API keys",
+          "$ref": "#/$defs/Mode3",
+          "default": "optional",
+          "title": "Mode"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "keys"
+      ],
+      "title": "Local API Keys"
+    },
+    "LocalAPIKey": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/APIKey",
+          "title": "Key"
+        },
+        "metadata": true
+      },
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ],
+      "title": "Local API Key"
+    },
+    "APIKey": {
+      "type": "string",
+      "title": "API Key"
+    },
+    "Mode3": {
+      "description": "Validation mode for API Key authentication",
+      "oneOf": [
+        {
+          "description": "A valid API Key must be present.",
+          "type": "string",
+          "const": "strict",
+          "title": "Strict"
+        },
+        {
+          "description": "If credentials exist, validate them.\nThis is the default option.\nWarning: this allows requests without credentials!",
+          "type": "string",
+          "const": "optional",
+          "title": "Optional"
+        }
+      ],
+      "title": "Mode3"
+    },
+    "Authorization": {
+      "$ref": "#/$defs/RuleSet",
+      "title": "Authorization"
+    },
+    "RuleSet": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Rules"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "rules"
+      ],
+      "title": "Rule Set"
+    }
+  },
+  "description": "Local LLM Policy configuration"
+}

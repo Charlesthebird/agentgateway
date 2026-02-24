@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "filter": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Expression",
+          "title": "Expression"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Filter"
+    },
+    "add": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Add"
+    },
+    "remove": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      },
+      "title": "Remove"
+    }
+  },
+  "additionalProperties": false,
+  "title": "Logging Policy",
+  "$defs": {
+    "Expression": {
+      "type": "string",
+      "title": "Expression"
+    }
+  },
+  "description": "Logging Policy configuration"
+}

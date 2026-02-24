@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "description": "OpenAI /v1/chat/completions",
+      "type": "string",
+      "const": "completions",
+      "title": "Completions"
+    },
+    {
+      "description": "Anthropic /v1/messages",
+      "type": "string",
+      "const": "messages",
+      "title": "Messages"
+    },
+    {
+      "description": "OpenAI /v1/models",
+      "type": "string",
+      "const": "models",
+      "title": "Models"
+    },
+    {
+      "description": "Send the request to the upstream LLM provider as-is",
+      "type": "string",
+      "const": "passthrough",
+      "title": "Passthrough"
+    },
+    {
+      "description": "OpenAI /responses",
+      "type": "string",
+      "const": "responses",
+      "title": "Responses"
+    },
+    {
+      "description": "OpenAI /embeddings",
+      "type": "string",
+      "const": "embeddings",
+      "title": "Embeddings"
+    },
+    {
+      "description": "OpenAI /realtime (websockets)",
+      "type": "string",
+      "const": "realtime",
+      "title": "Realtime"
+    },
+    {
+      "description": "Anthropic /v1/messages/count_tokens",
+      "type": "string",
+      "const": "anthropicTokenCount",
+      "title": "Anthropic Token Count"
+    }
+  ],
+  "title": "Route Type",
+  "description": "Route Type with matching conditions"
+}

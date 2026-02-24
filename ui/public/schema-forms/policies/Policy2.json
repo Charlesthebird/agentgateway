@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "requestTimeout": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "title": "Request Timeout"
+    },
+    "backendRequestTimeout": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "title": "Backend Request Timeout"
+    }
+  },
+  "additionalProperties": false,
+  "title": "Policy2",
+  "description": "Policy2 configuration"
+}

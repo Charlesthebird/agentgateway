@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "headers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/HeaderMatch"
+      },
+      "title": "Headers"
+    },
+    "path": {
+      "$ref": "#/$defs/PathMatch",
+      "title": "Path"
+    },
+    "method": {
+      "type": "string",
+      "title": "Method"
+    },
+    "query": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/QueryMatch"
+      },
+      "title": "Query"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "title": "Route Match",
+  "$defs": {
+    "HeaderMatch": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "value": {
+          "$ref": "#/$defs/HeaderValueMatch",
+          "title": "Value"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "Header Match"
+    },
+    "HeaderValueMatch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "exact": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "exact"
+          ],
+          "additionalProperties": false,
+          "title": "Exact"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "additionalProperties": false,
+          "title": "Regex"
+        }
+      ],
+      "title": "Header Value Match"
+    },
+    "PathMatch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "exact": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "exact"
+          ],
+          "additionalProperties": false,
+          "title": "Exact"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "pathPrefix": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pathPrefix"
+          ],
+          "additionalProperties": false,
+          "title": "Path Prefix"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer",
+                  "format": "uint",
+                  "minimum": 0
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "additionalProperties": false,
+          "title": "Regex"
+        }
+      ],
+      "title": "Path Match"
+    },
+    "QueryMatch": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "value": {
+          "$ref": "#/$defs/QueryValueMatch",
+          "title": "Value"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "Query Match"
+    },
+    "QueryValueMatch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "exact": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "exact"
+          ],
+          "additionalProperties": false,
+          "title": "Exact"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "additionalProperties": false,
+          "title": "Regex"
+        }
+      ],
+      "title": "Query Value Match"
+    }
+  },
+  "description": "Route Match with matching conditions"
+}

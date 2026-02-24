@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "namespace": {
+      "type": "string",
+      "title": "Namespace"
+    },
+    "ruleName": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "title": "Rule Name"
+    },
+    "kind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "title": "Kind"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "namespace"
+  ],
+  "title": "Route Name",
+  "description": "Route Name with matching conditions"
+}

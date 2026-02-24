@@ -1,0 +1,540 @@
+/* Global Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-base);
+  background-color: var(--color-bg-layout);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading);
+  color: var(--color-text-base);
+}
+
+h1 {
+  font-size: 38px;
+}
+
+h2 {
+  font-size: 30px;
+}
+
+h3 {
+  font-size: 24px;
+}
+
+h4 {
+  font-size: 20px;
+}
+
+h5 {
+  font-size: 16px;
+}
+
+h6 {
+  font-size: 14px;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  transition: color var(--transition-base) var(--transition-timing);
+}
+
+a:hover {
+  color: var(--color-link-hover);
+}
+
+a:active {
+  color: var(--color-link-active);
+}
+
+/* Button reset */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* Input reset */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* List reset */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Code */
+code {
+  font-family:
+    "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  background: var(--color-bg-spotlight);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+pre {
+  font-family:
+    "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace;
+  padding: var(--spacing-md);
+  background: var(--color-bg-spotlight);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-container);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-base);
+  border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Focus outline */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Common Layout Classes */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+/* Gap utilities */
+.gap-xs {
+  gap: var(--spacing-xs);
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+.gap-xl {
+  gap: var(--spacing-xl);
+}
+
+.gap-xxl {
+  gap: var(--spacing-xxl);
+}
+
+/* Overflow utilities */
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.overflow-y-auto {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Width/Height utilities */
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.full-size {
+  width: 100%;
+  height: 100%;
+}
+
+/* Text alignment */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Cursor utilities */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* User select */
+.select-none {
+  user-select: none;
+}
+
+/* Pointer events */
+.pointer-events-none {
+  pointer-events: none;
+}
+
+/* Responsive utilities */
+@media (max-width: 576px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 992px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+@media (min-width: 993px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+/* Styled Select dropdown overrides for dark mode */
+.ant-select-dropdown {
+  background-color: var(--color-bg-elevated) !important;
+  border: 1px solid var(--color-border-base) !important;
+  box-shadow:
+    0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+  border-radius: var(--border-radius-md) !important;
+}
+
+[data-theme="dark"] .ant-select-dropdown {
+  box-shadow:
+    0 6px 16px 0 rgba(0, 0, 0, 0.32),
+    0 3px 6px -4px rgba(0, 0, 0, 0.48),
+    0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.ant-select-item {
+  color: var(--color-text-base) !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+  margin: 2px 4px !important;
+}
+
+.ant-select-item-option-content {
+  color: var(--color-text-base) !important;
+  transition: color 0.2s ease !important;
+}
+
+/* Hover effect - simple lightness change */
+.ant-select-item-option-active:not(.ant-select-item-option-disabled):not(.ant-select-item-option-selected) {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="dark"] .ant-select-item-option-active:not(.ant-select-item-option-disabled):not(.ant-select-item-option-selected) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Hover effect on selected item */
+.ant-select-item-option-active.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: rgba(22, 119, 255, 0.15) !important;
+}
+
+[data-theme="dark"] .ant-select-item-option-active.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: rgba(22, 119, 255, 0.2) !important;
+}
+
+/* Selected state */
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: rgba(22, 119, 255, 0.1) !important;
+  color: var(--color-primary) !important;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: rgba(22, 119, 255, 0.15) !important;
+}
+
+/* Active (clicked) state - slightly more lightness change */
+.ant-select-item-option:active:not(.ant-select-item-option-disabled) {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="dark"] .ant-select-item-option:active:not(.ant-select-item-option-disabled) {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.ant-select-item-option-disabled {
+  color: var(--color-text-disabled) !important;
+  cursor: not-allowed !important;
+  opacity: 0.5;
+}
+
+.ant-select-item-empty {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Form and Card styling overrides for theme support */
+.ant-card {
+  background-color: var(--color-bg-container) !important;
+  border-color: var(--color-border-secondary) !important;
+}
+
+.ant-card-bordered {
+  border-color: var(--color-border-secondary) !important;
+}
+
+.ant-card-head {
+  border-bottom-color: var(--color-border-secondary) !important;
+  color: var(--color-text-base) !important;
+}
+
+.ant-card-head-title {
+  color: var(--color-text-base) !important;
+}
+
+/* Form field borders */
+.ant-input,
+.ant-input-number,
+.ant-picker,
+.ant-select-selector {
+  background-color: var(--color-bg-base) !important;
+  border-color: var(--color-border-base) !important;
+  color: var(--color-text-base) !important;
+}
+
+.ant-input:hover,
+.ant-input-number:hover,
+.ant-picker:hover,
+.ant-select-selector:hover {
+  border-color: var(--color-primary-hover) !important;
+}
+
+.ant-input:focus,
+.ant-input-number:focus,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1) !important;
+}
+
+.ant-input-disabled,
+.ant-input-number-disabled,
+.ant-picker-disabled,
+.ant-select-disabled .ant-select-selector {
+  background-color: var(--color-bg-elevated) !important;
+  border-color: var(--color-border-secondary) !important;
+  color: var(--color-text-tertiary) !important;
+}
+
+/* Form item labels */
+.ant-form-item-label > label {
+  color: var(--color-text-base) !important;
+}
+
+/* Textarea */
+.ant-input-textarea textarea {
+  background-color: var(--color-bg-base) !important;
+  border-color: var(--color-border-base) !important;
+  color: var(--color-text-base) !important;
+}
+
+/* Checkbox and Radio */
+.ant-checkbox-inner,
+.ant-radio-inner {
+  background-color: var(--color-bg-base) !important;
+  border-color: var(--color-border-base) !important;
+}
+
+.ant-checkbox-wrapper,
+.ant-radio-wrapper {
+  color: var(--color-text-base) !important;
+}
+
+/* Switch */
+.ant-switch {
+  background-color: var(--color-text-quaternary) !important;
+}
+
+.ant-switch-checked {
+  background-color: var(--color-primary) !important;
+}
+
+/* Divider in forms */
+.ant-divider {
+  border-color: var(--color-border-secondary) !important;
+}
+
+/* Form validation states - ensure visibility in dark mode */
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-number,
+.ant-form-item-has-error .ant-select-selector,
+.ant-form-item-has-error .ant-picker {
+  border-color: var(--color-error) !important;
+}
+
+.ant-form-item-has-error .ant-input:focus,
+.ant-form-item-has-error .ant-input-number:focus,
+.ant-form-item-has-error .ant-select-focused .ant-select-selector,
+.ant-form-item-has-error .ant-picker-focused {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1) !important;
+}
+
+/* Tooltip styling for dark mode */
+.ant-tooltip {
+  max-width: 400px;
+}
+
+.ant-tooltip-inner {
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-base) !important;
+  border: 1px solid var(--color-border-base) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-tooltip-arrow-content {
+  background-color: var(--color-bg-elevated) !important;
+  border-color: var(--color-border-base) !important;
+}
+
+[data-theme="dark"] .ant-tooltip-inner {
+  box-shadow:
+    0 6px 16px 0 rgba(0, 0, 0, 0.32),
+    0 3px 6px -4px rgba(0, 0, 0, 0.48),
+    0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
+}

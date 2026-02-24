@@ -1,0 +1,90 @@
+{
+  "category": "Policies",
+  "description": "Security, traffic management, and transformation rules",
+  "types": [
+    {
+      "key": "LocalPolicy",
+      "displayName": "Local Policy",
+      "description": "Local Policy configuration",
+      "schemaFile": "LocalPolicy.json"
+    },
+    {
+      "key": "A2aPolicy",
+      "displayName": "A2a Policy",
+      "description": "A2a Policy configuration",
+      "schemaFile": "A2aPolicy.json"
+    },
+    {
+      "key": "Policy",
+      "displayName": "Policy",
+      "description": "Policy configuration",
+      "schemaFile": "Policy.json"
+    },
+    {
+      "key": "LocalBackendPolicies",
+      "displayName": "Local Backend Policies",
+      "description": "Local Backend Policies connection",
+      "schemaFile": "LocalBackendPolicies.json"
+    },
+    {
+      "key": "Policy2",
+      "displayName": "Policy2",
+      "description": "Policy2 configuration",
+      "schemaFile": "Policy2.json"
+    },
+    {
+      "key": "Policy3",
+      "displayName": "Policy3",
+      "description": "Policy3 configuration",
+      "schemaFile": "Policy3.json"
+    },
+    {
+      "key": "TCPFilterOrPolicy",
+      "displayName": "TCP Filter Or Policy",
+      "description": "TCP Filter Or Policy configuration",
+      "schemaFile": "TCPFilterOrPolicy.json"
+    },
+    {
+      "key": "LocalTCPBackendPolicies",
+      "displayName": "Local TCP Backend Policies",
+      "description": "Local TCP Backend Policies connection",
+      "schemaFile": "LocalTCPBackendPolicies.json"
+    },
+    {
+      "key": "LocalGatewayPolicy",
+      "displayName": "Local Gateway Policy",
+      "description": "Local Gateway Policy configuration",
+      "schemaFile": "LocalGatewayPolicy.json"
+    },
+    {
+      "key": "LocalFrontendPolicies",
+      "displayName": "Local Frontend Policies",
+      "description": "Local Frontend Policies",
+      "schemaFile": "LocalFrontendPolicies.json"
+    },
+    {
+      "key": "LoggingPolicy",
+      "displayName": "Logging Policy",
+      "description": "Logging Policy configuration",
+      "schemaFile": "LoggingPolicy.json"
+    },
+    {
+      "key": "PolicyTarget",
+      "displayName": "Policy Target",
+      "description": "Policy Target configuration",
+      "schemaFile": "PolicyTarget.json"
+    },
+    {
+      "key": "PolicyPhase",
+      "displayName": "Policy Phase",
+      "description": "Policy Phase configuration",
+      "schemaFile": "PolicyPhase.json"
+    },
+    {
+      "key": "LocalLLMPolicy",
+      "displayName": "Local LLM Policy",
+      "description": "Local LLM Policy configuration",
+      "schemaFile": "LocalLLMPolicy.json"
+    }
+  ]
+}

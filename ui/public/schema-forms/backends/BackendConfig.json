@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "keepalives": {
+      "$ref": "#/$defs/KeepaliveConfig",
+      "default": {
+        "enabled": true,
+        "time": "3m0s",
+        "interval": "3m0s",
+        "retries": 9
+      },
+      "title": "Keepalives"
+    },
+    "connectTimeout": {
+      "type": "string",
+      "default": "10s",
+      "title": "Connect Timeout"
+    },
+    "poolIdleTimeout": {
+      "description": "The maximum duration to keep an idle connection alive.",
+      "type": "string",
+      "default": "1m30s",
+      "title": "Pool Idle Timeout"
+    },
+    "poolMaxSize": {
+      "description": "The maximum number of connections allowed in the pool, per hostname. If set, this will limit\nthe total number of connections kept alive to any given host.\nNote: excess connections will still be created, they will just not remain idle.\nIf unset, there is no limit",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint",
+      "minimum": 0,
+      "default": null,
+      "title": "Pool Max Size"
+    }
+  },
+  "additionalProperties": false,
+  "title": "Backend Config",
+  "$defs": {
+    "KeepaliveConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "title": "Enabled"
+        },
+        "time": {
+          "type": "string",
+          "default": "3m0s",
+          "title": "Time"
+        },
+        "interval": {
+          "type": "string",
+          "default": "3m0s",
+          "title": "Interval"
+        },
+        "retries": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 9,
+          "title": "Retries"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Keepalive Config"
+    }
+  },
+  "description": "Backend Config connection"
+}

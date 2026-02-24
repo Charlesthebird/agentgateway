@@ -1,0 +1,30 @@
+{
+  "category": "Listeners",
+  "description": "Port bindings and protocol listeners",
+  "types": [
+    {
+      "key": "LocalBind",
+      "displayName": "Local Bind",
+      "description": "Local Bind",
+      "schemaFile": "LocalBind.json"
+    },
+    {
+      "key": "LocalListener",
+      "displayName": "Local Listener",
+      "description": "Local Listener for incoming connections",
+      "schemaFile": "LocalListener.json"
+    },
+    {
+      "key": "LocalListenerProtocol",
+      "displayName": "Local Listener Protocol",
+      "description": "Local Listener Protocol for incoming connections",
+      "schemaFile": "LocalListenerProtocol.json"
+    },
+    {
+      "key": "ListenerTarget",
+      "displayName": "Listener Target",
+      "description": "Listener Target for incoming connections",
+      "schemaFile": "ListenerTarget.json"
+    }
+  ]
+}

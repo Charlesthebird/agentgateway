@@ -1,0 +1,54 @@
+{
+  "category": "Routes",
+  "description": "HTTP and TCP routing configurations",
+  "types": [
+    {
+      "key": "LocalRoute",
+      "displayName": "Local Route",
+      "description": "Local Route with matching conditions",
+      "schemaFile": "LocalRoute.json"
+    },
+    {
+      "key": "RouteMatch",
+      "displayName": "Route Match",
+      "description": "Route Match with matching conditions",
+      "schemaFile": "RouteMatch.json"
+    },
+    {
+      "key": "RouteType",
+      "displayName": "Route Type",
+      "description": "Route Type with matching conditions",
+      "schemaFile": "RouteType.json"
+    },
+    {
+      "key": "LocalRouteBackend",
+      "displayName": "Local Route Backend",
+      "description": "Local Route Backend connection with matching conditions",
+      "schemaFile": "LocalRouteBackend.json"
+    },
+    {
+      "key": "LocalTCPRoute",
+      "displayName": "Local TCP Route",
+      "description": "Local TCP Route with matching conditions",
+      "schemaFile": "LocalTCPRoute.json"
+    },
+    {
+      "key": "LocalTCPRouteBackend",
+      "displayName": "Local TCP Route Backend",
+      "description": "Local TCP Route Backend connection with matching conditions",
+      "schemaFile": "LocalTCPRouteBackend.json"
+    },
+    {
+      "key": "RouteName",
+      "displayName": "Route Name",
+      "description": "Route Name with matching conditions",
+      "schemaFile": "RouteName.json"
+    },
+    {
+      "key": "LLMRouteMatch",
+      "displayName": "LLM Route Match",
+      "description": "LLM Route Match with matching conditions",
+      "schemaFile": "LLMRouteMatch.json"
+    }
+  ]
+}

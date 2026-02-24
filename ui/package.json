@@ -9,13 +9,33 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-config-schema": "yarn run json2ts ../schema/config.json > src/config.d.ts",
-    "generate-cel-schema": "yarn run json2ts ../schema/cel.json > src/cel.d.ts"
+    "generate-cel-schema": "yarn run json2ts ../schema/cel.json > src/cel.d.ts",
+    "generate:schemas": "node scripts/form-generation/index.cjs && yarn run copy:schemas",
+    "copy:schemas": "cp -r schema-forms public/",
+    "prebuild": "yarn run generate:schemas",
+    "predev": "yarn run copy:schemas"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.5.2",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@rjsf/antd": "^5.22.2",
+    "@rjsf/core": "^5.22.2",
+    "@rjsf/utils": "^5.22.2",
+    "@rjsf/validator-ajv8": "^5.22.2",
+    "antd": "^5.23.3",
+    "chart.js": "^4.4.10",
+    "dayjs": "^1.11.13",
+    "framer-motion": "^12.0.2",
+    "lucide-react": "^0.469.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^7.2.1",
+    "swr": "^2.2.5"
   },
   "devDependencies": {
+    "@emotion/babel-plugin": "^11.13.5",
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",

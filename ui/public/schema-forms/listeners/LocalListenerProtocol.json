@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "HTTP",
+    "HTTPS",
+    "TLS",
+    "TCP",
+    "HBONE"
+  ],
+  "title": "Local Listener Protocol",
+  "description": "Local Listener Protocol for incoming connections"
+}

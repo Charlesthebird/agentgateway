@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "namespace": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "title": "Namespace"
+    },
+    "ruleName": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null,
+      "title": "Rule Name"
+    },
+    "hostnames": {
+      "description": "Can be a wildcard",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Hostnames"
+    },
+    "policies": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TCPFilterOrPolicy",
+          "title": "TCP Filter Or Policy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Policies"
+    },
+    "backends": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LocalTCPRouteBackend"
+      },
+      "title": "Backends"
+    }
+  },
+  "additionalProperties": false,
+  "title": "Local TCP Route",
+  "$defs": {
+    "TCPFilterOrPolicy": {
+      "type": "object",
+      "properties": {
+        "backendTLS": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendTLS",
+              "title": "Local Backend TLS"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Backend TLS"
+        }
+      },
+      "additionalProperties": false,
+      "title": "TCP Filter Or Policy"
+    },
+    "LocalBackendTLS": {
+      "type": "object",
+      "properties": {
+        "cert": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Cert"
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Key"
+        },
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Root"
+        },
+        "hostname": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Hostname"
+        },
+        "insecure": {
+          "type": "boolean",
+          "default": false,
+          "title": "Insecure"
+        },
+        "insecureHost": {
+          "type": "boolean",
+          "default": false,
+          "title": "Insecure Host"
+        },
+        "alpn": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null,
+          "title": "Alpn"
+        },
+        "subjectAltNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null,
+          "title": "Subject Alt Names"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local Backend TLS"
+    },
+    "LocalTCPRouteBackend": {
+      "type": "object",
+      "properties": {
+        "weight": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0,
+          "default": 1,
+          "title": "Weight"
+        },
+        "policies": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalTCPBackendPolicies",
+              "title": "Local TCP Backend Policies"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Policies"
+        }
+      },
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "invalid"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "description": "Service reference. Service must be defined in the top level services list.",
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/NamespacedHostname"
+                },
+                "port": {
+                  "type": "integer",
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "port"
+              ]
+            }
+          },
+          "required": [
+            "service"
+          ],
+          "title": "Service"
+        },
+        {
+          "description": "Hostname or IP address",
+          "type": "object",
+          "properties": {
+            "host": {
+              "description": "Hostname or IP address",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host"
+          ],
+          "title": "Host"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "description": "Explicit backend reference. Backend must be defined in the top level backends list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "backend"
+          ],
+          "title": "Backend"
+        }
+      ],
+      "title": "Local TCP Route Backend"
+    },
+    "LocalTCPBackendPolicies": {
+      "type": "object",
+      "properties": {
+        "backendTLS": {
+          "description": "Send TLS to the backend.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendTLS",
+              "title": "Local Backend TLS"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Backend TLS"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local TCP Backend Policies"
+    },
+    "NamespacedHostname": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "title": "Namespace"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname"
+        }
+      },
+      "required": [
+        "namespace",
+        "hostname"
+      ],
+      "title": "Namespaced Hostname"
+    }
+  },
+  "description": "Local TCP Route with matching conditions"
+}

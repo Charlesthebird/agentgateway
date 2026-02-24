@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "gateway": {
+          "$ref": "#/$defs/ListenerTarget"
+        }
+      },
+      "required": [
+        "gateway"
+      ],
+      "additionalProperties": false,
+      "title": "Gateway"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "route": {
+          "$ref": "#/$defs/RouteName"
+        }
+      },
+      "required": [
+        "route"
+      ],
+      "additionalProperties": false,
+      "title": "Route"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/BackendTarget"
+        }
+      },
+      "required": [
+        "backend"
+      ],
+      "additionalProperties": false,
+      "title": "Backend"
+    }
+  ],
+  "title": "Policy Target",
+  "$defs": {
+    "ListenerTarget": {
+      "type": "object",
+      "properties": {
+        "gatewayName": {
+          "type": "string",
+          "title": "Gateway Name"
+        },
+        "gatewayNamespace": {
+          "type": "string",
+          "title": "Gateway Namespace"
+        },
+        "listenerName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Listener Name"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "gatewayName",
+        "gatewayNamespace"
+      ],
+      "title": "Listener Target"
+    },
+    "RouteName": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace"
+        },
+        "ruleName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Rule Name"
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Kind"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "namespace"
+      ],
+      "title": "Route Name"
+    },
+    "BackendTarget": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "invalid"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "namespace": {
+                  "type": "string"
+                },
+                "section": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "namespace"
+              ]
+            }
+          },
+          "required": [
+            "backend"
+          ],
+          "additionalProperties": false,
+          "title": "Backend"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "hostname": {
+                  "type": "string"
+                },
+                "namespace": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "hostname",
+                "namespace"
+              ]
+            }
+          },
+          "required": [
+            "service"
+          ],
+          "additionalProperties": false,
+          "title": "Service"
+        }
+      ],
+      "title": "Backend Target"
+    }
+  },
+  "description": "Policy Target configuration"
+}

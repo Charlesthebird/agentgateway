@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "string",
+      "enum": [
+        "invalid"
+      ],
+      "title": "Option 1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "backend": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "section": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "namespace"
+          ]
+        }
+      },
+      "required": [
+        "backend"
+      ],
+      "additionalProperties": false,
+      "title": "Backend"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "service": {
+          "type": "object",
+          "properties": {
+            "hostname": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "port": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "hostname",
+            "namespace"
+          ]
+        }
+      },
+      "required": [
+        "service"
+      ],
+      "additionalProperties": false,
+      "title": "Service"
+    }
+  ],
+  "title": "Backend Target",
+  "description": "Backend Target connection"
+}

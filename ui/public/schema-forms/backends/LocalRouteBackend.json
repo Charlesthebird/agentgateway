@@ -1,0 +1,2216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "weight": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0,
+      "default": 1,
+      "title": "Weight"
+    },
+    "policies": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalBackendPolicies",
+          "title": "Local Backend Policies"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Policies"
+    }
+  },
+  "unevaluatedProperties": false,
+  "oneOf": [
+    {
+      "type": "string",
+      "enum": [
+        "invalid"
+      ],
+      "title": "Option 1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "service": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "$ref": "#/$defs/NamespacedHostname"
+            },
+            "port": {
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "port"
+          ]
+        }
+      },
+      "required": [
+        "service"
+      ],
+      "title": "Service"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "title": "Host"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "dynamic": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "dynamic"
+      ],
+      "title": "Dynamic"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "mcp": {
+          "$ref": "#/$defs/LocalMcpBackend"
+        }
+      },
+      "required": [
+        "mcp"
+      ],
+      "title": "Mcp"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ai": {
+          "$ref": "#/$defs/LocalAIBackend"
+        }
+      },
+      "required": [
+        "ai"
+      ],
+      "title": "Ai"
+    }
+  ],
+  "title": "Local Route Backend",
+  "$defs": {
+    "LocalBackendPolicies": {
+      "type": "object",
+      "properties": {
+        "requestHeaderModifier": {
+          "description": "Headers to be modified in the request.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeaderModifier",
+              "title": "Header Modifier"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Header Modifier"
+        },
+        "responseHeaderModifier": {
+          "description": "Headers to be modified in the response.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeaderModifier",
+              "title": "Header Modifier"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Header Modifier"
+        },
+        "requestRedirect": {
+          "description": "Directly respond to the request with a redirect.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RequestRedirect",
+              "title": "Request Redirect"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Redirect"
+        },
+        "mcpAuthorization": {
+          "description": "Authorization policies for MCP access.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpAuthorization",
+              "title": "Mcp Authorization"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mcp Authorization"
+        },
+        "a2a": {
+          "description": "Mark this traffic as A2A to enable A2A processing and telemetry.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/A2aPolicy",
+              "title": "A2a Policy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "A2a"
+        },
+        "ai": {
+          "description": "Mark this as LLM traffic to enable LLM processing.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Policy",
+              "title": "Policy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ai"
+        },
+        "backendTLS": {
+          "description": "Send TLS to the backend.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendTLS",
+              "title": "Local Backend TLS"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Backend TLS"
+        },
+        "backendAuth": {
+          "description": "Authenticate to the backend.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackendAuth",
+              "title": "Backend Auth"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Backend Auth"
+        },
+        "http": {
+          "description": "Specify HTTP settings for the backend",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HTTP",
+              "title": "HTTP"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Http"
+        },
+        "tcp": {
+          "description": "Specify TCP settings for the backend",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TCP",
+              "title": "TCP"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tcp"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local Backend Policies"
+    },
+    "HeaderModifier": {
+      "type": "object",
+      "properties": {
+        "add": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Add"
+        },
+        "set": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Set"
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Remove"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Header Modifier"
+    },
+    "RequestRedirect": {
+      "type": "object",
+      "properties": {
+        "scheme": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Scheme"
+        },
+        "authority": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HostRedirect",
+              "title": "Host Redirect"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Authority"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PathRedirect",
+              "title": "Path Redirect"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Path"
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 1,
+          "maximum": 65535,
+          "title": "Status"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Request Redirect"
+    },
+    "HostRedirect": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "auto",
+            "none"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "full"
+          ],
+          "additionalProperties": false,
+          "title": "Full"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "host"
+          ],
+          "additionalProperties": false,
+          "title": "Host"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 1,
+              "maximum": 65535
+            }
+          },
+          "required": [
+            "port"
+          ],
+          "additionalProperties": false,
+          "title": "Port"
+        }
+      ],
+      "title": "Host Redirect"
+    },
+    "PathRedirect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "full"
+          ],
+          "additionalProperties": false,
+          "title": "Full"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "prefix": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "prefix"
+          ],
+          "additionalProperties": false,
+          "title": "Prefix"
+        }
+      ],
+      "title": "Path Redirect"
+    },
+    "McpAuthorization": {
+      "$ref": "#/$defs/RuleSet",
+      "title": "Mcp Authorization"
+    },
+    "RuleSet": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Rules"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "rules"
+      ],
+      "title": "Rule Set"
+    },
+    "A2aPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "A2a Policy"
+    },
+    "Policy": {
+      "type": "object",
+      "properties": {
+        "promptGuard": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptGuard",
+              "title": "Prompt Guard"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt Guard"
+        },
+        "defaults": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "title": "Defaults"
+        },
+        "overrides": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "title": "Overrides"
+        },
+        "prompts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptEnrichment",
+              "title": "Prompt Enrichment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompts"
+        },
+        "modelAliases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Model Aliases"
+        },
+        "promptCaching": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PromptCachingConfig",
+              "title": "Prompt Caching Config"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt Caching"
+        },
+        "routes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RouteType"
+          },
+          "title": "Routes"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Policy"
+    },
+    "PromptGuard": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RequestGuard"
+          },
+          "title": "Request"
+        },
+        "response": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResponseGuard"
+          },
+          "title": "Response"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Prompt Guard"
+    },
+    "RequestGuard": {
+      "type": "object",
+      "properties": {
+        "rejection": {
+          "$ref": "#/$defs/RequestRejection",
+          "default": {
+            "body": "The request was rejected due to inappropriate content",
+            "status": 403
+          },
+          "title": "Rejection"
+        }
+      },
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "$ref": "#/$defs/RegexRules"
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "title": "Regex"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "webhook": {
+              "$ref": "#/$defs/Webhook"
+            }
+          },
+          "required": [
+            "webhook"
+          ],
+          "title": "Webhook"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "openAIModeration": {
+              "$ref": "#/$defs/Moderation"
+            }
+          },
+          "required": [
+            "openAIModeration"
+          ],
+          "title": "Open AI Moderation"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bedrockGuardrails": {
+              "$ref": "#/$defs/BedrockGuardrails"
+            }
+          },
+          "required": [
+            "bedrockGuardrails"
+          ],
+          "title": "Bedrock Guardrails"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "googleModelArmor": {
+              "$ref": "#/$defs/GoogleModelArmor"
+            }
+          },
+          "required": [
+            "googleModelArmor"
+          ],
+          "title": "Google Model Armor"
+        }
+      ],
+      "title": "Request Guard"
+    },
+    "RequestRejection": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/Bytes",
+          "default": "The request was rejected due to inappropriate content",
+          "title": "Body"
+        },
+        "status": {
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 403,
+          "title": "Status"
+        },
+        "headers": {
+          "description": "Optional headers to add, set, or remove from the rejection response",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeaderModifier",
+              "title": "Header Modifier"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Headers"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Request Rejection"
+    },
+    "Bytes": {
+      "type": [
+        "array",
+        "string"
+      ],
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "title": "Bytes"
+    },
+    "RegexRules": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/Action",
+          "default": "mask",
+          "title": "Action"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RegexRule"
+          },
+          "title": "Rules"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "rules"
+      ],
+      "title": "Regex Rules"
+    },
+    "Action": {
+      "type": "string",
+      "enum": [
+        "mask",
+        "reject"
+      ],
+      "title": "Action"
+    },
+    "RegexRule": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "builtin": {
+              "$ref": "#/$defs/Builtin"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "builtin"
+          ],
+          "title": "Builtin"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "pattern"
+          ],
+          "title": "Pattern"
+        }
+      ],
+      "title": "Regex Rule"
+    },
+    "Builtin": {
+      "type": "string",
+      "enum": [
+        "ssn",
+        "creditCard",
+        "phoneNumber",
+        "email",
+        "caSin"
+      ],
+      "title": "Builtin"
+    },
+    "Webhook": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/SimpleLocalBackend",
+          "title": "Target"
+        },
+        "forwardHeaderMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HeaderMatch"
+          },
+          "title": "Forward Header Matches"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "title": "Webhook"
+    },
+    "SimpleLocalBackend": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "invalid"
+          ],
+          "title": "Option 1"
+        },
+        {
+          "description": "Service reference. Service must be defined in the top level services list.",
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/NamespacedHostname"
+                },
+                "port": {
+                  "type": "integer",
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "port"
+              ]
+            }
+          },
+          "required": [
+            "service"
+          ],
+          "additionalProperties": false,
+          "title": "Service"
+        },
+        {
+          "description": "Hostname or IP address",
+          "type": "object",
+          "properties": {
+            "host": {
+              "description": "Hostname or IP address",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host"
+          ],
+          "additionalProperties": false,
+          "title": "Host"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "description": "Explicit backend reference. Backend must be defined in the top level backends list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "backend"
+          ],
+          "additionalProperties": false,
+          "title": "Backend"
+        }
+      ],
+      "title": "Simple Local Backend"
+    },
+    "NamespacedHostname": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "title": "Namespace"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname"
+        }
+      },
+      "required": [
+        "namespace",
+        "hostname"
+      ],
+      "title": "Namespaced Hostname"
+    },
+    "HeaderMatch": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "value": {
+          "$ref": "#/$defs/HeaderValueMatch",
+          "title": "Value"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "Header Match"
+    },
+    "HeaderValueMatch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "exact": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "exact"
+          ],
+          "additionalProperties": false,
+          "title": "Exact"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "additionalProperties": false,
+          "title": "Regex"
+        }
+      ],
+      "title": "Header Value Match"
+    },
+    "Moderation": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "description": "Model to use. Defaults to `omni-moderation-latest`",
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        },
+        "policies": {
+          "$ref": "#/$defs/LocalBackendPolicies",
+          "title": "Policies"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "policies"
+      ],
+      "title": "Moderation"
+    },
+    "BedrockGuardrails": {
+      "description": "Configuration for AWS Bedrock Guardrails integration.",
+      "type": "object",
+      "properties": {
+        "guardrailIdentifier": {
+          "description": "The unique identifier of the guardrail",
+          "type": "string",
+          "title": "Guardrail Identifier"
+        },
+        "guardrailVersion": {
+          "description": "The version of the guardrail",
+          "type": "string",
+          "title": "Guardrail Version"
+        },
+        "region": {
+          "description": "AWS region where the guardrail is deployed",
+          "type": "string",
+          "title": "Region"
+        },
+        "policies": {
+          "description": "Backend policies for AWS authentication (optional, defaults to implicit AWS auth)",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendPolicies",
+              "title": "Local Backend Policies"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Policies"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "guardrailIdentifier",
+        "guardrailVersion",
+        "region"
+      ],
+      "title": "Bedrock Guardrails"
+    },
+    "GoogleModelArmor": {
+      "description": "Configuration for Google Cloud Model Armor integration.",
+      "type": "object",
+      "properties": {
+        "templateId": {
+          "description": "The template ID for the Model Armor configuration",
+          "type": "string",
+          "title": "Template Id"
+        },
+        "projectId": {
+          "description": "The GCP project ID",
+          "type": "string",
+          "title": "Project Id"
+        },
+        "location": {
+          "description": "The GCP region (default: us-central1)",
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Location"
+        },
+        "policies": {
+          "description": "Backend policies for GCP authentication (optional, defaults to implicit GCP auth)",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendPolicies",
+              "title": "Local Backend Policies"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Policies"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "templateId",
+        "projectId"
+      ],
+      "title": "Google Model Armor"
+    },
+    "ResponseGuard": {
+      "type": "object",
+      "properties": {
+        "rejection": {
+          "$ref": "#/$defs/RequestRejection",
+          "default": {
+            "body": "The request was rejected due to inappropriate content",
+            "status": 403
+          },
+          "title": "Rejection"
+        }
+      },
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "$ref": "#/$defs/RegexRules"
+            }
+          },
+          "required": [
+            "regex"
+          ],
+          "title": "Regex"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "webhook": {
+              "$ref": "#/$defs/Webhook"
+            }
+          },
+          "required": [
+            "webhook"
+          ],
+          "title": "Webhook"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bedrockGuardrails": {
+              "$ref": "#/$defs/BedrockGuardrails"
+            }
+          },
+          "required": [
+            "bedrockGuardrails"
+          ],
+          "title": "Bedrock Guardrails"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "googleModelArmor": {
+              "$ref": "#/$defs/GoogleModelArmor"
+            }
+          },
+          "required": [
+            "googleModelArmor"
+          ],
+          "title": "Google Model Armor"
+        }
+      ],
+      "title": "Response Guard"
+    },
+    "PromptEnrichment": {
+      "type": "object",
+      "properties": {
+        "append": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SimpleChatCompletionMessage"
+          },
+          "title": "Append"
+        },
+        "prepend": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SimpleChatCompletionMessage"
+          },
+          "title": "Prepend"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "Prompt Enrichment"
+    },
+    "SimpleChatCompletionMessage": {
+      "description": "SimpleChatCompletionMessage is a simplified chat message",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "title": "Role"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "Simple Chat Completion Message"
+    },
+    "PromptCachingConfig": {
+      "type": "object",
+      "properties": {
+        "cacheSystem": {
+          "type": "boolean",
+          "default": true,
+          "title": "Cache System"
+        },
+        "cacheMessages": {
+          "type": "boolean",
+          "default": true,
+          "title": "Cache Messages"
+        },
+        "cacheTools": {
+          "type": "boolean",
+          "default": false,
+          "title": "Cache Tools"
+        },
+        "minTokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0,
+          "default": 1024,
+          "title": "Min Tokens"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Prompt Caching Config"
+    },
+    "RouteType": {
+      "oneOf": [
+        {
+          "description": "OpenAI /v1/chat/completions",
+          "type": "string",
+          "const": "completions",
+          "title": "Completions"
+        },
+        {
+          "description": "Anthropic /v1/messages",
+          "type": "string",
+          "const": "messages",
+          "title": "Messages"
+        },
+        {
+          "description": "OpenAI /v1/models",
+          "type": "string",
+          "const": "models",
+          "title": "Models"
+        },
+        {
+          "description": "Send the request to the upstream LLM provider as-is",
+          "type": "string",
+          "const": "passthrough",
+          "title": "Passthrough"
+        },
+        {
+          "description": "OpenAI /responses",
+          "type": "string",
+          "const": "responses",
+          "title": "Responses"
+        },
+        {
+          "description": "OpenAI /embeddings",
+          "type": "string",
+          "const": "embeddings",
+          "title": "Embeddings"
+        },
+        {
+          "description": "OpenAI /realtime (websockets)",
+          "type": "string",
+          "const": "realtime",
+          "title": "Realtime"
+        },
+        {
+          "description": "Anthropic /v1/messages/count_tokens",
+          "type": "string",
+          "const": "anthropicTokenCount",
+          "title": "Anthropic Token Count"
+        }
+      ],
+      "title": "Route Type"
+    },
+    "LocalBackendTLS": {
+      "type": "object",
+      "properties": {
+        "cert": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Cert"
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Key"
+        },
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Root"
+        },
+        "hostname": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Hostname"
+        },
+        "insecure": {
+          "type": "boolean",
+          "default": false,
+          "title": "Insecure"
+        },
+        "insecureHost": {
+          "type": "boolean",
+          "default": false,
+          "title": "Insecure Host"
+        },
+        "alpn": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null,
+          "title": "Alpn"
+        },
+        "subjectAltNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null,
+          "title": "Subject Alt Names"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Local Backend TLS"
+    },
+    "BackendAuth": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "passthrough": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "passthrough"
+          ],
+          "additionalProperties": false,
+          "title": "Passthrough"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "$ref": "#/$defs/FileOrInline"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false,
+          "title": "Key"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "gcp": {
+              "$ref": "#/$defs/GcpAuth"
+            }
+          },
+          "required": [
+            "gcp"
+          ],
+          "additionalProperties": false,
+          "title": "Gcp"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "aws": {
+              "$ref": "#/$defs/AwsAuth"
+            }
+          },
+          "required": [
+            "aws"
+          ],
+          "additionalProperties": false,
+          "title": "Aws"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "azure": {
+              "$ref": "#/$defs/AzureAuth"
+            }
+          },
+          "required": [
+            "azure"
+          ],
+          "additionalProperties": false,
+          "title": "Azure"
+        }
+      ],
+      "title": "Backend Auth"
+    },
+    "FileOrInline": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file"
+          ],
+          "title": "File"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "File Or Inline"
+    },
+    "GcpAuth": {
+      "anyOf": [
+        {
+          "description": "Fetch an id token",
+          "type": "object",
+          "properties": {
+            "type": {
+              "$ref": "#/$defs/IdToken"
+            },
+            "audience": {
+              "description": "Audience for the token. If not set, the destination host will be used.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "title": "Type"
+        },
+        {
+          "description": "Fetch an access token",
+          "type": "object",
+          "properties": {
+            "type": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/AccessToken"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "additionalProperties": false,
+          "title": "Type"
+        }
+      ],
+      "title": "Gcp Auth"
+    },
+    "IdToken": {
+      "type": "string",
+      "format": "const",
+      "const": "idToken",
+      "title": "Id Token"
+    },
+    "AccessToken": {
+      "type": "string",
+      "format": "const",
+      "const": "accessToken",
+      "title": "Access Token"
+    },
+    "AwsAuth": {
+      "anyOf": [
+        {
+          "description": "Use explicit AWS credentials",
+          "type": "object",
+          "properties": {
+            "accessKeyId": {
+              "type": "string"
+            },
+            "secretAccessKey": {
+              "type": "string"
+            },
+            "region": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sessionToken": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "accessKeyId",
+            "secretAccessKey"
+          ],
+          "title": "Access Key Id"
+        },
+        {
+          "description": "Use implicit AWS authentication (environment variables, IAM roles, etc.)",
+          "type": "object",
+          "additionalProperties": false
+        }
+      ],
+      "title": "Aws Auth"
+    },
+    "AzureAuth": {
+      "oneOf": [
+        {
+          "description": "Use explicit Azure credentials",
+          "type": "object",
+          "properties": {
+            "explicitConfig": {
+              "type": "object",
+              "unevaluatedProperties": false,
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "clientSecret": {
+                      "type": "object",
+                      "properties": {
+                        "tenant_id": {
+                          "type": "string"
+                        },
+                        "client_id": {
+                          "type": "string"
+                        },
+                        "client_secret": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "required": [
+                        "tenant_id",
+                        "client_id",
+                        "client_secret"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "clientSecret"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "managedIdentity": {
+                      "type": "object",
+                      "properties": {
+                        "userAssignedIdentity": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/$defs/AzureUserAssignedIdentity"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "managedIdentity"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "workloadIdentity": {
+                      "type": "object",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "workloadIdentity"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "explicitConfig"
+          ],
+          "additionalProperties": false,
+          "title": "Explicit Config"
+        },
+        {
+          "description": "Use implicit Azure auth. Note that this is for developer use-cases only!",
+          "type": "object",
+          "properties": {
+            "developerImplicit": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "developerImplicit"
+          ],
+          "additionalProperties": false,
+          "title": "Developer Implicit"
+        }
+      ],
+      "title": "Azure Auth"
+    },
+    "AzureUserAssignedIdentity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "clientId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "clientId"
+          ],
+          "additionalProperties": false,
+          "title": "Client Id"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "objectId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "objectId"
+          ],
+          "additionalProperties": false,
+          "title": "Object Id"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resourceId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "resourceId"
+          ],
+          "additionalProperties": false,
+          "title": "Resource Id"
+        }
+      ],
+      "title": "Azure User Assigned Identity"
+    },
+    "HTTP": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "requestTimeout": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Request Timeout"
+        }
+      },
+      "additionalProperties": false,
+      "title": "HTTP"
+    },
+    "TCP": {
+      "type": "object",
+      "properties": {
+        "keepalives": {
+          "$ref": "#/$defs/KeepaliveConfig",
+          "title": "Keepalives"
+        },
+        "connectTimeout": {
+          "$ref": "#/$defs/Duration",
+          "title": "Connect Timeout"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "keepalives",
+        "connectTimeout"
+      ],
+      "title": "TCP"
+    },
+    "KeepaliveConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "title": "Enabled"
+        },
+        "time": {
+          "type": "string",
+          "default": "3m0s",
+          "title": "Time"
+        },
+        "interval": {
+          "type": "string",
+          "default": "3m0s",
+          "title": "Interval"
+        },
+        "retries": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 9,
+          "title": "Retries"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Keepalive Config"
+    },
+    "Duration": {
+      "type": "object",
+      "properties": {
+        "secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "title": "Secs"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "title": "Nanos"
+        }
+      },
+      "required": [
+        "secs",
+        "nanos"
+      ],
+      "title": "Duration"
+    },
+    "LocalMcpBackend": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LocalMcpTarget"
+          },
+          "title": "Targets"
+        },
+        "statefulMode": {
+          "$ref": "#/$defs/McpStatefulMode",
+          "title": "Stateful Mode"
+        },
+        "prefixMode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpPrefixMode",
+              "title": "Mcp Prefix Mode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prefix Mode"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "targets"
+      ],
+      "title": "Local Mcp Backend"
+    },
+    "LocalMcpTarget": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "policies": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendPolicies",
+              "title": "Local Backend Policies"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Policies"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "sse": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                "path": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "host"
+              ]
+            }
+          },
+          "required": [
+            "sse"
+          ],
+          "title": "Sse"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mcp": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                "path": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "host"
+              ]
+            }
+          },
+          "required": [
+            "mcp"
+          ],
+          "title": "Mcp"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "stdio": {
+              "type": "object",
+              "properties": {
+                "cmd": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "env": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "cmd"
+              ]
+            }
+          },
+          "required": [
+            "stdio"
+          ],
+          "title": "Stdio"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "openapi": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                "path": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "schema": true
+              },
+              "additionalProperties": false,
+              "required": [
+                "host",
+                "schema"
+              ]
+            }
+          },
+          "required": [
+            "openapi"
+          ],
+          "title": "Openapi"
+        }
+      ],
+      "title": "Local Mcp Target"
+    },
+    "McpStatefulMode": {
+      "type": "string",
+      "enum": [
+        "stateless",
+        "stateful"
+      ],
+      "title": "Mcp Stateful Mode"
+    },
+    "McpPrefixMode": {
+      "type": "string",
+      "enum": [
+        "always",
+        "conditional"
+      ],
+      "title": "Mcp Prefix Mode"
+    },
+    "LocalAIBackend": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalNamedAIProvider",
+          "title": "Local Named AI Provider"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LocalAIProviders"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "groups"
+          ],
+          "title": "Groups"
+        }
+      ],
+      "title": "Local AI Backend"
+    },
+    "LocalNamedAIProvider": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "provider": {
+          "$ref": "#/$defs/AIProvider",
+          "title": "Provider"
+        },
+        "hostOverride": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Host Override"
+        },
+        "pathOverride": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Path Override"
+        },
+        "tokenize": {
+          "description": "Whether to tokenize on the request flow. This enables us to do more accurate rate limits,\nsince we know (part of) the cost of the request upfront.\nThis comes with the cost of an expensive operation.",
+          "type": "boolean",
+          "default": false,
+          "title": "Tokenize"
+        },
+        "policies": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendPolicies",
+              "title": "Local Backend Policies"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Policies"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "provider"
+      ],
+      "title": "Local Named AI Provider"
+    },
+    "AIProvider": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "openAI": {
+              "$ref": "#/$defs/Provider"
+            }
+          },
+          "required": [
+            "openAI"
+          ],
+          "additionalProperties": false,
+          "title": "Open AI"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "gemini": {
+              "$ref": "#/$defs/Provider2"
+            }
+          },
+          "required": [
+            "gemini"
+          ],
+          "additionalProperties": false,
+          "title": "Gemini"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "vertex": {
+              "$ref": "#/$defs/Provider3"
+            }
+          },
+          "required": [
+            "vertex"
+          ],
+          "additionalProperties": false,
+          "title": "Vertex"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "anthropic": {
+              "$ref": "#/$defs/Provider4"
+            }
+          },
+          "required": [
+            "anthropic"
+          ],
+          "additionalProperties": false,
+          "title": "Anthropic"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bedrock": {
+              "$ref": "#/$defs/Provider5"
+            }
+          },
+          "required": [
+            "bedrock"
+          ],
+          "additionalProperties": false,
+          "title": "Bedrock"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "azureOpenAI": {
+              "$ref": "#/$defs/Provider6"
+            }
+          },
+          "required": [
+            "azureOpenAI"
+          ],
+          "additionalProperties": false,
+          "title": "Azure Open AI"
+        }
+      ],
+      "title": "AI Provider"
+    },
+    "Provider": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Provider"
+    },
+    "Provider2": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        }
+      },
+      "title": "Provider2"
+    },
+    "Provider3": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Region"
+        },
+        "projectId": {
+          "type": "string",
+          "title": "Project Id"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "projectId"
+      ],
+      "title": "Provider3"
+    },
+    "Provider4": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Provider4"
+    },
+    "Provider5": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        },
+        "region": {
+          "type": "string",
+          "title": "Region"
+        },
+        "guardrailIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Guardrail Identifier"
+        },
+        "guardrailVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Guardrail Version"
+        }
+      },
+      "required": [
+        "region"
+      ],
+      "title": "Provider5"
+    },
+    "Provider6": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Model"
+        },
+        "host": {
+          "type": "string",
+          "title": "Host"
+        },
+        "apiVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Api Version"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "host"
+      ],
+      "title": "Provider6"
+    },
+    "LocalAIProviders": {
+      "type": "object",
+      "properties": {
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LocalNamedAIProvider"
+          },
+          "title": "Providers"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "providers"
+      ],
+      "title": "Local AI Providers"
+    }
+  },
+  "description": "Local Route Backend connection with matching conditions"
+}

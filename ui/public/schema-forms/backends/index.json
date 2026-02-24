@@ -1,0 +1,78 @@
+{
+  "category": "Backends",
+  "description": "Backend service connections",
+  "types": [
+    {
+      "key": "FullLocalBackend",
+      "displayName": "Full Local Backend",
+      "description": "Full Local Backend connection",
+      "schemaFile": "FullLocalBackend.json"
+    },
+    {
+      "key": "BackendConfig",
+      "displayName": "Backend Config",
+      "description": "Backend Config connection",
+      "schemaFile": "BackendConfig.json"
+    },
+    {
+      "key": "SimpleLocalBackend",
+      "displayName": "Simple Local Backend",
+      "description": "Simple Local Backend connection",
+      "schemaFile": "SimpleLocalBackend.json"
+    },
+    {
+      "key": "LocalBackendPolicies",
+      "displayName": "Local Backend Policies",
+      "description": "Local Backend Policies connection",
+      "schemaFile": "LocalBackendPolicies.json"
+    },
+    {
+      "key": "LocalBackendTLS",
+      "displayName": "Local Backend TLS",
+      "description": "Local Backend TLS connection",
+      "schemaFile": "LocalBackendTLS.json"
+    },
+    {
+      "key": "BackendAuth",
+      "displayName": "Backend Auth",
+      "description": "Backend Auth connection",
+      "schemaFile": "BackendAuth.json"
+    },
+    {
+      "key": "LocalRouteBackend",
+      "displayName": "Local Route Backend",
+      "description": "Local Route Backend connection with matching conditions",
+      "schemaFile": "LocalRouteBackend.json"
+    },
+    {
+      "key": "LocalMcpBackend",
+      "displayName": "Local Mcp Backend",
+      "description": "Local Mcp Backend connection",
+      "schemaFile": "LocalMcpBackend.json"
+    },
+    {
+      "key": "LocalAIBackend",
+      "displayName": "Local AI Backend",
+      "description": "Local AI Backend connection",
+      "schemaFile": "LocalAIBackend.json"
+    },
+    {
+      "key": "LocalTCPRouteBackend",
+      "displayName": "Local TCP Route Backend",
+      "description": "Local TCP Route Backend connection with matching conditions",
+      "schemaFile": "LocalTCPRouteBackend.json"
+    },
+    {
+      "key": "LocalTCPBackendPolicies",
+      "displayName": "Local TCP Backend Policies",
+      "description": "Local TCP Backend Policies connection",
+      "schemaFile": "LocalTCPBackendPolicies.json"
+    },
+    {
+      "key": "BackendTarget",
+      "displayName": "Backend Target",
+      "description": "Backend Target connection",
+      "schemaFile": "BackendTarget.json"
+    }
+  ]
+}

@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "passthrough": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "passthrough"
+      ],
+      "additionalProperties": false,
+      "title": "Passthrough"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/FileOrInline"
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false,
+      "title": "Key"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "gcp": {
+          "$ref": "#/$defs/GcpAuth"
+        }
+      },
+      "required": [
+        "gcp"
+      ],
+      "additionalProperties": false,
+      "title": "Gcp"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/AwsAuth"
+        }
+      },
+      "required": [
+        "aws"
+      ],
+      "additionalProperties": false,
+      "title": "Aws"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "azure": {
+          "$ref": "#/$defs/AzureAuth"
+        }
+      },
+      "required": [
+        "azure"
+      ],
+      "additionalProperties": false,
+      "title": "Azure"
+    }
+  ],
+  "title": "Backend Auth",
+  "$defs": {
+    "FileOrInline": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file"
+          ],
+          "title": "File"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "File Or Inline"
+    },
+    "GcpAuth": {
+      "anyOf": [
+        {
+          "description": "Fetch an id token",
+          "type": "object",
+          "properties": {
+            "type": {
+              "$ref": "#/$defs/IdToken"
+            },
+            "audience": {
+              "description": "Audience for the token. If not set, the destination host will be used.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "title": "Type"
+        },
+        {
+          "description": "Fetch an access token",
+          "type": "object",
+          "properties": {
+            "type": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/AccessToken"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "additionalProperties": false,
+          "title": "Type"
+        }
+      ],
+      "title": "Gcp Auth"
+    },
+    "IdToken": {
+      "type": "string",
+      "format": "const",
+      "const": "idToken",
+      "title": "Id Token"
+    },
+    "AccessToken": {
+      "type": "string",
+      "format": "const",
+      "const": "accessToken",
+      "title": "Access Token"
+    },
+    "AwsAuth": {
+      "anyOf": [
+        {
+          "description": "Use explicit AWS credentials",
+          "type": "object",
+          "properties": {
+            "accessKeyId": {
+              "type": "string"
+            },
+            "secretAccessKey": {
+              "type": "string"
+            },
+            "region": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sessionToken": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "accessKeyId",
+            "secretAccessKey"
+          ],
+          "title": "Access Key Id"
+        },
+        {
+          "description": "Use implicit AWS authentication (environment variables, IAM roles, etc.)",
+          "type": "object",
+          "additionalProperties": false
+        }
+      ],
+      "title": "Aws Auth"
+    },
+    "AzureAuth": {
+      "oneOf": [
+        {
+          "description": "Use explicit Azure credentials",
+          "type": "object",
+          "properties": {
+            "explicitConfig": {
+              "type": "object",
+              "unevaluatedProperties": false,
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "clientSecret": {
+                      "type": "object",
+                      "properties": {
+                        "tenant_id": {
+                          "type": "string"
+                        },
+                        "client_id": {
+                          "type": "string"
+                        },
+                        "client_secret": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "required": [
+                        "tenant_id",
+                        "client_id",
+                        "client_secret"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "clientSecret"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "managedIdentity": {
+                      "type": "object",
+                      "properties": {
+                        "userAssignedIdentity": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/$defs/AzureUserAssignedIdentity"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "managedIdentity"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "workloadIdentity": {
+                      "type": "object",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "workloadIdentity"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "explicitConfig"
+          ],
+          "additionalProperties": false,
+          "title": "Explicit Config"
+        },
+        {
+          "description": "Use implicit Azure auth. Note that this is for developer use-cases only!",
+          "type": "object",
+          "properties": {
+            "developerImplicit": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "developerImplicit"
+          ],
+          "additionalProperties": false,
+          "title": "Developer Implicit"
+        }
+      ],
+      "title": "Azure Auth"
+    },
+    "AzureUserAssignedIdentity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "clientId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "clientId"
+          ],
+          "additionalProperties": false,
+          "title": "Client Id"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "objectId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "objectId"
+          ],
+          "additionalProperties": false,
+          "title": "Object Id"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resourceId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "resourceId"
+          ],
+          "additionalProperties": false,
+          "title": "Resource Id"
+        }
+      ],
+      "title": "Azure User Assigned Identity"
+    }
+  },
+  "description": "Backend Auth connection"
+}
