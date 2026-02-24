@@ -1,16 +1,16 @@
-import Form from '@rjsf/antd';
-import type { RJSFSchema } from '@rjsf/utils';
-import validator from '@rjsf/validator-ajv8';
-import { Alert, Spin } from 'antd';
-import { useEffect, useState } from 'react';
+import Form from "@rjsf/antd";
+import type { RJSFSchema } from "@rjsf/utils";
+import { Alert, Spin } from "antd";
+import { useEffect, useState } from "react";
+import { validator } from "../../utils/validator";
 import {
-    ArrayFieldTemplate,
-    CollapsibleObjectFieldTemplate,
-    FieldTemplate,
-} from '../FormTemplates';
+  ArrayFieldTemplate,
+  CollapsibleObjectFieldTemplate,
+  FieldTemplate,
+} from "../FormTemplates";
 
 interface SchemaFormProps {
-  category: 'policies' | 'listeners' | 'routes' | 'backends';
+  category: "policies" | "listeners" | "routes" | "backends";
   schemaType: string;
   initialData?: any;
   onSubmit: (data: any) => void;
@@ -37,20 +37,20 @@ export function SchemaForm({
     const loadSchema = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const schemaPath = `/schema-forms/${category}/${schemaType}.json`;
         const response = await fetch(schemaPath);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to load schema: ${response.statusText}`);
         }
-        
+
         const schemaData = await response.json();
         setSchema(schemaData);
       } catch (err) {
-        console.error('Error loading schema:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error loading schema:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
@@ -61,7 +61,7 @@ export function SchemaForm({
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
+      <div style={{ textAlign: "center", padding: "40px" }}>
         <Spin size="large" tip="Loading form schema..." />
       </div>
     );
@@ -72,7 +72,7 @@ export function SchemaForm({
       <Alert
         type="error"
         message="Failed to load form"
-        description={error || 'Schema not found'}
+        description={error || "Schema not found"}
         showIcon
       />
     );
@@ -85,6 +85,9 @@ export function SchemaForm({
       formData={initialData}
       onSubmit={({ formData }) => onSubmit(formData)}
       onChange={({ formData }) => onChange?.(formData)}
+      onError={(errors) => {
+        console.error("Form validation errors:", errors);
+      }}
       templates={{
         ObjectFieldTemplate: CollapsibleObjectFieldTemplate,
         FieldTemplate: FieldTemplate,

@@ -4,8 +4,10 @@ import { Button, Card, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { fetchConfig, updateConfig } from "../../api/config";
 import { SchemaForm } from "../../components/SchemaForm";
 import { StyledSelect } from "../../components/StyledSelect";
+import { mergeFormDataIntoConfig } from "./configMerger";
 
 const Container = styled.div`
   display: flex;
@@ -92,19 +94,18 @@ export const FormPage = () => {
   );
 
   const handleSubmit = async (data: unknown) => {
-    const savePromise = new Promise((resolve) => {
-      setTimeout(() => {
-        console.log(`${idParam ? "Updating" : "Creating"} ${category}:`, data);
-        // TODO: Implement actual API call
-        resolve(null);
-      }, 500);
-    });
+    const savePromise = async () => {
+      const config = await fetchConfig();
+      const updatedConfig = mergeFormDataIntoConfig(config, category, data);
+      await updateConfig(updatedConfig);
+    };
 
     toast
-      .promise(savePromise, {
+      .promise(savePromise(), {
         loading: `${idParam ? "Updating" : "Creating"} ${categoryConfig.displayName}...`,
         success: `${categoryConfig.displayName} ${idParam ? "updated" : "created"} successfully!`,
-        error: `Failed to save ${category}`,
+        error: (err) =>
+          err?.message || `Failed to save ${categoryConfig.displayName}`,
       })
       .then(() => {
         navigate(categoryConfig.basePath);
