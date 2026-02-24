@@ -24,18 +24,44 @@ export const ConfirmModal = ({
   confirmLoading = false,
   danger = false,
 }: ConfirmModalProps) => {
+  const footer = (
+    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+      <span
+        onClick={onCancel}
+        style={{
+          padding: "6px 16px",
+          cursor: "pointer",
+          color: "#000000d9",
+          backgroundColor: "#fff",
+          border: "1px solid #d9d9d9",
+          borderRadius: "6px",
+        }}
+      >
+        {cancelText}
+      </span>
+      <span
+        onClick={onConfirm}
+        style={{
+          padding: "6px 16px",
+          cursor: confirmLoading ? "not-allowed" : "pointer",
+          color: danger ? "#fff" : "#fff",
+          backgroundColor: danger ? "#ff4d4f" : "#1890ff",
+          border: "none",
+          borderRadius: "6px",
+          opacity: confirmLoading ? 0.6 : 1,
+        }}
+      >
+        {confirmLoading ? "Loading..." : confirmText}
+      </span>
+    </div>
+  );
+
   return (
     <Modal
       title={title}
       open={open}
-      onOk={onConfirm}
       onCancel={onCancel}
-      okText={confirmText}
-      cancelText={cancelText}
-      okButtonProps={{
-        danger,
-        loading: confirmLoading,
-      }}
+      footer={footer}
       confirmLoading={confirmLoading}
     >
       {content}

@@ -96,7 +96,11 @@ export const FormPage = () => {
   const handleSubmit = async (data: unknown) => {
     const savePromise = async () => {
       const config = await fetchConfig();
-      const updatedConfig = mergeFormDataIntoConfig(config, category, data);
+      const updatedConfig = await mergeFormDataIntoConfig(
+        config,
+        category,
+        data,
+      );
       await updateConfig(updatedConfig);
     };
 

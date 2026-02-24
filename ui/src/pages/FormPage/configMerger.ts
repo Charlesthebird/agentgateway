@@ -1,119 +1,100 @@
+import Ajv from "ajv";
 import type { LocalConfig } from "../../api/types";
 
 type Category = "policies" | "listeners" | "routes" | "backends";
+
+function allowAdditionalProperties(obj: any): void {
+  if (typeof obj === "object" && obj !== null) {
+    if (obj.additionalProperties === false) {
+      obj.additionalProperties = true;
+    }
+    for (const key in obj) {
+      allowAdditionalProperties(obj[key]);
+    }
+  }
+}
+
+const ajv = new Ajv({ allErrors: true, validateSchema: false, strict: false });
+
+/**
+ * Validates data against the JSON schema for the given category and type.
+ */
+async function validateAgainstSchema(
+  category: Category,
+  schemaType: string,
+  data: any,
+): Promise<void> {
+  const schemaUrl = `/schema-forms/${category}/${schemaType}.json`;
+  const response = await fetch(schemaUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to load schema for ${category}/${schemaType}`);
+  }
+  const schema = await response.json();
+  allowAdditionalProperties(schema);
+
+  const validate = ajv.compile(schema);
+  const valid = validate(data);
+  if (!valid) {
+    const errors =
+      validate.errors
+        ?.map((err: any) => `${err.instancePath} ${err.message}`)
+        .join(", ") || "Unknown validation error";
+    throw new Error(`Validation failed: ${errors}`);
+  }
+}
 
 /**
  * Merges form data into the config based on the category.
  * Handles both simple objects and nested config structures.
  */
-export function mergeFormDataIntoConfig(
+export async function mergeFormDataIntoConfig(
   config: LocalConfig,
   category: Category,
   data: any,
-): LocalConfig {
+): Promise<LocalConfig> {
   const newConfig = { ...config };
 
   // If data has the full nested binds structure, extract the relevant parts
+  let formBind: any;
+
   if (data?.binds?.[0]) {
-    const formBind = data.binds[0];
-    const formListener = formBind.listeners?.[0];
-    const formRoute = formListener?.routes?.[0];
-    const formBackend = formRoute?.backends?.[0];
+    formBind = data.binds[0];
+  } else {
+    // For direct form submissions (e.g., listener forms), data is the object itself
+    // No additional setup needed
+  }
 
-    // Ensure binds array exists
-    if (!newConfig.binds || newConfig.binds.length === 0) {
-      newConfig.binds = [
-        {
-          port: formBind.port || 8080,
-          listeners: [],
-        },
-      ];
-    }
-
-    const targetBind = newConfig.binds[0];
-
-    // Extract and merge based on category
-    switch (category) {
-      case "listeners": {
-        if (!formListener) {
-          throw new Error("No listener data found in form submission.");
-        }
-
-        // Validate required fields
-        if (!formListener.name) {
-          throw new Error("Listener must have a 'name' field.");
-        }
-        if (!formListener.hostname) {
-          throw new Error("Listener must have a 'hostname' field.");
-        }
-        if (!formListener.protocol) {
-          throw new Error("Listener must have a 'protocol' field.");
-        }
-
-        targetBind.listeners = targetBind.listeners || [];
-        targetBind.listeners.push(formListener);
-        break;
-      }
-
-      case "routes": {
-        if (!formRoute) {
-          throw new Error("No route data found in form submission.");
-        }
-
-        if (!targetBind.listeners?.[0]) {
-          throw new Error("No listener found. Please create a listener first.");
-        }
-
-        targetBind.listeners[0].routes = targetBind.listeners[0].routes || [];
-        targetBind.listeners[0].routes.push(formRoute);
-        break;
-      }
-
-      case "backends": {
-        if (!formBackend) {
-          throw new Error("No backend data found in form submission.");
-        }
-
-        if (!targetBind.listeners?.[0]?.routes?.[0]) {
-          throw new Error("No route found. Please create a route first.");
-        }
-
-        targetBind.listeners[0].routes[0].backends =
-          targetBind.listeners[0].routes[0].backends || [];
-        targetBind.listeners[0].routes[0].backends.push(formBackend);
-        break;
-      }
-
-      case "policies": {
-        const formPolicies = formRoute?.policies;
-        if (!formPolicies) {
-          throw new Error("No policy data found in form submission.");
-        }
-
-        if (!targetBind.listeners?.[0]?.routes?.[0]) {
-          throw new Error("No route found. Please create a route first.");
-        }
-
-        targetBind.listeners[0].routes[0].policies = {
-          ...targetBind.listeners[0].routes[0].policies,
-          ...formPolicies,
-        };
-        break;
-      }
-    }
-
-    return newConfig;
+  // Ensure binds array exists
+  if (!newConfig.binds || newConfig.binds.length === 0) {
+    newConfig.binds = [
+      {
+        port: formBind?.port || 8080,
+        listeners: [],
+      },
+    ];
   }
 
   // Handle simple (non-nested) data structures
   switch (category) {
     case "listeners": {
+      let listenerData = data;
+      if (data.binds?.[0]?.listeners?.[0]) {
+        listenerData = data.binds[0].listeners[0];
+      } else if (data.listener) {
+        listenerData = data.listener;
+      }
+
+      // Validate against schema
+      await validateAgainstSchema(category, "LocalListener", listenerData);
+
       // Add listener to the first bind, or create a bind if none exists
       if (!newConfig.binds || newConfig.binds.length === 0) {
-        newConfig.binds = [{ port: 8080, listeners: [data] }];
+        newConfig.binds = [
+          { port: formBind?.port || 8080, listeners: [listenerData] },
+        ];
       } else {
         newConfig.binds[0].listeners = newConfig.binds[0].listeners || [];
-        newConfig.binds[0].listeners.push(data);
+        newConfig.binds[0].listeners.push(listenerData);
       }
       break;
     }

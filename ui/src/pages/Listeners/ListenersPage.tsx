@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { Button, Card, Space, Table } from "antd";
+import { Card, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -69,15 +69,20 @@ export const ListenersPage = () => {
     navigate(`/form?category=listeners&type=http&name=${item.name}`);
   };
 
-  const handleDelete = (name: string) => {
+  const handleDelete = (record: ListenerRow) => {
     confirm({
       title: "Delete Listener",
       content:
         "Are you sure you want to delete this listener? This action cannot be undone.",
       onConfirm: async () => {
-        await deleteListener(name);
-        mutate(); // Refresh the listeners data
-        toast.success("Listener deleted successfully");
+        try {
+          await deleteListener(record.name || "", record.port || 0);
+          mutate(); // Refresh the listeners data
+          toast.success("Listener deleted successfully");
+        } catch (error) {
+          console.error("Failed to delete listener:", error);
+          toast.error("Failed to delete listener");
+        }
       },
       confirmText: "Delete",
       danger: true,
@@ -119,21 +124,18 @@ export const ListenersPage = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
+          <span
             onClick={() => handleEdit(record)}
+            style={{ cursor: "pointer", color: "#1890ff" }}
           >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.name || "")}
+            <EditOutlined /> Edit
+          </span>
+          <span
+            onClick={() => handleDelete(record)}
+            style={{ cursor: "pointer", color: "#ff4d4f" }}
           >
-            Delete
-          </Button>
+            <DeleteOutlined /> Delete
+          </span>
         </Space>
       ),
     },
@@ -183,14 +185,22 @@ export const ListenersPage = () => {
                 value: type.key,
               }))}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
+            <span
               onClick={handleCreate}
-              disabled={!selectedType}
+              style={{
+                backgroundColor: selectedType ? "#1890ff" : "#d9d9d9",
+                color: selectedType ? "white" : "#bfbfbf",
+                padding: "6px 16px",
+                borderRadius: "6px",
+                cursor: selectedType ? "pointer" : "not-allowed",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
             >
+              <PlusOutlined />
               Create Listener
-            </Button>
+            </span>
           </Space>
 
           {selectedTypeInfo && (

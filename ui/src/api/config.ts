@@ -29,18 +29,28 @@ export async function fetchConfigDump(): Promise<any> {
 }
 
 /**
- * Deletes a listener by name from all binds
+ * Deletes a listener by name from the specific bind
  */
-export async function deleteListener(listenerName: string): Promise<void> {
+export async function deleteListener(
+  listenerName: string,
+  port: number,
+): Promise<void> {
   const config = await fetchConfig();
 
-  // Remove the listener from all binds
+  // Find the bind with the matching port and remove the listener
   if (config.binds) {
-    config.binds.forEach((bind) => {
-      bind.listeners = bind.listeners.filter(
-        (listener) => listener.name !== listenerName,
-      );
-    });
+    const bind = config.binds.find((b) => b.port === port);
+    if (bind) {
+      bind.listeners = bind.listeners.filter((listener) => {
+        if (listenerName === "") {
+          // Remove unnamed listeners (name is null, undefined, or empty string)
+          return listener.name != null && listener.name !== "";
+        } else {
+          // Remove listeners with matching name
+          return listener.name !== listenerName;
+        }
+      });
+    }
   }
 
   await updateConfig(config);

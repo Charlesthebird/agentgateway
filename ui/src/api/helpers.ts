@@ -13,47 +13,50 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
   // Clean up binds
   if (!cleaned.binds) return cleaned;
 
-  cleaned.binds = cleaned.binds.map((bind) => {
-    const cleanedBind = { ...bind };
+  cleaned.binds = cleaned.binds
+    .map((bind) => {
+      const cleanedBind = { ...bind };
 
-    // Clean up listeners
-    cleanedBind.listeners = cleanedBind.listeners.map((listener) => {
-      const cleanedListener: any = {
-        protocol: listener.protocol,
-      };
+      // Clean up listeners
+      cleanedBind.listeners = cleanedBind.listeners
+        .map((listener) => {
+          const cleanedListener: any = {};
 
-      // Only include fields that have values
-      if (listener.name) cleanedListener.name = listener.name;
-      if (listener.hostname) cleanedListener.hostname = listener.hostname;
-      if (listener.tls) cleanedListener.tls = listener.tls;
+          // Only include fields that have values
+          if (listener.protocol) cleanedListener.protocol = listener.protocol;
+          if (listener.name) cleanedListener.name = listener.name;
+          if (listener.hostname) cleanedListener.hostname = listener.hostname;
+          if (listener.tls) cleanedListener.tls = listener.tls;
 
-      // Include routes if they exist (even if empty)
-      if (listener.routes !== undefined && listener.routes !== null) {
-        cleanedListener.routes = listener.routes.map((route) => {
-          const cleanedRoute: any = {
-            hostnames: route.hostnames,
-            matches: route.matches,
-            backends: route.backends,
-          };
+          // Include routes if they exist (even if empty)
+          if (listener.routes !== undefined && listener.routes !== null) {
+            cleanedListener.routes = listener.routes.map((route) => {
+              const cleanedRoute: any = {
+                hostnames: route.hostnames,
+                matches: route.matches,
+                backends: route.backends,
+              };
 
-          if (route.name) cleanedRoute.name = route.name;
-          if (route.ruleName) cleanedRoute.ruleName = route.ruleName;
-          if (route.policies) cleanedRoute.policies = route.policies;
+              if (route.name) cleanedRoute.name = route.name;
+              if (route.ruleName) cleanedRoute.ruleName = route.ruleName;
+              if (route.policies) cleanedRoute.policies = route.policies;
 
-          return cleanedRoute;
-        });
-      }
+              return cleanedRoute;
+            });
+          }
 
-      // Include tcpRoutes if they exist (even if empty)
-      if (listener.tcpRoutes !== undefined && listener.tcpRoutes !== null) {
-        cleanedListener.tcpRoutes = listener.tcpRoutes;
-      }
+          // Include tcpRoutes if they exist (even if empty)
+          if (listener.tcpRoutes !== undefined && listener.tcpRoutes !== null) {
+            cleanedListener.tcpRoutes = listener.tcpRoutes;
+          }
 
-      return cleanedListener;
-    });
+          return cleanedListener;
+        })
+        .filter((listener) => Object.keys(listener).length > 0);
 
-    return cleanedBind;
-  });
+      return cleanedBind;
+    })
+    .filter((bind) => bind.listeners.length > 0);
 
   // Clean up workloads and services - only include if they have content
   if (

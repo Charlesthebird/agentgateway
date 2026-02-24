@@ -1663,7 +1663,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.12.0, ajv@npm:^8.17.1":
+"ajv@npm:^8.0.0, ajv@npm:^8.12.0, ajv@npm:^8.17.1, ajv@npm:^8.18.0":
   version: 8.18.0
   resolution: "ajv@npm:8.18.0"
   dependencies:
@@ -5074,6 +5074,7 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     "@types/uuid": "npm:^10.0.0"
     "@vitejs/plugin-react": "npm:^5.1.1"
+    ajv: "npm:^8.18.0"
     antd: "npm:^5.23.3"
     chart.js: "npm:^4.4.10"
     dayjs: "npm:^1.11.13"

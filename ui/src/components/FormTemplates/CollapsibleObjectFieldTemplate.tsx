@@ -2,7 +2,6 @@ import type { ObjectFieldTemplateProps } from "@rjsf/utils";
 import { Collapse, Typography } from "antd";
 import { useMemo } from "react";
 
-const { Panel } = Collapse;
 const { Title } = Typography;
 
 // Maximum nesting level before we stop indenting further
@@ -99,22 +98,22 @@ export function CollapsibleObjectFieldTemplate(
           defaultActiveKey={shouldAutoCollapse ? [] : ["optional"]}
           ghost
           style={{ marginBottom: 16 }}
-        >
-          <Panel
-            header={
-              <Typography.Text strong>
-                Advanced Options ({optionalFields.length})
-              </Typography.Text>
-            }
-            key="optional"
-          >
-            {optionalFields.map((prop) => (
-              <div key={prop.name} style={{ marginBottom: 8 }}>
-                {prop.content}
-              </div>
-            ))}
-          </Panel>
-        </Collapse>
+          items={[
+            {
+              key: "optional",
+              label: (
+                <Typography.Text strong>
+                  Advanced Options ({optionalFields.length})
+                </Typography.Text>
+              ),
+              children: optionalFields.map((prop) => (
+                <div key={prop.name} style={{ marginBottom: 8 }}>
+                  {prop.content}
+                </div>
+              )),
+            },
+          ]}
+        />
       )}
     </div>
   );
