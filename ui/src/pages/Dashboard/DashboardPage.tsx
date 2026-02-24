@@ -1,24 +1,30 @@
 import {
-    ArrowDownOutlined,
-    ArrowUpOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    CloseCircleOutlined,
-    WarningOutlined,
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import styled from "@emotion/styled";
 import { Badge, Card, Col, Progress, Row, Spin, Statistic, Tag } from "antd";
 import {
-    Activity,
-    Brain,
-    Headphones,
-    Network,
-    Route,
-    Server,
-    Shield,
+  Activity,
+  Brain,
+  Headphones,
+  Network,
+  Route,
+  Server,
+  Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useBackends, useConfig, useListeners, usePolicies, useRoutes } from "../../api";
+import {
+  useBackends,
+  useConfig,
+  useListeners,
+  usePolicies,
+  useRoutes,
+} from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
 
 const Container = styled.div`
@@ -32,6 +38,7 @@ const StatCard = styled(Card)`
   .ant-card-body {
     padding: var(--spacing-lg);
   }
+  height: 100%;
 `;
 
 const QuickActionCard = styled(Card)`
@@ -87,13 +94,22 @@ export const DashboardPage = () => {
   const { data: backends, isLoading: backendsLoading } = useBackends();
   const { data: policies, isLoading: policiesLoading } = usePolicies();
 
-  const isLoading = configLoading || listenersLoading || routesLoading || backendsLoading || policiesLoading;
+  const isLoading =
+    configLoading ||
+    listenersLoading ||
+    routesLoading ||
+    backendsLoading ||
+    policiesLoading;
 
   // Calculate statistics from real data
   const stats = {
     listeners: { total: listeners.length, active: listeners.length },
     routes: { total: routes.length, active: routes.length },
-    backends: { total: backends.length, healthy: backends.length, unhealthy: 0 },
+    backends: {
+      total: backends.length,
+      healthy: backends.length,
+      unhealthy: 0,
+    },
     policies: { total: policies.length, enabled: policies.length },
     requests: { total: 0, change: 0 }, // These would come from metrics API
     latency: { avg: 0, change: 0 }, // These would come from metrics API
@@ -220,7 +236,21 @@ export const DashboardPage = () => {
                 prefix={<Activity size={20} />}
                 suffix={
                   <Tag
-                    color={stats.requests.change > 0 ? "green" : "red"}
+                    style={{
+                      background:
+                        stats.requests.change > 0
+                          ? "var(--color-success-bg)"
+                          : "var(--color-error-bg)",
+                      color:
+                        stats.requests.change > 0
+                          ? "var(--color-success)"
+                          : "var(--color-error)",
+                      borderColor:
+                        stats.requests.change > 0
+                          ? "var(--color-success)"
+                          : "var(--color-error)",
+                      marginLeft: "8px",
+                    }}
                     icon={
                       stats.requests.change > 0 ? (
                         <ArrowUpOutlined />
@@ -242,7 +272,10 @@ export const DashboardPage = () => {
                 value={stats.latency.avg}
                 suffix="ms"
                 valueStyle={{
-                  color: stats.latency.change < 0 ? "#3f8600" : "#cf1322",
+                  color:
+                    stats.latency.change < 0
+                      ? "var(--color-success)"
+                      : "var(--color-error)",
                 }}
                 prefix={
                   stats.latency.change < 0 ? (
@@ -252,7 +285,13 @@ export const DashboardPage = () => {
                   )
                 }
               />
-              <div style={{ fontSize: "12px", color: "#999", marginTop: 4 }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "var(--color-text-secondary)",
+                  marginTop: 4,
+                }}
+              >
                 {Math.abs(stats.latency.change)}% vs last hour
               </div>
             </StatCard>
@@ -264,10 +303,19 @@ export const DashboardPage = () => {
                 value={stats.errors.rate}
                 suffix="%"
                 valueStyle={{
-                  color: stats.errors.rate > 1 ? "#cf1322" : "#3f8600",
+                  color:
+                    stats.errors.rate > 1
+                      ? "var(--color-error)"
+                      : "var(--color-success)",
                 }}
               />
-              <div style={{ fontSize: "12px", color: "#999", marginTop: 4 }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "var(--color-text-secondary)",
+                  marginTop: 4,
+                }}
+              >
                 {stats.errors.count} errors in last hour
               </div>
             </StatCard>
@@ -278,7 +326,7 @@ export const DashboardPage = () => {
               <Progress
                 percent={stats.uptime}
                 showInfo={false}
-                strokeColor="#52c41a"
+                strokeColor="var(--color-success)"
                 style={{ marginTop: 8 }}
               />
             </StatCard>
@@ -316,7 +364,10 @@ export const DashboardPage = () => {
                 />
               }
               valueStyle={{
-                color: stats.backends.unhealthy > 0 ? "#faad14" : "#3f8600",
+                color:
+                  stats.backends.unhealthy > 0
+                    ? "var(--color-warning)"
+                    : "var(--color-success)",
               }}
             />
           </Col>
@@ -342,7 +393,12 @@ export const DashboardPage = () => {
                   <div style={{ fontWeight: 600, marginBottom: 4 }}>
                     {action.title}
                   </div>
-                  <div style={{ fontSize: "12px", color: "#999" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--color-text-secondary)",
+                    }}
+                  >
                     {action.description}
                   </div>
                 </div>

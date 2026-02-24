@@ -1,10 +1,11 @@
 import styled from "@emotion/styled";
-import { Button, Card, Col, Input, Row, Space } from "antd";
-import { PlayCircle } from "lucide-react";
-import { useState } from "react";
+import { Alert, Button, Card, Col, Row, Select, Space } from "antd";
+import yaml from "js-yaml";
+import { PlayCircle, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { StyledAlert } from "../../components/StyledAlert";
-import { StyledSelect } from "../../components/StyledSelect";
+import { API_BASE_URL } from "../../api/client";
+import { MonacoEditorComponent } from "./MonacoEditorComponent";
 
 const Container = styled.div`
   display: flex;
@@ -32,22 +33,6 @@ const EditorContent = styled.div`
   padding: var(--spacing-lg);
 `;
 
-const CodeInput = styled(Input.TextArea)`
-  font-family: "Monaco", "Consolas", monospace;
-  font-size: 13px;
-`;
-
-const ResultContainer = styled.div`
-  padding: var(--spacing-md);
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-secondary);
-  border-radius: var(--border-radius-base);
-  font-family: "Monaco", "Consolas", monospace;
-  font-size: 13px;
-  white-space: pre-wrap;
-  word-break: break-word;
-`;
-
 const TemplateList = styled.div`
   display: flex;
   flex-direction: column;
@@ -67,32 +52,181 @@ const TemplateItem = styled.div`
   }
 `;
 
+type TemplateKey = "empty" | "http";
+
+const TEMPLATES: Record<TemplateKey, string> = {
+  empty: "",
+  http: `apiKey:
+  key: <redacted>
+  role: admin
+backend:
+  name: my-backend
+  protocol: http
+  type: service
+basicAuth:
+  username: alice
+extauthz: {}
+extproc: {}
+jwt:
+  exp: 1900650294
+  iss: agentgateway.dev
+  sub: test-user
+llm:
+  completion:
+  - Hello
+  countTokens: 10
+  inputTokens: 100
+  outputTokens: 50
+  params:
+    frequency_penalty: 0.0
+    max_tokens: 1024
+    presence_penalty: 0.0
+    seed: 42
+    temperature: 0.7
+    top_p: 1.0
+  provider: fake-ai
+  requestModel: gpt-4
+  responseModel: gpt-4-turbo
+  streaming: false
+  totalTokens: 150
+mcp:
+  tool:
+    name: get_weather
+    target: my-mcp-server
+request:
+  body: eyJtb2RlbCI6ICJmYXN0In0=
+  endTime: 2000-01-01T12:00:01Z
+  headers:
+    accept: application/json
+    foo: bar
+    user-agent: example
+  host: example.com
+  method: GET
+  path: /api/test
+  scheme: http
+  startTime: 2000-01-01T12:00:00Z
+  uri: http://example.com/api/test
+  version: HTTP/1.1
+response:
+  body: eyJvayI6IHRydWV9
+  code: 200
+  headers:
+    content-type: application/json
+source:
+  address: 127.0.0.1
+  identity: null
+  issuer: ''
+  port: 12345
+  subject: ''
+  subjectAltNames: []
+  subjectCn: cn
+`,
+};
+
+const EXAMPLES: { name: string; expr: string }[] = [
+  {
+    name: "HTTP",
+    expr: "request.method == 'GET' && response.code == 200 && request.path.startsWith('/api/')",
+  },
+  { name: "MCP Payload", expr: "mcp.tool.name == 'get_weather'" },
+  { name: "Body Based Routing", expr: "json(request.body).model" },
+  {
+    name: "JWT Claims",
+    expr: "jwt.iss == 'agentgateway.dev' && jwt.sub == 'test-user'",
+  },
+  { name: "Source IP", expr: "cidr('127.0.0.1/8').containsIP(source.address)" },
+];
+
 export const CELPlaygroundPage = () => {
-  const [expression, setExpression] = useState(
-    'request.path.startsWith("/api") && request.method == "GET"',
-  );
-  const [context, setContext] = useState(
-    JSON.stringify(
-      {
-        request: {
-          path: "/api/users",
-          method: "GET",
-          headers: {
-            "content-type": "application/json",
-          },
-        },
-        user: {
-          id: "user123",
-          role: "admin",
-        },
-      },
-      null,
-      2,
-    ),
-  );
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [expression, setExpression] = useState<string>(EXAMPLES[0].expr);
+  const [inputData, setInputData] = useState<string>(TEMPLATES["http"]);
+  const [template, setTemplate] = useState<TemplateKey>("http");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [resultValue, setResultValue] = useState<unknown | null>(null);
+  const [resultError, setResultError] = useState<string | null>(null);
+  const hasResult = resultValue !== undefined || resultError !== null;
+
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const editorTheme = isDark ? "vs-dark" : "vs";
+
+  useEffect(() => {
+    setInputData(TEMPLATES[template]);
+  }, [template]);
+
+  const handleEvaluate = useCallback(async () => {
+    let parsed: unknown = undefined;
+    if (inputData.trim().length > 0) {
+      try {
+        parsed = yaml.load(inputData);
+      } catch (err) {
+        toast.error("Input data is not valid YAML");
+        return;
+      }
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expression,
+          data: parsed,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        setResultValue(null);
+        setResultError("Evaluation failed: " + res.status + " " + text);
+        return;
+      }
+
+      const json = await res.json();
+      if (json.error) {
+        setResultValue(null);
+        setResultError(json.error);
+      } else {
+        setResultError(null);
+        setResultValue(json.result);
+      }
+    } catch (err: any) {
+      const message = err?.message ? String(err.message) : String(err);
+      setResultValue(null);
+      setResultError("Request error: " + message);
+    } finally {
+      setLoading(false);
+    }
+  }, [expression, inputData]);
+
+  const handleReset = () => {
+    setExpression(EXAMPLES[0].expr);
+    setTemplate("http");
+    setInputData(TEMPLATES["http"]);
+    setResultValue(null);
+    setResultError(null);
+    toast("Reset to example template");
+  };
+
+  const handleCopyResult = async () => {
+    try {
+      const text = resultError
+        ? resultError
+        : resultValue !== null
+          ? JSON.stringify(resultValue, null, 2)
+          : "";
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard");
+    } catch (e) {
+      toast.error("Failed to copy result");
+    }
+  };
+
+  const evaluateRef = useRef(handleEvaluate);
+  useEffect(() => {
+    evaluateRef.current = handleEvaluate;
+  }, [handleEvaluate]);
 
   const templates = [
     {
@@ -145,58 +279,38 @@ export const CELPlaygroundPage = () => {
     },
   ];
 
-  const handleEvaluate = async () => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    const evaluationPromise = (async () => {
-      // Validate JSON context
-      JSON.parse(context);
-
-      // Mock CEL evaluation - will be replaced with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Mock result
-      const mockResult = {
-        result: true,
-        type: "bool",
-        duration: "12ms",
-        expression,
-      };
-
-      return mockResult;
-    })();
-
-    toast
-      .promise(evaluationPromise, {
-        loading: "Evaluating expression...",
-        success: "Expression evaluated successfully",
-        error: (err) => err.message || "Evaluation failed",
-      })
-      .then((mockResult) => {
-        setResult(JSON.stringify(mockResult, null, 2));
-      })
-      .catch((err: any) => {
-        setError(err.message || "Failed to evaluate expression");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
   const loadTemplate = (template: (typeof templates)[0]) => {
     setExpression(template.expression);
-    setContext(JSON.stringify(template.context, null, 2));
-    setResult(null);
-    setError(null);
+    setInputData(yaml.dump(template.context));
+    setResultValue(null);
+    setResultError(null);
   };
 
   return (
     <Container>
-      <h1>CEL Playground</h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h1>CEL Playground</h1>
+        <Space>
+          <Button
+            onClick={handleEvaluate}
+            disabled={loading}
+            icon={<PlayCircle />}
+          >
+            Evaluate
+          </Button>
+          <Button icon={<RotateCcw />} onClick={handleReset}>
+            Reset
+          </Button>
+        </Space>
+      </div>
 
-      <StyledAlert
+      <Alert
         message="Common Expression Language (CEL)"
         description="Test CEL expressions used for policy evaluation, routing decisions, and request validation. CEL provides a simple, fast, and safe way to evaluate expressions."
         type="info"
@@ -210,74 +324,131 @@ export const CELPlaygroundPage = () => {
             <EditorCard>
               <EditorHeader>
                 <strong>CEL Expression</strong>
-                <StyledSelect
-                  placeholder="Load template..."
-                  style={{ width: 200 }}
-                  onChange={(value) => {
-                    if (typeof value === "string") {
-                      const template = templates[parseInt(value)];
-                      if (template) loadTemplate(template);
-                    }
-                  }}
-                >
-                  {templates.map((template, index) => (
-                    <StyledSelect.Option key={index} value={index.toString()}>
-                      {template.name}
-                    </StyledSelect.Option>
-                  ))}
-                </StyledSelect>
               </EditorHeader>
               <EditorContent>
-                <CodeInput
+                <MonacoEditorComponent
                   value={expression}
-                  onChange={(e) => setExpression(e.target.value)}
-                  rows={4}
-                  placeholder="Enter CEL expression..."
+                  onChange={(v) => setExpression(v ?? "")}
+                  language="javascript"
+                  height="200px"
+                  theme={editorTheme}
+                  onEvaluate={() => evaluateRef.current()}
                 />
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    marginTop: "12px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {EXAMPLES.map((ex, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setExpression(ex.expr)}
+                      style={{
+                        fontSize: "12px",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        background: "var(--color-bg-hover)",
+                        border: "1px solid var(--color-border-secondary)",
+                        cursor: "pointer",
+                      }}
+                      title={ex.expr}
+                    >
+                      {ex.name}
+                    </button>
+                  ))}
+                </div>
               </EditorContent>
             </EditorCard>
 
             <EditorCard>
               <EditorHeader>
-                <strong>Context (JSON)</strong>
+                <strong>Input Data (YAML)</strong>
+                <Select
+                  value={template}
+                  onChange={(value) => setTemplate(value as TemplateKey)}
+                  style={{ width: 120 }}
+                >
+                  <Select.Option value="empty">Empty</Select.Option>
+                  <Select.Option value="http">HTTP</Select.Option>
+                </Select>
               </EditorHeader>
               <EditorContent>
-                <CodeInput
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  rows={12}
-                  placeholder='{"request": {...}, "user": {...}}'
+                <MonacoEditorComponent
+                  value={inputData}
+                  onChange={(v) => setInputData(v ?? "")}
+                  language="yaml"
+                  height="400px"
+                  theme={editorTheme}
                 />
               </EditorContent>
             </EditorCard>
 
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlayCircle size={20} />}
-              onClick={handleEvaluate}
-              loading={loading}
-              block
-            >
-              Evaluate Expression
-            </Button>
-
-            {error && (
-              <StyledAlert
-                message="Evaluation Error"
-                description={error}
-                type="error"
-                showIcon
-              />
-            )}
-
-            {result && (
+            {hasResult && (
               <EditorCard>
                 <EditorHeader>
-                  <strong>Result</strong>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <strong>Result</strong>
+                    <Button
+                      type="text"
+                      size="small"
+                      onClick={handleCopyResult}
+                      style={{
+                        fontSize: "12px",
+                        height: "24px",
+                        padding: "0 8px",
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
                 </EditorHeader>
                 <EditorContent>
-                  <ResultContainer>{result}</ResultContainer>
+                  {resultError ? (
+                    <div
+                      style={{
+                        borderRadius: "6px",
+                        background: "var(--color-error-bg)",
+                        border: "1px solid var(--color-error-border)",
+                        padding: "16px",
+                        height: "200px",
+                        overflow: "auto",
+                      }}
+                    >
+                      <pre
+                        style={{
+                          fontSize: "13px",
+                          color: "var(--color-error)",
+                          whiteSpace: "pre-wrap",
+                          fontFamily: "Monaco, monospace",
+                          margin: 0,
+                        }}
+                      >
+                        {resultError}
+                      </pre>
+                    </div>
+                  ) : resultValue !== null ? (
+                    <MonacoEditorComponent
+                      value={JSON.stringify(resultValue, null, 2)}
+                      onChange={() => {}}
+                      language="json"
+                      height="200px"
+                      theme={editorTheme}
+                      options={{
+                        readOnly: true,
+                      }}
+                    />
+                  ) : null}
                 </EditorContent>
               </EditorCard>
             )}

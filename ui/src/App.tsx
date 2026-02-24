@@ -1,3 +1,4 @@
+import { ConfigProvider, theme } from "antd";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { MainLayout } from "./components/Layout/MainLayout";
@@ -30,56 +31,64 @@ import {
 } from "./pages/Traffic/TrafficPages";
 
 function App() {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <ConfigProvider
+      theme={{
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      }}
+    >
+      <BrowserRouter>
+        <ErrorBoundary>
+          <MainLayout>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* OLD Section */}
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/listeners" element={<ListenersPage />} />
-          <Route path="/routes" element={<RoutesPage />} />
-          <Route path="/backends" element={<BackendsPage />} />
-          <Route path="/policies" element={<PoliciesPage />} />
-          <Route path="/playground" element={<PlaygroundPage />} />
-          
-          {/* Generic Form Page */}
-          <Route path="/form" element={<FormPage />} />
+              {/* OLD Section */}
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/listeners" element={<ListenersPage />} />
+              <Route path="/routes" element={<RoutesPage />} />
+              <Route path="/backends" element={<BackendsPage />} />
+              <Route path="/policies" element={<PoliciesPage />} />
+              <Route path="/playground" element={<PlaygroundPage />} />
 
-          {/* LLM Section */}
-          <Route path="/llm" element={<LLMOverviewPage />} />
-          <Route path="/llm/models" element={<LLMModelsPage />} />
-          <Route path="/llm/logs" element={<LLMLogsPage />} />
-          <Route path="/llm/metrics" element={<LLMMetricsPage />} />
-          <Route path="/llm/playground" element={<LLMPlaygroundPage />} />
+              {/* Generic Form Page */}
+              <Route path="/form" element={<FormPage />} />
 
-          {/* MCP Section */}
-          <Route path="/mcp" element={<MCPOverviewPage />} />
-          <Route path="/mcp/servers" element={<MCPServersPage />} />
-          <Route path="/mcp/logs" element={<MCPLogsPage />} />
-          <Route path="/mcp/metrics" element={<MCPMetricsPage />} />
-          <Route path="/mcp/playground" element={<MCPPlaygroundPage />} />
+              {/* LLM Section */}
+              <Route path="/llm" element={<LLMOverviewPage />} />
+              <Route path="/llm/models" element={<LLMModelsPage />} />
+              <Route path="/llm/logs" element={<LLMLogsPage />} />
+              <Route path="/llm/metrics" element={<LLMMetricsPage />} />
+              <Route path="/llm/playground" element={<LLMPlaygroundPage />} />
 
-          {/* Traffic Section */}
-          <Route path="/traffic" element={<TrafficOverviewPage />} />
-          <Route path="/traffic/routing" element={<TrafficRoutingPage />} />
-          <Route path="/traffic/logs" element={<TrafficLogsPage />} />
-          <Route path="/traffic/metrics" element={<TrafficMetricsPage />} />
+              {/* MCP Section */}
+              <Route path="/mcp" element={<MCPOverviewPage />} />
+              <Route path="/mcp/servers" element={<MCPServersPage />} />
+              <Route path="/mcp/logs" element={<MCPLogsPage />} />
+              <Route path="/mcp/metrics" element={<MCPMetricsPage />} />
+              <Route path="/mcp/playground" element={<MCPPlaygroundPage />} />
 
-          {/* CEL Playground */}
-          <Route path="/cel-playground" element={<CELPlaygroundPage />} />
+              {/* Traffic Section */}
+              <Route path="/traffic" element={<TrafficOverviewPage />} />
+              <Route path="/traffic/routing" element={<TrafficRoutingPage />} />
+              <Route path="/traffic/logs" element={<TrafficLogsPage />} />
+              <Route path="/traffic/metrics" element={<TrafficMetricsPage />} />
 
-          {/* Setup Wizard */}
-          <Route path="/setup" element={<SetupWizardPage />} />
+              {/* CEL Playground */}
+              <Route path="/cel-playground" element={<CELPlaygroundPage />} />
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </MainLayout>
-      </ErrorBoundary>
-    </BrowserRouter>
+              {/* Setup Wizard */}
+              <Route path="/setup" element={<SetupWizardPage />} />
+
+              {/* Catch all */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </MainLayout>
+        </ErrorBoundary>
+      </BrowserRouter>
+    </ConfigProvider>
   );
 }
 

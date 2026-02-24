@@ -21,6 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts";
+import { AgentgatewayLogo } from "../AgentgatewayLogo";
 
 const { Sider, Content, Header } = AntLayout;
 
@@ -62,14 +63,26 @@ const StyledContent = styled(Content)`
 `;
 
 const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-md);
   padding: var(--spacing-lg);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
-  text-align: center;
   border-bottom: 1px solid var(--color-border-secondary);
   cursor: pointer;
   transition: opacity var(--transition-base) var(--transition-timing);
+
+  svg {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-base);
+  }
 
   &:hover {
     opacity: 0.8;
@@ -303,7 +316,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   return (
     <StyledLayout>
       <StyledSider width={240} collapsed={false}>
-        <Logo onClick={() => navigate("/dashboard")}>AgentGateway</Logo>
+        <Logo onClick={() => navigate("/dashboard")}>
+          <AgentgatewayLogo />
+          <span>agentgateway</span>
+        </Logo>
         <Menu
           mode="inline"
           selectedKeys={[location.pathname]}

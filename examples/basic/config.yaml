@@ -1,22 +1,36 @@
-# yaml-language-server: $schema=https://agentgateway.dev/schema/config
 binds:
-- port: 3000
+- port: 3001
   listeners:
   - routes:
-    - policies:
-        cors:
-          allowOrigins:
-          - "*"
-          allowHeaders:
-          - mcp-protocol-version
-          - content-type
-          - cache-control
-          exposeHeaders:
-          - "Mcp-Session-Id"
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /asdfa
       backends:
       - mcp:
           targets:
           - name: everything
             stdio:
               cmd: npx
-              args: ["@modelcontextprotocol/server-everything"]
+              args:
+              - '@modelcontextprotocol/server-everything'
+      policies:
+        cors:
+          allowOrigins:
+          - '*'
+          allowHeaders:
+          - mcp-protocol-version
+          - content-type
+          - cache-control
+          exposeHeaders:
+          - Mcp-Session-Id
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+    - hostnames: []
+      matches: []
+      backends: []
+      name: test
+      ruleName: test
