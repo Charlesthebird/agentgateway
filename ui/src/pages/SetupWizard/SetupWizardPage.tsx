@@ -14,6 +14,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { StyledAlert } from "../../components/StyledAlert";
+import { StyledSelect } from "../../components/StyledSelect";
 import { useWizard } from "../../contexts";
 
 const Container = styled.div`
@@ -174,11 +175,11 @@ export const SetupWizardPage = () => {
                 rules={[{ required: true }]}
                 initialValue="http"
               >
-                <Select>
-                  <Select.Option value="http">HTTP</Select.Option>
-                  <Select.Option value="https">HTTPS</Select.Option>
-                  <Select.Option value="tcp">TCP</Select.Option>
-                </Select>
+                <StyledSelect>
+                  <StyledSelect.Option value="http">HTTP</StyledSelect.Option>
+                  <StyledSelect.Option value="https">HTTPS</StyledSelect.Option>
+                  <StyledSelect.Option value="tcp">TCP</StyledSelect.Option>
+                </StyledSelect>
               </Form.Item>
 
               <Form.Item

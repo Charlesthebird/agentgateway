@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
-import { Button, Card, Form, Input, Select, Space, Tabs } from "antd";
+import { Button, Card, Form, Input, Space, Tabs } from "antd";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { StyledSelect } from "../../components/StyledSelect";
 
 const Container = styled.div`
   display: flex;
@@ -106,13 +107,13 @@ export const PlaygroundPage = () => {
           initialValue="GET"
           rules={[{ required: true }]}
         >
-          <Select style={{ width: 150 }}>
-            <Select.Option value="GET">GET</Select.Option>
-            <Select.Option value="POST">POST</Select.Option>
-            <Select.Option value="PUT">PUT</Select.Option>
-            <Select.Option value="DELETE">DELETE</Select.Option>
-            <Select.Option value="PATCH">PATCH</Select.Option>
-          </Select>
+          <StyledSelect style={{ width: 150 }}>
+            <StyledSelect.Option value="GET">GET</StyledSelect.Option>
+            <StyledSelect.Option value="POST">POST</StyledSelect.Option>
+            <StyledSelect.Option value="PUT">PUT</StyledSelect.Option>
+            <StyledSelect.Option value="DELETE">DELETE</StyledSelect.Option>
+            <StyledSelect.Option value="PATCH">PATCH</StyledSelect.Option>
+          </StyledSelect>
         </Form.Item>
 
         <Form.Item
@@ -216,10 +217,10 @@ export const PlaygroundPage = () => {
       </p>
       <Form layout="vertical">
         <Form.Item label="MCP Server" required>
-          <Select placeholder="Select MCP server">
-            <Select.Option value="server1">MCP Server 1</Select.Option>
-            <Select.Option value="server2">MCP Server 2</Select.Option>
-          </Select>
+          <StyledSelect placeholder="Select MCP server">
+            <StyledSelect.Option value="server1">MCP Server 1</StyledSelect.Option>
+            <StyledSelect.Option value="server2">MCP Server 2</StyledSelect.Option>
+          </StyledSelect>
         </Form.Item>
         <Form.Item label="Method" required>
           <Input placeholder="tools/list" />
@@ -240,11 +241,11 @@ export const PlaygroundPage = () => {
           <Input placeholder="agent://service-name" />
         </Form.Item>
         <Form.Item label="Action" required>
-          <Select placeholder="Select action">
-            <Select.Option value="query">Query</Select.Option>
-            <Select.Option value="execute">Execute</Select.Option>
-            <Select.Option value="subscribe">Subscribe</Select.Option>
-          </Select>
+          <StyledSelect placeholder="Select action">
+            <StyledSelect.Option value="query">Query</StyledSelect.Option>
+            <StyledSelect.Option value="execute">Execute</StyledSelect.Option>
+            <StyledSelect.Option value="subscribe">Subscribe</StyledSelect.Option>
+          </StyledSelect>
         </Form.Item>
         <Form.Item label="Payload (JSON)">
           <Input.TextArea rows={6} placeholder='{"query": "test"}' />

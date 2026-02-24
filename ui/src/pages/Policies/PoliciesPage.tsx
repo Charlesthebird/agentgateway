@@ -1,19 +1,13 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import {
-    Button,
-    Card,
-    Modal,
-    Space,
-    Table,
-    Tag,
-} from "antd";
+import { Button, Card, Modal, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { usePolicies } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
+import { StyledSelect } from "../../components/StyledSelect";
 import type { FilterOrPolicy } from "../../config";
 
 const Container = styled.div`
@@ -88,33 +82,35 @@ export const PoliciesPage = () => {
     });
   };
 
-  const getPolicyTypes = (policies: FilterOrPolicy | null | undefined): string[] => {
+  const getPolicyTypes = (
+    policies: FilterOrPolicy | null | undefined,
+  ): string[] => {
     if (!policies) return [];
     const types: string[] = [];
-    if (policies.requestHeaderModifier) types.push('Request Headers');
-    if (policies.responseHeaderModifier) types.push('Response Headers');
-    if (policies.requestRedirect) types.push('Redirect');
-    if (policies.urlRewrite) types.push('URL Rewrite');
-    if (policies.requestMirror) types.push('Request Mirror');
-    if (policies.directResponse) types.push('Direct Response');
-    if (policies.cors) types.push('CORS');
-    if (policies.mcpAuthorization) types.push('MCP Authorization');
-    if (policies.authorization) types.push('Authorization');
-    if (policies.mcpAuthentication) types.push('MCP Authentication');
-    if (policies.a2a) types.push('A2A');
-    if (policies.ai) types.push('AI');
-    if (policies.backendTLS) types.push('Backend TLS');
-    if (policies.backendAuth) types.push('Backend Auth');
-    if (policies.localRateLimit) types.push('Local Rate Limit');
+    if (policies.requestHeaderModifier) types.push("Request Headers");
+    if (policies.responseHeaderModifier) types.push("Response Headers");
+    if (policies.requestRedirect) types.push("Redirect");
+    if (policies.urlRewrite) types.push("URL Rewrite");
+    if (policies.requestMirror) types.push("Request Mirror");
+    if (policies.directResponse) types.push("Direct Response");
+    if (policies.cors) types.push("CORS");
+    if (policies.mcpAuthorization) types.push("MCP Authorization");
+    if (policies.authorization) types.push("Authorization");
+    if (policies.mcpAuthentication) types.push("MCP Authentication");
+    if (policies.a2a) types.push("A2A");
+    if (policies.ai) types.push("AI");
+    if (policies.backendTLS) types.push("Backend TLS");
+    if (policies.backendAuth) types.push("Backend Auth");
+    if (policies.localRateLimit) types.push("Local Rate Limit");
     return types;
   };
 
   const columns: ColumnsType<PolicyRow> = [
-    { 
-      title: "Route", 
-      dataIndex: "name", 
+    {
+      title: "Route",
+      dataIndex: "name",
       key: "name",
-      render: (name: string) => name || "<unnamed>"
+      render: (name: string) => name || "<unnamed>",
     },
     {
       title: "Policy Types",
@@ -124,23 +120,25 @@ export const PoliciesPage = () => {
         return (
           <>
             {types.map((type, idx) => (
-              <Tag key={idx} color="green">{type}</Tag>
+              <Tag key={idx} color="green">
+                {type}
+              </Tag>
             ))}
           </>
         );
       },
     },
-    { 
-      title: "Listener", 
-      dataIndex: "listenerName", 
+    {
+      title: "Listener",
+      dataIndex: "listenerName",
       key: "listenerName",
-      render: (name: string | null | undefined) => name || "N/A"
+      render: (name: string | null | undefined) => name || "N/A",
     },
-    { 
-      title: "Port", 
-      dataIndex: "port", 
+    {
+      title: "Port",
+      dataIndex: "port",
       key: "port",
-      render: (port: number | undefined) => port || "N/A"
+      render: (port: number | undefined) => port || "N/A",
     },
     {
       title: "Actions",
@@ -197,11 +195,15 @@ export const PoliciesPage = () => {
           </p>
 
           <Space>
-            <Select
+            <StyledSelect
               placeholder="Select policy type"
               style={{ width: 300 }}
               value={selectedType}
-              onChange={setSelectedType}
+              onChange={(value) => {
+                if (typeof value === "string") {
+                  setSelectedType(value);
+                }
+              }}
               options={categoryIndex?.types.map((type) => ({
                 label: type.displayName,
                 value: type.key,

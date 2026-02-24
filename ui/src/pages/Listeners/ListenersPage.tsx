@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useListeners } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
+import { StyledSelect } from "../../components/StyledSelect";
 import type { LocalListener } from "../../config";
 
 const Container = styled.div`
@@ -28,7 +29,7 @@ interface CategoryIndex {
 
 type ListenerRow = LocalListener & {
   port?: number;
-}
+};
 
 export const ListenersPage = () => {
   const navigate = useNavigate();
@@ -78,29 +79,29 @@ export const ListenersPage = () => {
   };
 
   const columns: ColumnsType<ListenerRow> = [
-    { 
-      title: "Name", 
-      dataIndex: "name", 
+    {
+      title: "Name",
+      dataIndex: "name",
       key: "name",
-      render: (name: string | null | undefined) => name || "<unnamed>"
+      render: (name: string | null | undefined) => name || "<unnamed>",
     },
-    { 
-      title: "Hostname", 
-      dataIndex: "hostname", 
+    {
+      title: "Hostname",
+      dataIndex: "hostname",
       key: "hostname",
-      render: (hostname: string | null | undefined) => hostname || "*"
+      render: (hostname: string | null | undefined) => hostname || "*",
     },
-    { 
-      title: "Port", 
-      dataIndex: "port", 
+    {
+      title: "Port",
+      dataIndex: "port",
       key: "port",
-      render: (port: number | undefined) => port || "N/A"
+      render: (port: number | undefined) => port || "N/A",
     },
-    { 
-      title: "Protocol", 
-      dataIndex: "protocol", 
+    {
+      title: "Protocol",
+      dataIndex: "protocol",
       key: "protocol",
-      render: (protocol: string | undefined) => protocol || "HTTP"
+      render: (protocol: string | undefined) => protocol || "HTTP",
     },
     {
       title: "Routes",
@@ -123,7 +124,7 @@ export const ListenersPage = () => {
             type="link"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.name || '')}
+            onClick={() => handleDelete(record.name || "")}
           >
             Delete
           </Button>
@@ -162,11 +163,15 @@ export const ListenersPage = () => {
           </p>
 
           <Space>
-            <Select
+            <StyledSelect
               placeholder="Select listener type"
               style={{ width: 300 }}
               value={selectedType}
-              onChange={setSelectedType}
+              onChange={(value) => {
+                if (typeof value === "string") {
+                  setSelectedType(value);
+                }
+              }}
               options={categoryIndex?.types.map((type) => ({
                 label: type.displayName,
                 value: type.key,

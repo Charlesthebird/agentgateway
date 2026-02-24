@@ -538,3 +538,86 @@ pre code {
     0 3px 6px -4px rgba(0, 0, 0, 0.48),
     0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
 }
+
+/* Alert styling inside cards */
+.ant-card-body .ant-alert {
+  background-color: var(--color-bg-elevated) !important;
+  border: 1px solid var(--color-border-base) !important;
+  color: var(--color-text-base) !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-success {
+  background-color: rgba(82, 196, 26, 0.1) !important;
+  border-color: rgba(82, 196, 26, 0.4) !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-error {
+  background-color: rgba(255, 77, 79, 0.1) !important;
+  border-color: rgba(255, 77, 79, 0.4) !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-warning {
+  background-color: rgba(250, 173, 20, 0.1) !important;
+  border-color: rgba(250, 173, 20, 0.4) !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-info {
+  background-color: rgba(22, 119, 255, 0.1) !important;
+  border-color: rgba(22, 119, 255, 0.4) !important;
+}
+
+/* Dark mode adjustments for alerts in cards */
+[data-theme="dark"] .ant-card-body .ant-alert {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--color-border-base) !important;
+}
+
+[data-theme="dark"] .ant-card-body .ant-alert.ant-alert-success {
+  background-color: rgba(82, 196, 26, 0.15) !important;
+  border-color: rgba(82, 196, 26, 0.5) !important;
+}
+
+[data-theme="dark"] .ant-card-body .ant-alert.ant-alert-error {
+  background-color: rgba(255, 77, 79, 0.15) !important;
+  border-color: rgba(255, 77, 79, 0.5) !important;
+}
+
+[data-theme="dark"] .ant-card-body .ant-alert.ant-alert-warning {
+  background-color: rgba(250, 173, 20, 0.15) !important;
+  border-color: rgba(250, 173, 20, 0.5) !important;
+}
+
+[data-theme="dark"] .ant-card-body .ant-alert.ant-alert-info {
+  background-color: rgba(22, 119, 255, 0.15) !important;
+  border-color: rgba(22, 119, 255, 0.5) !important;
+}
+
+/* Alert message and description text */
+.ant-card-body .ant-alert-message {
+  color: var(--color-text-base) !important;
+}
+
+.ant-card-body .ant-alert-description {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Alert icons */
+.ant-card-body .ant-alert-icon {
+  color: currentColor !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-success .ant-alert-icon {
+  color: #52c41a !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-error .ant-alert-icon {
+  color: #ff4d4f !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-warning .ant-alert-icon {
+  color: #faad14 !important;
+}
+
+.ant-card-body .ant-alert.ant-alert-info .ant-alert-icon {
+  color: #1677ff !important;
+}

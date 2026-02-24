@@ -4,6 +4,7 @@ import { PlayCircle } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { StyledAlert } from "../../components/StyledAlert";
+import { StyledSelect } from "../../components/StyledSelect";
 
 const Container = styled.div`
   display: flex;
@@ -209,20 +210,22 @@ export const CELPlaygroundPage = () => {
             <EditorCard>
               <EditorHeader>
                 <strong>CEL Expression</strong>
-                <Select
+                <StyledSelect
                   placeholder="Load template..."
                   style={{ width: 200 }}
                   onChange={(value) => {
-                    const template = templates[parseInt(value)];
-                    if (template) loadTemplate(template);
+                    if (typeof value === "string") {
+                      const template = templates[parseInt(value)];
+                      if (template) loadTemplate(template);
+                    }
                   }}
                 >
                   {templates.map((template, index) => (
-                    <Select.Option key={index} value={index.toString()}>
+                    <StyledSelect.Option key={index} value={index.toString()}>
                       {template.name}
-                    </Select.Option>
+                    </StyledSelect.Option>
                   ))}
-                </Select>
+                </StyledSelect>
               </EditorHeader>
               <EditorContent>
                 <CodeInput

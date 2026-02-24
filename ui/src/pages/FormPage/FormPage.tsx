@@ -1,10 +1,11 @@
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { Button, Card, Select, Space, Typography } from "antd";
+import { Button, Card, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SchemaForm } from "../../components/SchemaForm";
+import { StyledSelect } from "../../components/StyledSelect";
 
 const Container = styled.div`
   display: flex;
@@ -114,12 +115,14 @@ export const FormPage = () => {
     navigate(categoryConfig.basePath);
   };
 
-  const handleTypeChange = (newType: string) => {
-    setSelectedType(newType);
-    // Update URL with new type
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("type", newType);
-    navigate(`?${newParams.toString()}`, { replace: true });
+  const handleTypeChange = (newType: unknown) => {
+    if (typeof newType === "string") {
+      setSelectedType(newType);
+      // Update URL with new type
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("type", newType);
+      navigate(`?${newParams.toString()}`, { replace: true });
+    }
   };
 
   return (
@@ -142,7 +145,7 @@ export const FormPage = () => {
             >
               {categoryConfig.displayName} Type
             </Typography.Text>
-            <Select
+            <StyledSelect
               placeholder={`Select ${category} type`}
               style={{ width: "100%" }}
               value={selectedType}

@@ -4,7 +4,7 @@ import { Select } from "antd";
 /**
  * Styled Select component that works well in both light and dark modes
  */
-export const StyledSelect = styled(Select)`
+const StyledSelectBase = styled(Select)`
   &.ant-select {
     /* Select input box */
     .ant-select-selector {
@@ -82,3 +82,11 @@ export const StyledSelect = styled(Select)`
     }
   }
 `;
+
+// Re-export with static properties from the original Select
+export const StyledSelect = Object.assign(StyledSelectBase, {
+  Option: Select.Option,
+  OptGroup: Select.OptGroup,
+  SECRET_COMBOBOX_MODE_DO_NOT_USE: Select.SECRET_COMBOBOX_MODE_DO_NOT_USE,
+  _InternalPanelDoNotUseOrYouWillBeFired: Select._InternalPanelDoNotUseOrYouWillBeFired,
+});

@@ -1,12 +1,13 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 import { Button, Card, Modal, Space, Table, Tag } from "antd";
-import type { ColumnsType } from 'antd/es/table';
+import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useBackends } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
+import { StyledSelect } from "../../components/StyledSelect";
 import type { LocalRouteBackend } from "../../config";
 
 const Container = styled.div`
@@ -30,7 +31,7 @@ type BackendRow = LocalRouteBackend & {
   port?: number;
   listenerName?: string | null;
   routeName?: string | null;
-}
+};
 
 export const BackendsPage = () => {
   const navigate = useNavigate();
@@ -70,84 +71,95 @@ export const BackendsPage = () => {
 
   const handleDelete = (_backend: BackendRow) => {
     Modal.confirm({
-      title: 'Delete Backend',
-      content: 'Are you sure you want to delete this backend?',
+      title: "Delete Backend",
+      content: "Are you sure you want to delete this backend?",
       onOk: () => {
         // TODO: Implement delete via API
-        toast.error('Delete functionality not yet implemented');
+        toast.error("Delete functionality not yet implemented");
       },
     });
   };
 
   const getBackendType = (backend: BackendRow): string => {
-    if ('service' in backend) return 'Service';
-    if ('host' in backend) return 'Host';
-    if ('mcp' in backend) return 'MCP';
-    if ('ai' in backend) return 'AI';
-    if ('dynamic' in backend) return 'Dynamic';
-    return 'Unknown';
+    if ("service" in backend) return "Service";
+    if ("host" in backend) return "Host";
+    if ("mcp" in backend) return "MCP";
+    if ("ai" in backend) return "AI";
+    if ("dynamic" in backend) return "Dynamic";
+    return "Unknown";
   };
 
   const getBackendTarget = (backend: BackendRow): string => {
-    if ('service' in backend && backend.service && typeof backend.service === 'object') {
+    if (
+      "service" in backend &&
+      backend.service &&
+      typeof backend.service === "object"
+    ) {
       const service = backend.service as { name: any; port: number };
       return `${service.name}:${service.port}`;
     }
-    if ('host' in backend && typeof backend.host === 'string') {
+    if ("host" in backend && typeof backend.host === "string") {
       return backend.host;
     }
-    if ('mcp' in backend && backend.mcp) {
-      return 'MCP Backend';
+    if ("mcp" in backend && backend.mcp) {
+      return "MCP Backend";
     }
-    if ('ai' in backend && backend.ai) {
-      return 'AI Backend';
+    if ("ai" in backend && backend.ai) {
+      return "AI Backend";
     }
-    if ('dynamic' in backend) {
-      return 'Dynamic';
+    if ("dynamic" in backend) {
+      return "Dynamic";
     }
-    return 'N/A';
+    return "N/A";
   };
 
   const columns: ColumnsType<BackendRow> = [
-    { 
-      title: 'Type', 
-      key: 'type',
-      render: (_, record) => (
-        <Tag color="blue">{getBackendType(record)}</Tag>
-      )
-    },
-    { 
-      title: 'Target', 
-      key: 'target',
-      render: (_, record) => getBackendTarget(record)
-    },
-    { 
-      title: 'Route', 
-      dataIndex: 'routeName', 
-      key: 'routeName',
-      render: (name: string | null | undefined) => name || "N/A"
-    },
-    { 
-      title: 'Listener', 
-      dataIndex: 'listenerName', 
-      key: 'listenerName',
-      render: (name: string | null | undefined) => name || "N/A"
+    {
+      title: "Type",
+      key: "type",
+      render: (_, record) => <Tag color="blue">{getBackendType(record)}</Tag>,
     },
     {
-      title: 'Weight',
-      dataIndex: 'weight',
-      key: 'weight',
+      title: "Target",
+      key: "target",
+      render: (_, record) => getBackendTarget(record),
+    },
+    {
+      title: "Route",
+      dataIndex: "routeName",
+      key: "routeName",
+      render: (name: string | null | undefined) => name || "N/A",
+    },
+    {
+      title: "Listener",
+      dataIndex: "listenerName",
+      key: "listenerName",
+      render: (name: string | null | undefined) => name || "N/A",
+    },
+    {
+      title: "Weight",
+      dataIndex: "weight",
+      key: "weight",
       render: (weight: number | undefined) => weight || 1,
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
             Edit
           </Button>
-          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          >
             Delete
           </Button>
         </Space>
@@ -185,11 +197,15 @@ export const BackendsPage = () => {
           </p>
 
           <Space>
-            <Select
+            <StyledSelect
               placeholder="Select backend type"
               style={{ width: 300 }}
               value={selectedType}
-              onChange={setSelectedType}
+              onChange={(value) => {
+                if (typeof value === "string") {
+                  setSelectedType(value);
+                }
+              }}
               options={categoryIndex?.types.map((type) => ({
                 label: type.displayName,
                 value: type.key,
@@ -218,7 +234,7 @@ export const BackendsPage = () => {
         <Table
           columns={columns}
           dataSource={backends}
-          rowKey={(record, index) => `${record.routeName || 'route'}-${index}`}
+          rowKey={(record, index) => `${record.routeName || "route"}-${index}`}
           pagination={{ pageSize: 10 }}
           loading={isLoading}
         />

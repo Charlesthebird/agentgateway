@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useRoutes } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
+import { StyledSelect } from "../../components/StyledSelect";
 import type { LocalRoute } from "../../config";
 
 const Container = styled.div`
@@ -29,7 +30,7 @@ interface CategoryIndex {
 type RouteRow = LocalRoute & {
   port?: number;
   listenerName?: string | null;
-}
+};
 
 export const RoutesPage = () => {
   const navigate = useNavigate();
@@ -79,15 +80,15 @@ export const RoutesPage = () => {
   };
 
   const columns: ColumnsType<RouteRow> = [
-    { 
-      title: "Name", 
-      dataIndex: "name", 
+    {
+      title: "Name",
+      dataIndex: "name",
       key: "name",
-      render: (name: string | null | undefined) => name || "<unnamed>"
+      render: (name: string | null | undefined) => name || "<unnamed>",
     },
-    { 
-      title: "Hostnames", 
-      dataIndex: "hostnames", 
+    {
+      title: "Hostnames",
+      dataIndex: "hostnames",
       key: "hostnames",
       render: (hostnames: string[] | undefined) => (
         <>
@@ -101,12 +102,20 @@ export const RoutesPage = () => {
       title: "Methods",
       key: "methods",
       render: (_, record) => {
-        const methods = (record.matches || []).map(m => m.method).filter(Boolean);
+        const methods = (record.matches || [])
+          .map((m) => m.method)
+          .filter(Boolean);
         return (
           <>
-            {methods.length > 0 ? methods.map((method, idx) => (
-              <Tag key={idx} color="blue">{method}</Tag>
-            )) : <span style={{ color: 'var(--color-text-secondary)' }}>Any</span>}
+            {methods.length > 0 ? (
+              methods.map((method, idx) => (
+                <Tag key={idx} color="blue">
+                  {method}
+                </Tag>
+              ))
+            ) : (
+              <span style={{ color: "var(--color-text-secondary)" }}>Any</span>
+            )}
           </>
         );
       },
@@ -115,17 +124,25 @@ export const RoutesPage = () => {
       title: "Paths",
       key: "paths",
       render: (_, record) => {
-        const paths = (record.matches || []).map(m => {
-          if ('exact' in m.path) return m.path.exact;
-          if ('prefix' in m.path) return m.path.prefix + '*';
-          if ('regex' in m.path) return `regex: ${m.path.regex}`;
-          return null;
-        }).filter(Boolean);
+        const paths = (record.matches || [])
+          .map((m) => {
+            if ("exact" in m.path) return m.path.exact;
+            if ("prefix" in m.path) return m.path.prefix + "*";
+            if ("regex" in m.path) return `regex: ${m.path.regex}`;
+            return null;
+          })
+          .filter(Boolean);
         return (
           <>
-            {paths.length > 0 ? paths.map((path, idx) => (
-              <div key={idx}><code>{path}</code></div>
-            )) : <span style={{ color: 'var(--color-text-secondary)' }}>Any</span>}
+            {paths.length > 0 ? (
+              paths.map((path, idx) => (
+                <div key={idx}>
+                  <code>{path}</code>
+                </div>
+              ))
+            ) : (
+              <span style={{ color: "var(--color-text-secondary)" }}>Any</span>
+            )}
           </>
         );
       },
@@ -151,7 +168,7 @@ export const RoutesPage = () => {
             type="link"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.name || '')}
+            onClick={() => handleDelete(record.name || "")}
           >
             Delete
           </Button>
@@ -187,11 +204,15 @@ export const RoutesPage = () => {
           <p>Configure HTTP and TCP routes with matching conditions.</p>
 
           <Space>
-            <Select
+            <StyledSelect
               placeholder="Select route type"
               style={{ width: 300 }}
               value={selectedType}
-              onChange={setSelectedType}
+              onChange={(value) => {
+                if (typeof value === "string") {
+                  setSelectedType(value);
+                }
+              }}
               options={categoryIndex?.types.map((type) => ({
                 label: type.displayName,
                 value: type.key,
