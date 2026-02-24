@@ -20,16 +20,15 @@ export const lightTheme: ThemeConfig = {
   },
   components: {
     Layout: {
-      colorBgHeader: "#ffffff",
-      colorBgBody: "#f5f5f5",
-      colorBgTrigger: "#ffffff",
+      headerBg: "#ffffff",
+      bodyBg: "#f5f5f5",
+      triggerBg: "#ffffff",
     },
     Menu: {
-      colorItemBg: "transparent",
-      colorItemBgSelected: "#e6f4ff",
-      colorItemBgHover: "#f5f5f5",
-      colorItemTextSelected: "#1677ff",
-      colorItemTextHover: "rgba(0, 0, 0, 0.88)",
+      itemBg: "transparent",
+      itemHoverBg: "#f5f5f5",
+      itemSelectedBg: "#1677ff",
+      itemHoverColor: "rgba(0, 0, 0, 0.88)",
     },
     Button: {
       primaryShadow: "0 2px 0 rgba(5, 145, 255, 0.1)",
@@ -77,16 +76,15 @@ export const darkTheme: ThemeConfig = {
   },
   components: {
     Layout: {
-      colorBgHeader: "#141414",
-      colorBgBody: "#000000",
-      colorBgTrigger: "#141414",
+      headerBg: "#141414",
+      bodyBg: "#000000",
+      triggerBg: "#141414",
     },
     Menu: {
-      colorItemBg: "transparent",
-      colorItemBgSelected: "#111b26",
-      colorItemBgHover: "#1f1f1f",
-      colorItemTextSelected: "#1677ff",
-      colorItemTextHover: "rgba(255, 255, 255, 0.85)",
+      itemBg: "transparent",
+      itemHoverBg: "#1f1f1f",
+      itemSelectedBg: "#1677ff",
+      itemHoverColor: "rgba(255, 255, 255, 0.85)",
       darkItemBg: "#141414",
     },
     Button: {

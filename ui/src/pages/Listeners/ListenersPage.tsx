@@ -1,14 +1,15 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { Button, Card, Modal, Space, Table } from "antd";
+import { Button, Card, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { useListeners } from "../../api";
+import { deleteListener, useListeners } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
 import { StyledSelect } from "../../components/StyledSelect";
 import type { LocalListener } from "../../config";
+import { useConfirm } from "../../contexts/ConfirmContext";
 
 const Container = styled.div`
   display: flex;
@@ -33,11 +34,12 @@ type ListenerRow = LocalListener & {
 
 export const ListenersPage = () => {
   const navigate = useNavigate();
-  const { data: listeners, error, isLoading } = useListeners();
+  const { data: listeners, error, isLoading, mutate } = useListeners();
   const [categoryIndex, setCategoryIndex] = useState<CategoryIndex | null>(
     null,
   );
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetch("/schema-forms/listeners/index.json")
@@ -67,14 +69,18 @@ export const ListenersPage = () => {
     navigate(`/form?category=listeners&type=http&name=${item.name}`);
   };
 
-  const handleDelete = (_name: string) => {
-    Modal.confirm({
+  const handleDelete = (name: string) => {
+    confirm({
       title: "Delete Listener",
-      content: "Are you sure you want to delete this listener?",
-      onOk: () => {
-        // TODO: Implement delete via API
-        toast.error("Delete functionality not yet implemented");
+      content:
+        "Are you sure you want to delete this listener? This action cannot be undone.",
+      onConfirm: async () => {
+        await deleteListener(name);
+        mutate(); // Refresh the listeners data
+        toast.success("Listener deleted successfully");
       },
+      confirmText: "Delete",
+      danger: true,
     });
   };
 

@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { Button, Card, Modal, Space, Table, Tag } from "antd";
+import { Button, Card, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -9,6 +9,7 @@ import { usePolicies } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
 import { StyledSelect } from "../../components/StyledSelect";
 import type { FilterOrPolicy } from "../../config";
+import { useConfirm } from "../../contexts/ConfirmContext";
 
 const Container = styled.div`
   display: flex;
@@ -42,6 +43,7 @@ export const PoliciesPage = () => {
     null,
   );
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetch("/schema-forms/policies/index.json")
@@ -72,13 +74,15 @@ export const PoliciesPage = () => {
   };
 
   const handleDelete = (_name: string) => {
-    Modal.confirm({
+    confirm({
       title: "Delete Policy",
       content: "Are you sure you want to delete this policy?",
-      onOk: () => {
+      onConfirm: () => {
         // TODO: Implement delete via API
         toast.error("Delete functionality not yet implemented");
       },
+      confirmText: "Delete",
+      danger: true,
     });
   };
 

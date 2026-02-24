@@ -27,3 +27,21 @@ export async function updateConfig(config: LocalConfig): Promise<void> {
 export async function fetchConfigDump(): Promise<any> {
   return get<any>("/config_dump");
 }
+
+/**
+ * Deletes a listener by name from all binds
+ */
+export async function deleteListener(listenerName: string): Promise<void> {
+  const config = await fetchConfig();
+
+  // Remove the listener from all binds
+  if (config.binds) {
+    config.binds.forEach((bind) => {
+      bind.listeners = bind.listeners.filter(
+        (listener) => listener.name !== listenerName,
+      );
+    });
+  }
+
+  await updateConfig(config);
+}
