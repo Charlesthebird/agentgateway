@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useRoutes } from "../../api";
+import { ProtocolTag } from "../../components/ProtocolTag";
 import { StyledAlert } from "../../components/StyledAlert";
 import { StyledSelect } from "../../components/StyledSelect";
 import type { LocalRoute } from "../../config";
@@ -113,9 +114,7 @@ export const RoutesPage = () => {
           <>
             {methods.length > 0 ? (
               methods.map((method, idx) => (
-                <Tag key={idx} color="blue">
-                  {method}
-                </Tag>
+                <ProtocolTag key={idx} protocol={method as string} />
               ))
             ) : (
               <span style={{ color: "var(--color-text-secondary)" }}>Any</span>

@@ -1,7 +1,8 @@
 import { InfoCircleOutlined } from "@ant-design/icons";
 import type { FieldTemplateProps } from "@rjsf/utils";
 import { Form, Tooltip } from "antd";
-import React from "react";
+import { useContext } from "react";
+import { HideLabelContext } from "./HideLabelContext";
 
 /**
  * Custom FieldTemplate that provides Ant Design Form.Item styling
@@ -15,7 +16,7 @@ export function FieldTemplate(props: FieldTemplateProps) {
     help,
     required,
     description,
-    errors,
+    rawErrors,
     children,
     schema,
     hidden,
@@ -25,34 +26,11 @@ export function FieldTemplate(props: FieldTemplateProps) {
     return <div className="hidden">{children}</div>;
   }
 
-  // Check if parent wrapper has data-hide-label attribute
-  // This is set by CollapsibleObjectFieldTemplate when label matches section title
-  const shouldHideLabel = React.useMemo(() => {
-    if (!id) return false;
-
-    try {
-      // Try to find the wrapper div with data-hide-label
-      const element = document.getElementById(id);
-      if (element) {
-        let parent = element.parentElement;
-        while (parent && parent !== document.body) {
-          if (parent.getAttribute("data-hide-label") === "true") {
-            return true;
-          }
-          // Stop at form item level
-          if (parent.classList.contains("ant-form-item")) {
-            break;
-          }
-          parent = parent.parentElement;
-        }
-      }
-    } catch {
-      // If DOM query fails, don't hide label
-      return false;
-    }
-
-    return false;
-  }, [id]);
+  // Context-based label hiding: CollapsibleObjectFieldTemplate marks field IDs
+  // whose labels duplicate the section title so we skip rendering the label.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const hideLabelIds = useContext(HideLabelContext);
+  const shouldHideLabel = hideLabelIds.has(id);
 
   // Build help text from description - handle string, ReactElement, or object
   let helpText = "";
@@ -68,17 +46,7 @@ export function FieldTemplate(props: FieldTemplateProps) {
     ? ` (Default: ${JSON.stringify(schema.default)})`
     : "";
 
-  // Handle errors array or ReactElement
-  const errorList = (
-    errors && typeof errors !== "string" && "props" in errors
-      ? []
-      : Array.isArray(errors)
-        ? errors
-        : errors
-          ? [errors]
-          : []
-  ) as string[];
-  const hasErrors = errorList.length > 0;
+  const hasErrors = rawErrors && rawErrors.length > 0;
 
   // Determine if label is too long - use vertical layout for better readability
   const labelText = typeof label === "string" ? label : "";
@@ -89,7 +57,6 @@ export function FieldTemplate(props: FieldTemplateProps) {
     ? { labelCol: { span: 24 }, wrapperCol: { span: 24 } }
     : {};
 
-  // Don't show label if it matches parent section title
   const displayLabel = shouldHideLabel ? undefined : (
     <span>
       {label}
@@ -112,7 +79,7 @@ export function FieldTemplate(props: FieldTemplateProps) {
     <Form.Item
       label={displayLabel}
       validateStatus={hasErrors ? "error" : undefined}
-      help={hasErrors ? errorList : undefined}
+      help={hasErrors ? rawErrors : undefined}
       className={classNames}
       htmlFor={id}
       {...layoutProps}

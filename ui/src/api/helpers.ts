@@ -20,7 +20,7 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
       // Clean up listeners
       cleanedBind.listeners = cleanedBind.listeners
         .map((listener) => {
-          const cleanedListener: any = {};
+          const cleanedListener: Partial<LocalListener> = {};
 
           // Only include fields that have values
           if (listener.protocol) cleanedListener.protocol = listener.protocol;
@@ -28,10 +28,12 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
           if (listener.hostname) cleanedListener.hostname = listener.hostname;
           if (listener.tls) cleanedListener.tls = listener.tls;
 
-          // Include routes if they exist (even if empty)
-          if (listener.routes !== undefined && listener.routes !== null) {
+          // Include routes if non-null (even empty []). The active exclusive
+          // field must be present for the API to recognise the listener mode.
+          // The inactive counterpart will have been removed by the form layer.
+          if (listener.routes !== null && listener.routes !== undefined) {
             cleanedListener.routes = listener.routes.map((route) => {
-              const cleanedRoute: any = {
+              const cleanedRoute: Record<string, unknown> = {
                 hostnames: route.hostnames,
                 matches: route.matches,
                 backends: route.backends,
@@ -45,12 +47,12 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
             });
           }
 
-          // Include tcpRoutes if they exist (even if empty)
-          if (listener.tcpRoutes !== undefined && listener.tcpRoutes !== null) {
+          // Include tcpRoutes if non-null (even empty [])
+          if (listener.tcpRoutes !== null && listener.tcpRoutes !== undefined) {
             cleanedListener.tcpRoutes = listener.tcpRoutes;
           }
 
-          return cleanedListener;
+          return cleanedListener as LocalListener;
         })
         .filter((listener) => Object.keys(listener).length > 0);
 
@@ -63,17 +65,58 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
     !cleaned.workloads ||
     (Array.isArray(cleaned.workloads) && cleaned.workloads.length === 0)
   ) {
-    delete (cleaned as any).workloads;
+    Reflect.deleteProperty(cleaned, "workloads");
   }
 
   if (
     !cleaned.services ||
     (Array.isArray(cleaned.services) && cleaned.services.length === 0)
   ) {
-    delete (cleaned as any).services;
+    Reflect.deleteProperty(cleaned, "services");
   }
 
   return cleaned;
+}
+
+/**
+ * Recursively strips null values and empty arrays from an object produced
+ * by RJSF.  RJSF initialises every optional array field to [] and every
+ * optional scalar to null; sending those to the API can violate oneOf /
+ * mutually-exclusive field constraints (e.g. routes vs tcpRoutes on a
+ * listener).  This function removes them so only intentionally-set values
+ * are sent.
+ *
+ * @param value          - The value to strip.
+ * @param keepTopLevelKeys - Top-level object keys whose empty-array values
+ *   should be preserved (i.e. the "active" field in a oneOf group — the API
+ *   requires the field to be present even when the array is empty).
+ */
+export function stripFormDefaults(
+  value: unknown,
+  keepTopLevelKeys?: ReadonlySet<string>,
+): unknown {
+  if (value === null || value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    if (value.length === 0) return undefined;
+    const stripped = value
+      .map((v) => stripFormDefaults(v))
+      .filter((v) => v !== undefined);
+    return stripped.length === 0 ? undefined : stripped;
+  }
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (keepTopLevelKeys?.has(k) && Array.isArray(v) && v.length === 0) {
+        // Preserve empty array for active oneOf fields
+        out[k] = [];
+        continue;
+      }
+      const stripped = stripFormDefaults(v);
+      if (stripped !== undefined) out[k] = stripped;
+    }
+    return out;
+  }
+  return value;
 }
 
 /**

@@ -1,1 +1,27 @@
-binds: []
+binds:
+- port: 8080
+  listeners:
+  - protocol: TCP
+    name: testdsfsdf
+    hostname: b.com
+    tcpRoutes:
+    - name: adsf
+      namespace: sadf
+      ruleName: d
+  - name: lkjlkjl
+    routes:
+    - matches:
+      - path:
+          pathPrefix: /
+      name: myroute
+      ruleName: test
+    - matches:
+      - path:
+          pathPrefix: /
+      name: asdfasdfasdf
+  tunnelProtocol: direct
+- port: 8081
+  listeners:
+  - protocol: HBONE
+    name: asdf
+  tunnelProtocol: direct

@@ -110,6 +110,16 @@ export const darkTheme: ThemeConfig = {
       colorBgContainer: "#141414",
       colorBorder: "#424242",
     },
+    Alert: {
+      colorSuccessBg: "#162312",
+      colorSuccessBorder: "#274916",
+      colorErrorBg: "#2a1215",
+      colorErrorBorder: "#58181c",
+      colorWarningBg: "#2b2111",
+      colorWarningBorder: "#594214",
+      colorInfoBg: "#111a2c",
+      colorInfoBorder: "#15325b",
+    },
   },
 };
 

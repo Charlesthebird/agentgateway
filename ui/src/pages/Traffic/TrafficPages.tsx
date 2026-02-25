@@ -1,6 +1,8 @@
 import styled from "@emotion/styled";
 import { Card } from "antd";
 
+export { TrafficRoutingPage } from "./TrafficRoutingPage";
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -14,17 +16,6 @@ export const TrafficOverviewPage = () => {
       <h1>Traffic Overview</h1>
       <Card>
         <p>Traffic overview and statistics</p>
-      </Card>
-    </Container>
-  );
-};
-
-export const TrafficRoutingPage = () => {
-  return (
-    <Container>
-      <h1>Traffic Routing</h1>
-      <Card>
-        <p>Configure traffic routing rules</p>
       </Card>
     </Container>
   );

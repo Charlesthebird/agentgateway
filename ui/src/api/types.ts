@@ -5,12 +5,14 @@
 
 // Re-export the auto-generated LocalConfig and related types from config.d.ts
 export type {
+  FullLocalBackend,
   LocalAIBackend,
   LocalBackendPolicies,
   LocalBind,
   LocalConfig,
   LocalListener,
   LocalListenerProtocol,
+  LocalPolicy,
   LocalRoute,
   LocalRouteBackend,
   LocalTLSServerConfig,

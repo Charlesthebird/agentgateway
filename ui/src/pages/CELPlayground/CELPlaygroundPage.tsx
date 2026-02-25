@@ -1,10 +1,11 @@
 import styled from "@emotion/styled";
-import { Alert, Button, Card, Col, Row, Select, Space } from "antd";
+import { Button, Card, Col, Row, Select, Space } from "antd";
 import yaml from "js-yaml";
 import { PlayCircle, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../../api/client";
+import { StyledAlert } from "../../components/StyledAlert";
 import { MonacoEditorComponent } from "./MonacoEditorComponent";
 
 const Container = styled.div`
@@ -310,7 +311,7 @@ export const CELPlaygroundPage = () => {
         </Space>
       </div>
 
-      <Alert
+      <StyledAlert
         message="Common Expression Language (CEL)"
         description="Test CEL expressions used for policy evaluation, routing decisions, and request validation. CEL provides a simple, fast, and safe way to evaluate expressions."
         type="info"
