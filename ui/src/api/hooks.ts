@@ -101,6 +101,32 @@ export function useBackends(options?: SWRConfiguration<LocalConfig>) {
 }
 
 /**
+ * Hook to fetch LLM config from config
+ */
+export function useLLMConfig(options?: SWRConfiguration<LocalConfig>) {
+  const { data, error, isLoading, mutate } = useConfig(options);
+  return {
+    data: data?.llm ?? null,
+    error,
+    isLoading,
+    mutate,
+  };
+}
+
+/**
+ * Hook to fetch MCP config from config
+ */
+export function useMCPConfig(options?: SWRConfiguration<LocalConfig>) {
+  const { data, error, isLoading, mutate } = useConfig(options);
+  return {
+    data: data?.mcp ?? null,
+    error,
+    isLoading,
+    mutate,
+  };
+}
+
+/**
  * Hook to fetch policies from config
  */
 export function usePolicies(options?: SWRConfiguration<LocalConfig>) {

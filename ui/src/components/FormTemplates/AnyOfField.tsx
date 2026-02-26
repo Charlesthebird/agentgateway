@@ -70,12 +70,37 @@ export function AnyOfField(props: FieldProps) {
 
     const handleToggle = (checked: boolean) => {
       if (checked) {
+        // For scalar types (string, number, boolean) that have an enum, use the
+        // first enum value as the initial default rather than letting
+        // getDefaultFormState return undefined → which would then get coerced
+        // to `{}` and break the widget.
+        const isScalarEnum =
+          (mainSchema.type === "string" ||
+            mainSchema.type === "number" ||
+            mainSchema.type === "integer" ||
+            mainSchema.type === "boolean") &&
+          Array.isArray(mainSchema.enum) &&
+          mainSchema.enum.length > 0;
+
+        if (isScalarEnum) {
+          onChange(mainSchema.enum![0] as Parameters<typeof onChange>[0]);
+          return;
+        }
+
         const defaults = schemaUtils.getDefaultFormState(
           mainSchema,
           undefined,
         );
+        // Fall back to empty string for scalar types with no enum, empty object
+        // for object types.
+        const fallback =
+          mainSchema.type === "string" ||
+          mainSchema.type === "number" ||
+          mainSchema.type === "integer"
+            ? ""
+            : {};
         onChange(
-          (defaults ?? {}) as Parameters<typeof onChange>[0],
+          (defaults ?? fallback) as Parameters<typeof onChange>[0],
         );
       } else {
         onChange(null as Parameters<typeof onChange>[0]);

@@ -26,6 +26,7 @@ import {
   ExclusiveObjectFieldTemplate,
   FieldTemplate,
   OneOfField,
+  SelectWidget,
 } from "../../../components/FormTemplates";
 import { validator } from "../../../utils/validator";
 import type { EditTarget, NodeType } from "./HierarchyTree";
@@ -33,6 +34,19 @@ import { NodeDetailView } from "./NodeDetailView";
 import { RelationshipWidget } from "./RelationshipWidget";
 
 const { Text } = Typography;
+
+// ---------------------------------------------------------------------------
+// Error extraction — the API client throws plain ApiError objects (not Error
+// instances), so we need to handle both cases to show a useful toast message.
+// ---------------------------------------------------------------------------
+
+function extractErrorMessage(e: unknown): string | null {
+  if (!e) return null;
+  if (e instanceof Error) return e.message;
+  if (typeof e === "object" && "message" in e) return String((e as { message: unknown }).message);
+  if (typeof e === "string") return e;
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Label helpers
@@ -383,7 +397,7 @@ export function NodeEditDrawer({
       onSaved();
       onClose();
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+      toast.error(extractErrorMessage(e) ?? "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -398,7 +412,7 @@ export function NodeEditDrawer({
       onSaved();
       onClose();
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete");
+      toast.error(extractErrorMessage(e) ?? "Failed to delete");
     } finally {
       setSaving(false);
     }
@@ -518,7 +532,7 @@ export function NodeEditDrawer({
                   );
                 }
               }}
-              widgets={{ RelationshipWidget }}
+              widgets={{ RelationshipWidget, SelectWidget }}
               fields={{
                 OneOfField,
                 AnyOfField,

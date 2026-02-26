@@ -195,7 +195,6 @@
           "properties": {
             "explicitConfig": {
               "type": "object",
-              "unevaluatedProperties": false,
               "oneOf": [
                 {
                   "type": "object",

@@ -709,7 +709,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -822,13 +823,6 @@
     "SimpleLocalBackend": {
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
-        {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
           "properties": {
@@ -863,8 +857,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -888,25 +882,16 @@
           "title": "Backend"
         }
       ],
-      "title": "Simple Local Backend"
+      "title": "Simple Local Backend",
+      "default": {
+        "host": "example.com:8080"
+      }
     },
     "NamespacedHostname": {
-      "type": "object",
-      "properties": {
-        "namespace": {
-          "type": "string",
-          "title": "Namespace"
-        },
-        "hostname": {
-          "type": "string",
-          "title": "Hostname"
-        }
-      },
-      "required": [
-        "namespace",
-        "hostname"
-      ],
-      "title": "Namespaced Hostname"
+      "type": "string",
+      "title": "Namespaced Hostname",
+      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
+      "pattern": "^[^/]+/[^/]+$"
     },
     "DirectResponse": {
       "type": "object",
@@ -1273,7 +1258,6 @@
           "title": "Rejection"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "object",
@@ -1895,7 +1879,6 @@
           "properties": {
             "explicitConfig": {
               "type": "object",
-              "unevaluatedProperties": false,
               "oneOf": [
                 {
                   "type": "object",
@@ -2220,7 +2203,6 @@
           "title": "Rejection"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "object",
@@ -2465,15 +2447,7 @@
         "domain",
         "descriptors"
       ],
-      "unevaluatedProperties": false,
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
         {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
@@ -2508,8 +2482,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -2531,7 +2505,10 @@
           "title": "Backend"
         }
       ],
-      "title": "Remote Rate Limit"
+      "title": "Remote Rate Limit",
+      "default": {
+        "host": "example.com:8080"
+      }
     },
     "DescriptorSet": {
       "type": "array",
@@ -2843,15 +2820,7 @@
           "title": "Timeout"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
         {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
@@ -2886,8 +2855,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -2909,7 +2878,10 @@
           "title": "Backend"
         }
       ],
-      "title": "Ext Authz"
+      "title": "Ext Authz",
+      "default": {
+        "host": "example.com:8080"
+      }
     },
     "Protocol2": {
       "oneOf": [
@@ -3120,15 +3092,7 @@
           "title": "Response Attributes"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
         {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
@@ -3163,8 +3127,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -3186,7 +3150,10 @@
           "title": "Backend"
         }
       ],
-      "title": "Ext Proc"
+      "title": "Ext Proc",
+      "default": {
+        "host": "example.com:8080"
+      }
     },
     "FailureMode2": {
       "type": "string",
@@ -3361,15 +3328,7 @@
           "title": "Policies"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
         {
           "type": "object",
           "properties": {
@@ -3402,7 +3361,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -3448,7 +3408,10 @@
           "title": "Ai"
         }
       ],
-      "title": "Local Route Backend"
+      "title": "Local Route Backend",
+      "default": {
+        "host": "example.com:8080"
+      }
     },
     "LocalMcpBackend": {
       "type": "object",
@@ -3506,7 +3469,6 @@
       "required": [
         "name"
       ],
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "object",

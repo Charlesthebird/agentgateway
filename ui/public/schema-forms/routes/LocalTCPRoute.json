@@ -166,15 +166,7 @@
           "title": "Policies"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
         {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
@@ -209,8 +201,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -232,7 +224,10 @@
           "title": "Backend"
         }
       ],
-      "title": "Local TCP Route Backend"
+      "title": "Local TCP Route Backend",
+      "default": {
+        "host": "example.com:8080"
+      }
     },
     "LocalTCPBackendPolicies": {
       "type": "object",
@@ -255,22 +250,10 @@
       "title": "Local TCP Backend Policies"
     },
     "NamespacedHostname": {
-      "type": "object",
-      "properties": {
-        "namespace": {
-          "type": "string",
-          "title": "Namespace"
-        },
-        "hostname": {
-          "type": "string",
-          "title": "Hostname"
-        }
-      },
-      "required": [
-        "namespace",
-        "hostname"
-      ],
-      "title": "Namespaced Hostname"
+      "type": "string",
+      "title": "Namespaced Hostname",
+      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
+      "pattern": "^[^/]+/[^/]+$"
     }
   },
   "description": "Local TCP Route with matching conditions"

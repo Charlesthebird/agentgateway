@@ -1,5 +1,5 @@
 binds:
-- port: 8080
+- port: 8082
   listeners:
   - protocol: TCP
     name: testdsfsdfaaaaa
@@ -13,7 +13,7 @@ binds:
       ruleName: asdfasdf
       hostnames:
       - b.com
-    - name: asdfasdfasdfasdfasdf
+    - name: myroute
       hostnames:
       - b.com
   - name: lkjlkjl
@@ -21,6 +21,20 @@ binds:
     - matches:
       - path:
           pathPrefix: /
+      backends:
+      - weight: 1
+        ai:
+          name: asdf
+          provider:
+            openAI:
+              model: gpt-4
+          tokenize: false
+      - weight: 2
+        policies:
+          mcpAuthorization:
+            rules:
+            - asdf
+        dynamic: {}
       name: myroute
       ruleName: test
     - matches:

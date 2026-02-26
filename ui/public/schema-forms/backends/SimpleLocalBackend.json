@@ -43,8 +43,8 @@
       "type": "object",
       "properties": {
         "host": {
-          "description": "Hostname or IP address",
-          "type": "string"
+          "type": "string",
+          "description": "Format: host:port (e.g. \"example.com:8080\")"
         }
       },
       "required": [
@@ -71,22 +71,10 @@
   "title": "Simple Local Backend",
   "$defs": {
     "NamespacedHostname": {
-      "type": "object",
-      "properties": {
-        "namespace": {
-          "type": "string",
-          "title": "Namespace"
-        },
-        "hostname": {
-          "type": "string",
-          "title": "Hostname"
-        }
-      },
-      "required": [
-        "namespace",
-        "hostname"
-      ],
-      "title": "Namespaced Hostname"
+      "type": "string",
+      "title": "Namespaced Hostname",
+      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
+      "pattern": "^[^/]+/[^/]+$"
     }
   },
   "description": "Simple Local Backend connection"

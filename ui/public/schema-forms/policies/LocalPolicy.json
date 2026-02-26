@@ -688,7 +688,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -842,8 +843,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -870,22 +871,10 @@
       "title": "Simple Local Backend"
     },
     "NamespacedHostname": {
-      "type": "object",
-      "properties": {
-        "namespace": {
-          "type": "string",
-          "title": "Namespace"
-        },
-        "hostname": {
-          "type": "string",
-          "title": "Hostname"
-        }
-      },
-      "required": [
-        "namespace",
-        "hostname"
-      ],
-      "title": "Namespaced Hostname"
+      "type": "string",
+      "title": "Namespaced Hostname",
+      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
+      "pattern": "^[^/]+/[^/]+$"
     },
     "DirectResponse": {
       "type": "object",
@@ -1252,7 +1241,6 @@
           "title": "Rejection"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "object",
@@ -1924,7 +1912,6 @@
           "properties": {
             "explicitConfig": {
               "type": "object",
-              "unevaluatedProperties": false,
               "oneOf": [
                 {
                   "type": "object",
@@ -2249,7 +2236,6 @@
           "title": "Rejection"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "object",
@@ -2494,7 +2480,6 @@
         "domain",
         "descriptors"
       ],
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "string",
@@ -2537,8 +2522,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -2872,7 +2857,6 @@
           "title": "Timeout"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "string",
@@ -2915,8 +2899,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [
@@ -3149,7 +3133,6 @@
           "title": "Response Attributes"
         }
       },
-      "unevaluatedProperties": false,
       "oneOf": [
         {
           "type": "string",
@@ -3192,8 +3175,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
+              "type": "string",
+              "description": "Format: host:port (e.g. \"example.com:8080\")"
             }
           },
           "required": [

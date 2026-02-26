@@ -10,3 +10,4 @@ export type {
 export { FieldTemplate } from "./FieldTemplate";
 export { HideLabelContext } from "./HideLabelContext";
 export { OneOfField } from "./OneOfField";
+export { SelectWidget } from "./SelectWidget";
