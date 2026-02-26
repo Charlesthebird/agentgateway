@@ -286,6 +286,67 @@ function RouteDetailView({
   );
 }
 
+function BackendDetailView({ data }: { data: Record<string, unknown> }) {
+  // Detect which oneOf variant is active
+  const variant = (() => {
+    if ("host" in data) return "host";
+    if ("service" in data) return "service";
+    if ("ai" in data) return "ai";
+    if ("mcp" in data) return "mcp";
+    if ("dynamic" in data) return "dynamic";
+    if ("backend" in data) return "ref";
+    return "unknown";
+  })();
+
+  const labelMap: Record<string, string> = {
+    host: "Host",
+    service: "Service",
+    ai: "AI",
+    mcp: "MCP",
+    dynamic: "Dynamic",
+    ref: "Named Reference",
+    unknown: "Unknown",
+  };
+
+  const coreItems = [
+    { key: "type", label: "Type", children: <Tag bordered={false}>{labelMap[variant]}</Tag> },
+    ...(typeof data["weight"] === "number"
+      ? [{ key: "weight", label: "Weight", children: <span>{data["weight"]}</span> }]
+      : []),
+  ];
+
+  const variantItems = (() => {
+    if (variant === "host") {
+      return [{ key: "host", label: "Host:Port", children: <span style={{ fontFamily: "monospace" }}>{String(data["host"])}</span> }];
+    }
+    if (variant === "service") {
+      const svc = data["service"] as Record<string, unknown> | undefined;
+      return [
+        { key: "svc-name", label: "Service Name", children: <span style={{ fontFamily: "monospace" }}>{String(svc?.["name"] ?? "")}</span> },
+        { key: "svc-port", label: "Port", children: <span>{String(svc?.["port"] ?? "")}</span> },
+      ];
+    }
+    if (variant === "ai") {
+      const ai = data["ai"] as Record<string, unknown> | undefined;
+      return Object.entries(ai ?? {})
+        .filter(([, v]) => v !== null && v !== undefined)
+        .map(([k, v]) => ({ key: `ai-${k}`, label: camelToLabel(k), children: renderValue(k, v) }));
+    }
+    if (variant === "mcp") {
+      const mcp = data["mcp"] as Record<string, unknown> | undefined;
+      return Object.entries(mcp ?? {})
+        .filter(([, v]) => v !== null && v !== undefined)
+        .map(([k, v]) => ({ key: `mcp-${k}`, label: camelToLabel(k), children: renderValue(k, v) }));
+    }
+    if (variant === "ref") {
+      return [{ key: "backend", label: "Backend Name", children: <span style={{ fontFamily: "monospace" }}>{String(data["backend"])}</span> }];
+    }
+    return [];
+  })();
+
+  return <Descriptions bordered column={1} size="small" items={[...coreItems, ...variantItems]} />;
+}
+
 // Generic fallback
 function GenericDetailView({ data }: { data: Record<string, unknown> }) {
   const items = Object.entries(data)
@@ -338,6 +399,16 @@ export function NodeDetailView({ target }: NodeDetailViewProps) {
       <Section>
         <SectionTitle>{isTcp ? "TCP Route" : "HTTP Route"} details</SectionTitle>
         <RouteDetailView data={data} isTcp={isTcp} />
+      </Section>
+    );
+  }
+
+  if (target.type === "backend") {
+    const isTcp = target.schemaCategory === "tcpRouteBackends";
+    return (
+      <Section>
+        <SectionTitle>{isTcp ? "TCP" : "HTTP"} Backend details</SectionTitle>
+        <BackendDetailView data={data} />
       </Section>
     );
   }

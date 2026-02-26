@@ -4,6 +4,16 @@
 
 This document tracks the development of the Agent Gateway UI, covering routing page functionality, form validation, improved UX, and full-page build-out across all sidebar sections.
 
+## Latest: URL-based routing detail view
+
+- Clicking any resource (bind, listener, route, backend) in the hierarchy tree navigates to a URL like `/traffic/routing/bind/8080/listener/0/route/0` — fully bookmarkable and refreshable.
+- `TrafficRoutingPage` now uses a **split layout**: when a sub-route is active, a 380px tree sidebar sits left and the full-width `NodeDetailPage` fills the right.
+- `NodeDetailPage.tsx` (new): reads URL params, resolves the resource from the hierarchy, shows `NodeDetailView` with a breadcrumb trail and an "Edit" button. Edit opens `NodeEditDrawer`; after delete, navigates to the parent URL.
+- `NodeEditDrawer` gained `onDeleted?: () => void` — called instead of `onSaved` after a successful delete.
+- `HierarchyTree` uses `useNavigate` / `useLocation` internally; row clicks navigate to URL; Add buttons still call `onEditNode`. The current URL-matching node is highlighted via `selectedKeys`.
+- `SchemaCategory` in `NodeEditDrawer` includes `"binds"` → `LocalBind` in the `listeners/` schema folder.
+- `App.tsx` registers nested `<Route>` elements under `/traffic/routing` for all bind/listener/route/backend URL patterns.
+
 ## Current State (as of Feb 26, 2026)
 
 All pages in the UI project have been built out or improved. The sidebar structure is preserved unchanged.

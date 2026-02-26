@@ -322,7 +322,29 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         </Logo>
         <Menu
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[
+            // Match exact path or the longest known prefix so sub-pages
+            // (e.g. /traffic/routing/bind/8080) still highlight their menu item.
+            [
+              "/traffic/routing",
+              "/traffic/logs",
+              "/traffic/metrics",
+              "/llm/models",
+              "/llm/logs",
+              "/llm/metrics",
+              "/llm/playground",
+              "/mcp/servers",
+              "/mcp/logs",
+              "/mcp/metrics",
+              "/mcp/playground",
+            ]
+              .filter(
+                (k) =>
+                  location.pathname === k ||
+                  location.pathname.startsWith(k + "/"),
+              )
+              .sort((a, b) => b.length - a.length)[0] ?? location.pathname,
+          ]}
           openKeys={openKeys}
           onOpenChange={handleOpenChange}
           items={menuItems}

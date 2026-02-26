@@ -24,6 +24,7 @@ import { PlaygroundPage } from "./pages/Playground/PlaygroundPage";
 import { PoliciesPage } from "./pages/Policies/PoliciesPage";
 import { RoutesPage } from "./pages/Routes/RoutesPage";
 import { SetupWizardPage } from "./pages/SetupWizard/SetupWizardPage";
+import { NodeDetailPage } from "./pages/Traffic/NodeDetailPage";
 import {
   TrafficLogsPage,
   TrafficMetricsPage,
@@ -91,10 +92,15 @@ function App() {
 
                 {/* Traffic Section */}
                 <Route path="/traffic" element={<TrafficOverviewPage />} />
-                <Route
-                  path="/traffic/routing"
-                  element={<TrafficRoutingPage />}
-                />
+                <Route path="/traffic/routing" element={<TrafficRoutingPage />}>
+                  {/* Nested routes for detail panel */}
+                  <Route path="bind/:port" element={<NodeDetailPage />} />
+                  <Route path="bind/:port/listener/:li" element={<NodeDetailPage />} />
+                  <Route path="bind/:port/listener/:li/route/:ri" element={<NodeDetailPage />} />
+                  <Route path="bind/:port/listener/:li/tcproute/:ri" element={<NodeDetailPage />} />
+                  <Route path="bind/:port/listener/:li/route/:ri/backend/:bi" element={<NodeDetailPage />} />
+                  <Route path="bind/:port/listener/:li/tcproute/:ri/backend/:bi" element={<NodeDetailPage />} />
+                </Route>
                 <Route path="/traffic/logs" element={<TrafficLogsPage />} />
                 <Route
                   path="/traffic/metrics"

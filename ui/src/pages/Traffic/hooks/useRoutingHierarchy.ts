@@ -20,6 +20,15 @@ export interface ValidationError {
   message: string;
 }
 
+export interface BackendNode {
+  /** Raw backend object (LocalRouteBackend or LocalTCPRouteBackend) */
+  backend: Record<string, unknown>;
+  /** Index within route.backends */
+  backendIndex: number;
+  /** Whether this backend belongs to a TCP route */
+  isTcpRoute: boolean;
+}
+
 export interface RouteNode {
   /** Original route data */
   route: LocalRoute | LocalTCPRoute;
@@ -33,6 +42,8 @@ export interface RouteNode {
   listenerName: string | null;
   listenerProtocol: LocalListenerProtocol | undefined;
   validationErrors: ValidationError[];
+  /** Inline backends attached to this route */
+  backends: BackendNode[];
 }
 
 export interface ListenerNode {
@@ -205,6 +216,14 @@ export function useRoutingHierarchy(): RoutingHierarchy {
             ).length;
             brokenBackendRefs += brokenRefs;
 
+            const backends: BackendNode[] = (route.backends ?? []).map(
+              (b, bi) => ({
+                backend: b as unknown as Record<string, unknown>,
+                backendIndex: bi,
+                isTcpRoute: false,
+              }),
+            );
+
             return {
               route,
               isTcp: false,
@@ -213,6 +232,7 @@ export function useRoutingHierarchy(): RoutingHierarchy {
               listenerName: listener.name ?? null,
               listenerProtocol: listener.protocol,
               validationErrors: routeErrors,
+              backends,
             };
           },
         );
@@ -221,6 +241,14 @@ export function useRoutingHierarchy(): RoutingHierarchy {
         const tcpRouteNodes: RouteNode[] = (listener.tcpRoutes ?? []).map(
           (route, idx) => {
             totalRoutes++;
+            const backends: BackendNode[] = (route.backends ?? []).map(
+              (b, bi) => ({
+                backend: b as unknown as Record<string, unknown>,
+                backendIndex: bi,
+                isTcpRoute: true,
+              }),
+            );
+
             return {
               route,
               isTcp: true,
@@ -229,6 +257,7 @@ export function useRoutingHierarchy(): RoutingHierarchy {
               listenerName: listener.name ?? null,
               listenerProtocol: listener.protocol,
               validationErrors: [],
+              backends,
             };
           },
         );
