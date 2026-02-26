@@ -2,12 +2,20 @@ binds:
 - port: 8080
   listeners:
   - protocol: TCP
-    name: testdsfsdf
+    name: testdsfsdfaaaaa
     hostname: b.com
     tcpRoutes:
     - name: adsf
       namespace: sadf
       ruleName: d
+    - name: test
+      namespace: a
+      ruleName: asdfasdf
+      hostnames:
+      - b.com
+    - name: asdfasdfasdfasdfasdf
+      hostnames:
+      - b.com
   - name: lkjlkjl
     routes:
     - matches:

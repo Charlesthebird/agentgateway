@@ -1,4 +1,4 @@
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import Form from "@rjsf/antd";
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import {
@@ -29,6 +29,7 @@ import {
 } from "../../../components/FormTemplates";
 import { validator } from "../../../utils/validator";
 import type { EditTarget, NodeType } from "./HierarchyTree";
+import { NodeDetailView } from "./NodeDetailView";
 import { RelationshipWidget } from "./RelationshipWidget";
 
 const { Text } = Typography;
@@ -164,6 +165,20 @@ async function applyEdit(
     const listener = { ...listeners[target.listenerIndex!] };
     const isTcp = target.schemaCategory === "tcpRoutes";
 
+    // Guard: routes and tcpRoutes are mutually exclusive on a listener.
+    if (isTcp && (listener.routes?.length ?? 0) > 0) {
+      throw new Error(
+        "Cannot add a TCP route to a listener that already has HTTP routes. " +
+          "Remove the existing HTTP routes first.",
+      );
+    }
+    if (!isTcp && (listener.tcpRoutes?.length ?? 0) > 0) {
+      throw new Error(
+        "Cannot add an HTTP route to a listener that already has TCP routes. " +
+          "Remove the existing TCP routes first.",
+      );
+    }
+
     if (isTcp) {
       const tcpRoutes = [...(listener.tcpRoutes ?? [])];
       if (target.isNew) {
@@ -209,9 +224,15 @@ async function applyDelete(target: EditTarget): Promise<void> {
     const bind = { ...newConfig.binds[bindIdx] };
     const listeners = [...bind.listeners];
     const listener = { ...listeners[target.listenerIndex!] };
-    listener.routes = (listener.routes ?? []).filter(
-      (_, i) => i !== target.routeIndex,
-    );
+    if (target.schemaCategory === "tcpRoutes") {
+      listener.tcpRoutes = (listener.tcpRoutes ?? []).filter(
+        (_, i) => i !== target.routeIndex,
+      );
+    } else {
+      listener.routes = (listener.routes ?? []).filter(
+        (_, i) => i !== target.routeIndex,
+      );
+    }
     listeners[target.listenerIndex!] = listener;
     bind.listeners = listeners;
     newConfig.binds[bindIdx] = bind;
@@ -242,6 +263,9 @@ export function NodeEditDrawer({
   const [formData, setFormData] = useState<Record<string, unknown> | null>(
     null,
   );
+  // When opening an existing node, start in view (detail) mode.
+  // New nodes go straight to edit mode.
+  const [isEditing, setIsEditing] = useState(false);
   // Track which option is active for each exclusive group (indexed by groupLabel)
   const [activeGroupKeys, setActiveGroupKeys] = useState<
     Record<string, string>
@@ -264,6 +288,11 @@ export function NodeEditDrawer({
       .finally(() => setSchemaLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target?.schemaCategory, target?.type]);
+
+  // Reset editing mode when target changes
+  useEffect(() => {
+    setIsEditing(target?.isNew ?? false);
+  }, [target]);
 
   // Reset form data and active group keys when target changes
   useEffect(() => {
@@ -375,9 +404,32 @@ export function NodeEditDrawer({
     }
   };
 
+  const nodeLabel = target ? NODE_LABELS[target.type] : "";
+  const itemName =
+    (target?.initialData?.["name"] as string | undefined) ??
+    (target?.type === "bind" ? `Port ${target.bindPort}` : null);
+
   const title = target
-    ? `${target.isNew ? "New" : "Edit"} ${NODE_LABELS[target.type]}`
+    ? target.isNew
+      ? `New ${nodeLabel}`
+      : isEditing
+        ? `Edit ${nodeLabel}${itemName ? `: ${itemName}` : ""}`
+        : `${nodeLabel}${itemName ? `: ${itemName}` : ""}`
     : "";
+
+  const deleteButton = target && !target.isNew ? (
+    <Popconfirm
+      title={`Delete this ${NODE_LABELS[target.type]}?`}
+      description="This cannot be undone."
+      onConfirm={handleDelete}
+      okText="Delete"
+      okButtonProps={{ danger: true }}
+    >
+      <Button danger icon={<DeleteOutlined />} size="small">
+        Delete
+      </Button>
+    </Popconfirm>
+  ) : null;
 
   return (
     <Drawer
@@ -396,82 +448,108 @@ export function NodeEditDrawer({
       width="min(92vw, 1040px)"
       destroyOnClose
       extra={
-        target && !target.isNew ? (
-          <Popconfirm
-            title={`Delete this ${NODE_LABELS[target.type]}?`}
-            description="This cannot be undone."
-            onConfirm={handleDelete}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger icon={<DeleteOutlined />} size="small">
-              Delete
+        <Space size="small">
+          {!isEditing && !target?.isNew && target && (
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit
             </Button>
-          </Popconfirm>
-        ) : null
+          )}
+          {deleteButton}
+        </Space>
       }
     >
-      {schemaLoading && (
-        <div style={{ textAlign: "center", padding: 40 }}>
-          <Spin size="large" />
-        </div>
-      )}
-
-      {schemaError && (
-        <StyledAlert
-          type="error"
-          message="Failed to load form schema"
-          description={schemaError}
-          showIcon
-        />
-      )}
-
-      {!schemaLoading && !schemaError && schema && (
-        <Form
-          schema={schema}
-          validator={validator}
-          formData={formData}
-          uiSchema={exclusiveGroupUiSchema()}
-          formContext={
-            {
-              exclusiveGroups: activeGroups,
-              activeGroupKeys,
-              onGroupKeyChange: handleGroupKeyChange,
-            } satisfies ExclusiveFormContext
-          }
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={handleSubmit}
-          onError={(errors) => {
-            console.error("Form errors:", errors);
-            if (errors.length > 0) {
-              toast.error(
-                `Form has ${errors.length} validation error${errors.length > 1 ? "s" : ""}`,
-              );
-            }
-          }}
-          widgets={{ RelationshipWidget }}
-          fields={{
-            OneOfField,
-            AnyOfField,
-          }}
-          templates={{
-            ObjectFieldTemplate: ExclusiveObjectFieldTemplate,
-            FieldTemplate,
-            ArrayFieldTemplate,
-          }}
-          showErrorList="top"
-          disabled={saving}
-        >
+      {/* Detail (view) mode */}
+      {target && !isEditing && !target.isNew && (
+        <>
+          <NodeDetailView target={target} />
           <Button
-            type="primary"
-            htmlType="submit"
-            loading={saving}
-            style={{ marginTop: 16 }}
+            icon={<EditOutlined />}
+            onClick={() => setIsEditing(true)}
+            style={{ marginTop: 24 }}
             block
           >
-            {target?.isNew ? "Create" : "Save Changes"}
+            Edit {nodeLabel}
           </Button>
-        </Form>
+        </>
+      )}
+
+      {/* Edit / create mode */}
+      {(isEditing || target?.isNew) && (
+        <>
+          {schemaLoading && (
+            <div style={{ textAlign: "center", padding: 40 }}>
+              <Spin size="large" />
+            </div>
+          )}
+
+          {schemaError && (
+            <StyledAlert
+              type="error"
+              message="Failed to load form schema"
+              description={schemaError}
+              showIcon
+            />
+          )}
+
+          {!schemaLoading && !schemaError && schema && (
+            <Form
+              schema={schema}
+              validator={validator}
+              formData={formData}
+              uiSchema={exclusiveGroupUiSchema()}
+              formContext={
+                {
+                  exclusiveGroups: activeGroups,
+                  activeGroupKeys,
+                  onGroupKeyChange: handleGroupKeyChange,
+                } satisfies ExclusiveFormContext
+              }
+              onChange={({ formData: fd }) => setFormData(fd)}
+              onSubmit={handleSubmit}
+              onError={(errors) => {
+                console.error("Form errors:", errors);
+                if (errors.length > 0) {
+                  toast.error(
+                    `Form has ${errors.length} validation error${errors.length > 1 ? "s" : ""}`,
+                  );
+                }
+              }}
+              widgets={{ RelationshipWidget }}
+              fields={{
+                OneOfField,
+                AnyOfField,
+              }}
+              templates={{
+                ObjectFieldTemplate: ExclusiveObjectFieldTemplate,
+                FieldTemplate,
+                ArrayFieldTemplate,
+              }}
+              showErrorList="top"
+              disabled={saving}
+            >
+              <Space style={{ marginTop: 16, width: "100%" }}>
+                {!target?.isNew && (
+                  <Button onClick={() => setIsEditing(false)} style={{ flex: 1 }}>
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={saving}
+                  style={{ flex: 1 }}
+                  block={!!target?.isNew}
+                >
+                  {target?.isNew ? "Create" : "Save Changes"}
+                </Button>
+              </Space>
+            </Form>
+          )}
+        </>
       )}
     </Drawer>
   );

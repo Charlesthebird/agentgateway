@@ -3,7 +3,6 @@ import styled from "@emotion/styled";
 import { Badge, Button, Card, Dropdown, Empty, Space, Tag, Tooltip, Tree } from "antd";
 import type { DataNode } from "antd/es/tree";
 import {
-  Edit,
   Headphones,
   Network,
   PlusCircle,
@@ -119,7 +118,19 @@ function buildBindTitle(
   onEdit: (target: EditTarget) => void,
 ): ReactNode {
   return (
-    <NodeRow>
+    <NodeRow
+      onClick={(e) => {
+        e.stopPropagation();
+        onEdit({
+          type: "bind",
+          bindPort: bind.bind.port,
+          isNew: false,
+          schemaCategory: "backends",
+          initialData: bind.bind,
+        });
+      }}
+      style={{ cursor: "pointer" }}
+    >
       <Network
         size={14}
         style={{ color: "var(--color-primary)", flexShrink: 0 }}
@@ -132,45 +143,26 @@ function buildBindTitle(
         {bind.listeners.length} listener{bind.listeners.length !== 1 ? "s" : ""}
       </NodeMeta>
       <ValidationBadges errors={bind.validationErrors} />
-      <Space size="small">
-        <AddButton
-          type="text"
-          size="small"
-          icon={<Edit size={12} />}
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit({
-              type: "bind",
-              bindPort: bind.bind.port,
-              isNew: false,
-              schemaCategory: "backends",
-              initialData: bind.bind,
-            });
-          }}
-        >
-          Edit
-        </AddButton>
-        <AddButton
-          type="text"
-          size="small"
-          icon={<PlusCircle size={12} />}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAdd({
-              type: "listener",
-              bindPort: bind.bind.port,
-              isNew: true,
-              schemaCategory: "listeners",
-              initialData: {
-                routes: null, // Explicitly set to null to avoid validation
-                tcpRoutes: null,
-              },
-            });
-          }}
-        >
-          Add Listener
-        </AddButton>
-      </Space>
+      <AddButton
+        type="text"
+        size="small"
+        icon={<PlusCircle size={12} />}
+        onClick={(e) => {
+          e.stopPropagation();
+          onAdd({
+            type: "listener",
+            bindPort: bind.bind.port,
+            isNew: true,
+            schemaCategory: "listeners",
+            initialData: {
+              routes: null,
+              tcpRoutes: null,
+            },
+          });
+        }}
+      >
+        Add Listener
+      </AddButton>
     </NodeRow>
   );
 }
@@ -184,6 +176,106 @@ function buildListenerTitle(
 ): ReactNode {
   const protocol = ln.listener.protocol ?? "HTTP";
   const hostname = ln.listener.hostname ?? "*";
+
+  // Enforce mutual exclusion: routes and tcpRoutes cannot coexist on a listener.
+  const hasHttpRoutes = (ln.listener.routes?.length ?? 0) > 0;
+  const hasTcpRoutes = (ln.listener.tcpRoutes?.length ?? 0) > 0;
+  // If neither type is set yet, allow both; otherwise lock to what's already there.
+  const canAddHttp = !hasTcpRoutes;
+  const canAddTcp = !hasHttpRoutes;
+
+  const httpRouteCount = ln.listener.routes?.length ?? 0;
+  const tcpRouteCount = ln.listener.tcpRoutes?.length ?? 0;
+  const totalRoutes = httpRouteCount + tcpRouteCount;
+
+  const hostnameDefaults =
+    ln.listener.hostname && ln.listener.hostname !== "*"
+      ? [ln.listener.hostname]
+      : [];
+
+  const addHttpRoute = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation();
+    onAdd({
+      type: "route",
+      bindPort,
+      listenerIndex,
+      isNew: true,
+      schemaCategory: "routes",
+      initialData: {
+        hostnames: hostnameDefaults,
+        matches: [{ path: { pathPrefix: "/" } }],
+      },
+    });
+  };
+
+  const addTcpRoute = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation();
+    onAdd({
+      type: "route",
+      bindPort,
+      listenerIndex,
+      isNew: true,
+      schemaCategory: "tcpRoutes",
+      initialData: { hostnames: hostnameDefaults },
+    });
+  };
+
+  // Render add-route control: single button when only one type is allowed,
+  // dropdown when both are allowed.
+  let addRouteControl: ReactNode;
+  if (canAddHttp && canAddTcp) {
+    addRouteControl = (
+      <Dropdown
+        trigger={["click"]}
+        menu={{
+          items: [
+            {
+              key: "http",
+              label: "HTTP Route",
+              onClick: ({ domEvent }) => addHttpRoute(domEvent),
+            },
+            {
+              key: "tcp",
+              label: "TCP Route",
+              onClick: ({ domEvent }) => addTcpRoute(domEvent),
+            },
+          ],
+        }}
+      >
+        <AddButton
+          type="text"
+          size="small"
+          icon={<PlusCircle size={12} />}
+          onClick={(e) => e.stopPropagation()}
+        >
+          Add Route
+        </AddButton>
+      </Dropdown>
+    );
+  } else if (canAddHttp) {
+    addRouteControl = (
+      <AddButton
+        type="text"
+        size="small"
+        icon={<PlusCircle size={12} />}
+        onClick={addHttpRoute}
+      >
+        Add HTTP Route
+      </AddButton>
+    );
+  } else if (canAddTcp) {
+    addRouteControl = (
+      <AddButton
+        type="text"
+        size="small"
+        icon={<PlusCircle size={12} />}
+        onClick={addTcpRoute}
+      >
+        Add TCP Route
+      </AddButton>
+    );
+  }
+
   return (
     <NodeRow
       onClick={(e) => {
@@ -211,66 +303,13 @@ function buildListenerTitle(
         </Tag>
       )}
       <NodeMeta>
-        {ln.routes.length} route{ln.routes.length !== 1 ? "s" : ""}
+        {totalRoutes} route{totalRoutes !== 1 ? "s" : ""}
+        {hasTcpRoutes && !hasHttpRoutes && (
+          <span style={{ marginLeft: 4, opacity: 0.7 }}>(TCP)</span>
+        )}
       </NodeMeta>
       <ValidationBadges errors={ln.validationErrors} />
-      <Dropdown
-        trigger={["click"]}
-        menu={{
-          items: [
-            {
-              key: "http",
-              label: "HTTP Route",
-              onClick: ({ domEvent }) => {
-                domEvent.stopPropagation();
-                onAdd({
-                  type: "route",
-                  bindPort,
-                  listenerIndex,
-                  isNew: true,
-                  schemaCategory: "routes",
-                  initialData: {
-                    hostnames:
-                      ln.listener.hostname && ln.listener.hostname !== "*"
-                        ? [ln.listener.hostname]
-                        : [],
-                    matches: [{ path: { pathPrefix: "/" } }],
-                  },
-                });
-              },
-            },
-            {
-              key: "tcp",
-              label: "TCP Route",
-              onClick: ({ domEvent }) => {
-                domEvent.stopPropagation();
-                onAdd({
-                  type: "route",
-                  bindPort,
-                  listenerIndex,
-                  isNew: true,
-                  schemaCategory: "tcpRoutes",
-                  initialData: {
-                    hostnames:
-                      ln.listener.hostname && ln.listener.hostname !== "*"
-                        ? [ln.listener.hostname]
-                        : [],
-                  },
-                });
-              },
-            },
-          ],
-        }}
-      >
-        <AddButton
-          type="text"
-          size="small"
-          icon={<PlusCircle size={12} />}
-          onClick={(e) => e.stopPropagation()}
-        >
-          Add Route
-        </AddButton>
-      </Dropdown>
+      {addRouteControl}
     </NodeRow>
   );
 }
@@ -280,20 +319,21 @@ function buildRouteTitle(
   onEdit: (target: EditTarget) => void,
   bindPort: number,
   listenerIndex: number,
-  routeIndex: number,
 ): ReactNode {
   type MatchPathUnion = { exact?: string; pathPrefix?: string; regex?: string };
-  const paths = (rn.route.matches ?? [])
+  const httpRoute = rn.isTcp ? null : (rn.route as { matches?: Array<{ path?: unknown }> });
+  const paths = (httpRoute?.matches ?? [])
     .map((m) => {
       const p = m.path as MatchPathUnion;
-      if (p.exact != null) return p.exact;
-      if (p.pathPrefix != null) return p.pathPrefix + "*";
-      if (p.regex != null) return `~${p.regex}`;
+      if (p?.exact != null) return p.exact;
+      if (p?.pathPrefix != null) return p.pathPrefix + "*";
+      if (p?.regex != null) return `~${p.regex}`;
       return null;
     })
     .filter(Boolean) as string[];
 
   const backendCount = rn.route.backends?.length ?? 0;
+  const schemaCategory = rn.isTcp ? "tcpRoutes" : "routes";
 
   return (
     <NodeRow
@@ -303,10 +343,10 @@ function buildRouteTitle(
           type: "route",
           bindPort,
           listenerIndex,
-          routeIndex,
+          routeIndex: rn.categoryIndex,
           isNew: false,
-          schemaCategory: "routes",
-          initialData: rn.route,
+          schemaCategory,
+          initialData: rn.route as Record<string, unknown>,
         });
       }}
       style={{ cursor: "pointer" }}
@@ -316,6 +356,11 @@ function buildRouteTitle(
         style={{ color: "var(--color-primary)", flexShrink: 0 }}
       />
       <NodeLabel>{rn.route.name ?? "(unnamed route)"}</NodeLabel>
+      {rn.isTcp && (
+        <Tag bordered={false} color="blue" style={{ fontSize: 11 }}>
+          TCP
+        </Tag>
+      )}
       {paths.slice(0, 2).map((p, i) => (
         <Tag
           key={i}
@@ -368,11 +413,11 @@ function buildTreeData(
       icon: null,
       selectable: false,
       title: buildListenerTitle(ln, onAdd, onEdit, bindNode.bind.port, li),
-      children: (ln.routes ?? []).map((rn, ri) => ({
-        key: `route-${bindNode.bind.port}-${li}-${ri}`,
+      children: (ln.routes ?? []).map((rn) => ({
+        key: `route-${bindNode.bind.port}-${li}-${rn.isTcp ? "tcp" : "http"}-${rn.categoryIndex}`,
         icon: null,
         selectable: false,
-        title: buildRouteTitle(rn, onEdit, bindNode.bind.port, li, ri),
+        title: buildRouteTitle(rn, onEdit, bindNode.bind.port, li),
         isLeaf: true,
       })),
     })),

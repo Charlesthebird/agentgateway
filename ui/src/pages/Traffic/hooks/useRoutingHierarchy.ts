@@ -8,6 +8,7 @@ import type {
   LocalPolicy,
   LocalRoute,
   LocalRouteBackend,
+  LocalTCPRoute,
 } from "../../../api/types";
 
 // ---------------------------------------------------------------------------
@@ -21,7 +22,11 @@ export interface ValidationError {
 
 export interface RouteNode {
   /** Original route data */
-  route: LocalRoute;
+  route: LocalRoute | LocalTCPRoute;
+  /** True when this is a TCP route (listener.tcpRoutes), false for HTTP */
+  isTcp: boolean;
+  /** Index within listener.routes or listener.tcpRoutes (based on isTcp) */
+  categoryIndex: number;
   /** Inherited from parent bind */
   port: number;
   /** Inherited from parent listener */
@@ -185,31 +190,56 @@ export function useRoutingHierarchy(): RoutingHierarchy {
           allListenerHostnames,
         );
 
-        const routeNodes: RouteNode[] = (listener.routes ?? []).map((route) => {
-          totalRoutes++;
-          const routeErrors = validateRoute(route, listener, namedBackendNames);
+        // HTTP routes
+        const httpRouteNodes: RouteNode[] = (listener.routes ?? []).map(
+          (route, idx) => {
+            totalRoutes++;
+            const routeErrors = validateRoute(
+              route,
+              listener,
+              namedBackendNames,
+            );
+            const brokenRefs = routeErrors.filter(
+              (e) =>
+                e.level === "error" && e.message.includes("references backend"),
+            ).length;
+            brokenBackendRefs += brokenRefs;
 
-          const brokenRefs = routeErrors.filter(
-            (e) =>
-              e.level === "error" && e.message.includes("references backend"),
-          ).length;
-          brokenBackendRefs += brokenRefs;
+            return {
+              route,
+              isTcp: false,
+              categoryIndex: idx,
+              port: bind.port,
+              listenerName: listener.name ?? null,
+              listenerProtocol: listener.protocol,
+              validationErrors: routeErrors,
+            };
+          },
+        );
 
-          return {
-            route,
-            port: bind.port,
-            listenerName: listener.name ?? null,
-            listenerProtocol: listener.protocol,
-            validationErrors: routeErrors,
-          };
-        });
+        // TCP routes
+        const tcpRouteNodes: RouteNode[] = (listener.tcpRoutes ?? []).map(
+          (route, idx) => {
+            totalRoutes++;
+            return {
+              route,
+              isTcp: true,
+              categoryIndex: idx,
+              port: bind.port,
+              listenerName: listener.name ?? null,
+              listenerProtocol: listener.protocol,
+              validationErrors: [],
+            };
+          },
+        );
 
-        const nodeErrors = [...listenerErrors];
+        const allRouteNodes = [...httpRouteNodes, ...tcpRouteNodes];
+
         return {
           listener,
           port: bind.port,
-          routes: routeNodes,
-          validationErrors: nodeErrors,
+          routes: allRouteNodes,
+          validationErrors: listenerErrors,
         };
       });
 
