@@ -85,12 +85,6 @@ const Sidebar = styled.div`
   gap: var(--spacing-lg);
 `;
 
-const SidebarTitle = styled.h1`
-  margin: 0 0 var(--spacing-xs);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--color-text-base);
-`;
 
 const DetailPanel = styled.div`
   flex: 1;
@@ -160,16 +154,9 @@ export function TrafficRoutingPage() {
   // Drawer state (Add operations only)
   const [addTarget, setAddTarget] = useState<EditTarget | null>(null);
 
-  // Edit state (lifted here so the header button lives in the full-width bar)
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Reset edit mode when navigating to a different resource.
-  // We derive this from the pathname so the state is driven by the URL.
-  const [prevPathname, setPrevPathname] = useState(location.pathname);
-  if (prevPathname !== location.pathname) {
-    setPrevPathname(location.pathname);
-    setIsEditing(false);
-  }
+  // Edit mode is URL-driven: append ?edit=true to enter, navigate to bare path to exit.
+  // This makes it bookmarkable and avoids state-reset race conditions on navigation.
+  const isEditing = new URLSearchParams(location.search).get("edit") === "true";
 
   // ---------------------------------------------------------------------------
   // Resolve the selected resource from URL + hierarchy
@@ -353,8 +340,8 @@ export function TrafficRoutingPage() {
 
   const handleSaved = useCallback(() => {
     mutate();
-    setIsEditing(false);
-  }, [mutate]);
+    navigate(location.pathname); // removes ?edit=true
+  }, [mutate, navigate, location.pathname]);
 
   const handleDeleted = useCallback(() => {
     mutate();
@@ -429,7 +416,7 @@ export function TrafficRoutingPage() {
                 (isEditing ? (
                   <Button
                     icon={<X size={14} />}
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => navigate(location.pathname)}
                   >
                     Cancel
                   </Button>
@@ -437,7 +424,7 @@ export function TrafficRoutingPage() {
                   <Button
                     type="primary"
                     icon={<Edit2 size={14} />}
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => navigate(location.pathname + "?edit=true")}
                   >
                     Edit
                   </Button>

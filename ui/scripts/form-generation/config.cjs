@@ -30,6 +30,26 @@ module.exports = {
    * - typePatterns: Array of strings to match against type names (e.g., ['Policy'] matches 'LocalPolicy', 'JWTPolicy')
    * - exclude: Array of type names to explicitly exclude from this category
    */
+  /**
+   * Type overrides: replace specific $defs entries with a custom schema.
+   *
+   * Use this when the auto-generated schema for a type is structurally wrong
+   * (e.g. Rust newtype structs that schemars models as objects but actually
+   * serialise as a plain string). The replacement is applied before any other
+   * processing so titles, descriptions, and cleanup passes still run on the
+   * surrounding schema.
+   *
+   * Example: NamespacedHostname is generated as {namespace, hostname} by schemars
+   * but the backend serialises/deserialises it as the string "namespace/hostname".
+   */
+  TYPE_OVERRIDES: {
+    NamespacedHostname: {
+      type: 'string',
+      pattern: '^[^/]+/[^/]+$',
+      description: 'Service name in "namespace/hostname" format (e.g. "default/my-service")',
+    },
+  },
+
   CATEGORY_MAPPINGS: {
     policies: {
       name: 'Policies',

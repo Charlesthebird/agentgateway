@@ -4,11 +4,13 @@
   "properties": {
     "name": {
       "$ref": "#/$defs/ResourceName",
-      "title": "Name"
+      "title": "Name",
+      "description": "Unique name for this resource"
     },
     "target": {
       "$ref": "#/$defs/PolicyTarget",
-      "title": "Target"
+      "title": "Target",
+      "description": "Resource this policy attaches to"
     },
     "phase": {
       "description": "phase defines at what level the policy runs at. Gateway policies run pre-routing, while\nRoute policies apply post-routing.\nOnly a subset of policies are eligible as Gateway policies.\nIn general, normal (route level) policies should be used, except you need the policy to influence\nrouting.",
@@ -34,11 +36,13 @@
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name"
+          "title": "Name",
+          "description": "Unique name for this resource"
         },
         "namespace": {
           "type": "string",
-          "title": "Namespace"
+          "title": "Namespace",
+          "description": "Kubernetes-style namespace prefix"
         }
       },
       "additionalProperties": false,
@@ -60,7 +64,6 @@
           "required": [
             "gateway"
           ],
-          "additionalProperties": false,
           "title": "Gateway"
         },
         {
@@ -73,7 +76,6 @@
           "required": [
             "route"
           ],
-          "additionalProperties": false,
           "title": "Route"
         },
         {
@@ -86,7 +88,6 @@
           "required": [
             "backend"
           ],
-          "additionalProperties": false,
           "title": "Backend"
         }
       ],
@@ -123,18 +124,21 @@
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name"
+          "title": "Name",
+          "description": "Unique name for this resource"
         },
         "namespace": {
           "type": "string",
-          "title": "Namespace"
+          "title": "Namespace",
+          "description": "Kubernetes-style namespace prefix"
         },
         "ruleName": {
           "type": [
             "string",
             "null"
           ],
-          "title": "Rule Name"
+          "title": "Rule Name",
+          "description": "Optional name for this rule"
         },
         "kind": {
           "type": [
@@ -153,13 +157,6 @@
     },
     "BackendTarget": {
       "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
         {
           "type": "object",
           "properties": {
@@ -189,7 +186,6 @@
           "required": [
             "backend"
           ],
-          "additionalProperties": false,
           "title": "Backend"
         },
         {
@@ -209,7 +205,6 @@
                     "integer",
                     "null"
                   ],
-                  "format": "uint16",
                   "minimum": 0,
                   "maximum": 65535
                 }
@@ -224,7 +219,6 @@
           "required": [
             "service"
           ],
-          "additionalProperties": false,
           "title": "Service"
         }
       ],
@@ -232,11 +226,17 @@
     },
     "PolicyPhase": {
       "type": "string",
-      "enum": [
-        "route",
-        "gateway"
-      ],
-      "title": "Policy Phase"
+      "title": "Policy Phase",
+      "oneOf": [
+        {
+          "const": "route",
+          "title": "Route"
+        },
+        {
+          "const": "gateway",
+          "title": "Gateway"
+        }
+      ]
     },
     "FilterOrPolicy": {
       "type": "object",
@@ -645,14 +645,14 @@
               "type": "null"
             }
           ],
-          "title": "Path"
+          "title": "Path",
+          "description": "URL path match condition"
         },
         "status": {
           "type": [
             "integer",
             "null"
           ],
-          "format": "uint16",
           "minimum": 1,
           "maximum": 65535,
           "title": "Status"
@@ -665,11 +665,17 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "auto",
-            "none"
-          ],
-          "title": "Option 1"
+          "title": "Option 1",
+          "oneOf": [
+            {
+              "const": "auto",
+              "title": "Auto"
+            },
+            {
+              "const": "none",
+              "title": "None"
+            }
+          ]
         },
         {
           "type": "object",
@@ -681,21 +687,18 @@
           "required": [
             "full"
           ],
-          "additionalProperties": false,
           "title": "Full"
         },
         {
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "type": "string"
             }
           },
           "required": [
             "host"
           ],
-          "additionalProperties": false,
           "title": "Host"
         },
         {
@@ -703,7 +706,6 @@
           "properties": {
             "port": {
               "type": "integer",
-              "format": "uint16",
               "minimum": 1,
               "maximum": 65535
             }
@@ -711,7 +713,6 @@
           "required": [
             "port"
           ],
-          "additionalProperties": false,
           "title": "Port"
         }
       ],
@@ -729,7 +730,6 @@
           "required": [
             "full"
           ],
-          "additionalProperties": false,
           "title": "Full"
         },
         {
@@ -742,7 +742,6 @@
           "required": [
             "prefix"
           ],
-          "additionalProperties": false,
           "title": "Prefix"
         }
       ],
@@ -773,7 +772,8 @@
               "type": "null"
             }
           ],
-          "title": "Path"
+          "title": "Path",
+          "description": "URL path match condition"
         }
       },
       "additionalProperties": false,
@@ -788,7 +788,6 @@
         },
         "percentage": {
           "type": "number",
-          "format": "double",
           "title": "Percentage"
         }
       },
@@ -802,13 +801,6 @@
     "SimpleLocalBackend": {
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
-        {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
           "properties": {
@@ -820,7 +812,6 @@
                 },
                 "port": {
                   "type": "integer",
-                  "format": "uint16",
                   "minimum": 0,
                   "maximum": 65535
                 }
@@ -835,7 +826,6 @@
           "required": [
             "service"
           ],
-          "additionalProperties": false,
           "title": "Service"
         },
         {
@@ -843,14 +833,13 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "description": "Hostname or IP address",
+              "type": "string"
             }
           },
           "required": [
             "host"
           ],
-          "additionalProperties": false,
           "title": "Host"
         },
         {
@@ -864,7 +853,6 @@
           "required": [
             "backend"
           ],
-          "additionalProperties": false,
           "title": "Backend"
         }
       ],
@@ -872,9 +860,8 @@
     },
     "NamespacedHostname": {
       "type": "string",
-      "title": "Namespaced Hostname",
-      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
-      "pattern": "^[^/]+/[^/]+$"
+      "pattern": "^[^/]+/[^/]+$",
+      "description": "Service name in \"namespace/hostname\" format (e.g. \"default/my-service\")"
     },
     "DirectResponse": {
       "type": "object",
@@ -885,7 +872,6 @@
         },
         "status": {
           "type": "integer",
-          "format": "uint16",
           "minimum": 1,
           "maximum": 65535,
           "title": "Status"
@@ -905,7 +891,6 @@
       ],
       "items": {
         "type": "integer",
-        "format": "uint8",
         "minimum": 0,
         "maximum": 255
       },
@@ -1050,7 +1035,6 @@
           "required": [
             "auth0"
           ],
-          "additionalProperties": false,
           "title": "Auth0"
         },
         {
@@ -1064,7 +1048,6 @@
           "required": [
             "keycloak"
           ],
-          "additionalProperties": false,
           "title": "Keycloak"
         }
       ],
@@ -1202,7 +1185,8 @@
           "additionalProperties": {
             "$ref": "#/$defs/RouteType"
           },
-          "title": "Routes"
+          "title": "Routes",
+          "description": "HTTP routes"
         }
       },
       "additionalProperties": false,
@@ -1315,7 +1299,6 @@
         },
         "status": {
           "type": "integer",
-          "format": "uint16",
           "minimum": 1,
           "maximum": 65535,
           "default": 403,
@@ -1362,11 +1345,17 @@
     },
     "Action": {
       "type": "string",
-      "enum": [
-        "mask",
-        "reject"
-      ],
-      "title": "Action"
+      "title": "Action",
+      "oneOf": [
+        {
+          "const": "mask",
+          "title": "Mask"
+        },
+        {
+          "const": "reject",
+          "title": "Reject"
+        }
+      ]
     },
     "RegexRule": {
       "anyOf": [
@@ -1377,7 +1366,6 @@
               "$ref": "#/$defs/Builtin"
             }
           },
-          "additionalProperties": false,
           "required": [
             "builtin"
           ],
@@ -1390,7 +1378,6 @@
               "type": "string"
             }
           },
-          "additionalProperties": false,
           "required": [
             "pattern"
           ],
@@ -1401,21 +1388,37 @@
     },
     "Builtin": {
       "type": "string",
-      "enum": [
-        "ssn",
-        "creditCard",
-        "phoneNumber",
-        "email",
-        "caSin"
-      ],
-      "title": "Builtin"
+      "title": "Builtin",
+      "oneOf": [
+        {
+          "const": "ssn",
+          "title": "Ssn"
+        },
+        {
+          "const": "creditCard",
+          "title": "Credit Card"
+        },
+        {
+          "const": "phoneNumber",
+          "title": "Phone Number"
+        },
+        {
+          "const": "email",
+          "title": "Email"
+        },
+        {
+          "const": "caSin",
+          "title": "Ca Sin"
+        }
+      ]
     },
     "Webhook": {
       "type": "object",
       "properties": {
         "target": {
           "$ref": "#/$defs/SimpleLocalBackend",
-          "title": "Target"
+          "title": "Target",
+          "description": "Resource this policy attaches to"
         },
         "forwardHeaderMatches": {
           "type": "array",
@@ -1436,7 +1439,8 @@
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name"
+          "title": "Name",
+          "description": "Unique name for this resource"
         },
         "value": {
           "$ref": "#/$defs/HeaderValueMatch",
@@ -1462,7 +1466,6 @@
           "required": [
             "exact"
           ],
-          "additionalProperties": false,
           "title": "Exact"
         },
         {
@@ -1475,7 +1478,6 @@
           "required": [
             "regex"
           ],
-          "additionalProperties": false,
           "title": "Regex"
         }
       ],
@@ -1494,7 +1496,8 @@
         },
         "policies": {
           "$ref": "#/$defs/LocalBackendPolicies",
-          "title": "Policies"
+          "title": "Policies",
+          "description": "Policies to apply to this resource"
         }
       },
       "additionalProperties": false,
@@ -1678,7 +1681,8 @@
             "string",
             "null"
           ],
-          "title": "Hostname"
+          "title": "Hostname",
+          "description": "Hostname or domain to match (wildcards like *.example.com are supported)"
         },
         "insecure": {
           "type": "boolean",
@@ -1729,7 +1733,6 @@
           "required": [
             "passthrough"
           ],
-          "additionalProperties": false,
           "title": "Passthrough"
         },
         {
@@ -1742,7 +1745,6 @@
           "required": [
             "key"
           ],
-          "additionalProperties": false,
           "title": "Key"
         },
         {
@@ -1755,7 +1757,6 @@
           "required": [
             "gcp"
           ],
-          "additionalProperties": false,
           "title": "Gcp"
         },
         {
@@ -1768,7 +1769,6 @@
           "required": [
             "aws"
           ],
-          "additionalProperties": false,
           "title": "Aws"
         },
         {
@@ -1781,7 +1781,6 @@
           "required": [
             "azure"
           ],
-          "additionalProperties": false,
           "title": "Azure"
         }
       ],
@@ -1824,7 +1823,6 @@
               ]
             }
           },
-          "additionalProperties": false,
           "required": [
             "type"
           ],
@@ -1846,7 +1844,6 @@
               "default": null
             }
           },
-          "additionalProperties": false,
           "title": "Type"
         }
       ],
@@ -1854,13 +1851,11 @@
     },
     "IdToken": {
       "type": "string",
-      "format": "const",
       "const": "idToken",
       "title": "Id Token"
     },
     "AccessToken": {
       "type": "string",
-      "format": "const",
       "const": "accessToken",
       "title": "Access Token"
     },
@@ -1889,7 +1884,6 @@
               ]
             }
           },
-          "additionalProperties": false,
           "required": [
             "accessKeyId",
             "secretAccessKey"
@@ -1898,8 +1892,7 @@
         },
         {
           "description": "Use implicit AWS authentication (environment variables, IAM roles, etc.)",
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         }
       ],
       "title": "Aws Auth"
@@ -1983,7 +1976,6 @@
           "required": [
             "explicitConfig"
           ],
-          "additionalProperties": false,
           "title": "Explicit Config"
         },
         {
@@ -1998,7 +1990,6 @@
           "required": [
             "developerImplicit"
           ],
-          "additionalProperties": false,
           "title": "Developer Implicit"
         }
       ],
@@ -2016,7 +2007,6 @@
           "required": [
             "clientId"
           ],
-          "additionalProperties": false,
           "title": "Client Id"
         },
         {
@@ -2029,7 +2019,6 @@
           "required": [
             "objectId"
           ],
-          "additionalProperties": false,
           "title": "Object Id"
         },
         {
@@ -2042,7 +2031,6 @@
           "required": [
             "resourceId"
           ],
-          "additionalProperties": false,
           "title": "Resource Id"
         }
       ],
@@ -2109,7 +2097,6 @@
         },
         "retries": {
           "type": "integer",
-          "format": "uint32",
           "minimum": 0,
           "default": 9,
           "title": "Retries"
@@ -2123,13 +2110,11 @@
       "properties": {
         "secs": {
           "type": "integer",
-          "format": "uint64",
           "minimum": 0,
           "title": "Secs"
         },
         "nanos": {
           "type": "integer",
-          "format": "uint32",
           "minimum": 0,
           "title": "Nanos"
         }
@@ -2353,7 +2338,6 @@
             "integer",
             "null"
           ],
-          "format": "uint",
           "minimum": 0,
           "default": 1024,
           "title": "Min Tokens"
@@ -2420,14 +2404,12 @@
       "properties": {
         "maxTokens": {
           "type": "integer",
-          "format": "uint64",
           "minimum": 0,
           "default": 0,
           "title": "Max Tokens"
         },
         "tokensPerFill": {
           "type": "integer",
-          "format": "uint64",
           "minimum": 0,
           "default": 0,
           "title": "Tokens Per Fill"
@@ -2450,11 +2432,17 @@
     },
     "RateLimitType": {
       "type": "string",
-      "enum": [
-        "requests",
-        "tokens"
-      ],
-      "title": "Rate Limit Type"
+      "title": "Rate Limit Type",
+      "oneOf": [
+        {
+          "const": "requests",
+          "title": "Requests"
+        },
+        {
+          "const": "tokens",
+          "title": "Tokens"
+        }
+      ]
     },
     "RemoteRateLimit": {
       "type": "object",
@@ -2482,13 +2470,6 @@
       ],
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
-        {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
           "properties": {
@@ -2500,7 +2481,6 @@
                 },
                 "port": {
                   "type": "integer",
-                  "format": "uint16",
                   "minimum": 0,
                   "maximum": 65535
                 }
@@ -2522,8 +2502,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "description": "Hostname or IP address",
+              "type": "string"
             }
           },
           "required": [
@@ -2610,7 +2590,6 @@
               }
             }
           },
-          "additionalProperties": false,
           "required": [
             "providers"
           ],
@@ -2639,7 +2618,6 @@
               "$ref": "#/$defs/FileInlineOrRemote"
             }
           },
-          "additionalProperties": false,
           "required": [
             "issuer",
             "jwks"
@@ -2859,13 +2837,6 @@
       },
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
-        {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
           "properties": {
@@ -2877,7 +2848,6 @@
                 },
                 "port": {
                   "type": "integer",
-                  "format": "uint16",
                   "minimum": 0,
                   "maximum": 65535
                 }
@@ -2899,8 +2869,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "description": "Hostname or IP address",
+              "type": "string"
             }
           },
           "required": [
@@ -2959,7 +2929,6 @@
           "required": [
             "grpc"
           ],
-          "additionalProperties": false,
           "title": "Grpc"
         },
         {
@@ -3017,7 +2986,6 @@
           "required": [
             "http"
           ],
-          "additionalProperties": false,
           "title": "Http"
         }
       ],
@@ -3031,18 +2999,23 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "allow",
-            "deny"
-          ],
-          "title": "Option 1"
+          "title": "Option 1",
+          "oneOf": [
+            {
+              "const": "allow",
+              "title": "Allow"
+            },
+            {
+              "const": "deny",
+              "title": "Deny"
+            }
+          ]
         },
         {
           "type": "object",
           "properties": {
             "denyWithStatus": {
               "type": "integer",
-              "format": "uint16",
               "minimum": 0,
               "maximum": 65535
             }
@@ -3050,7 +3023,6 @@
           "required": [
             "denyWithStatus"
           ],
-          "additionalProperties": false,
           "title": "Deny With Status"
         }
       ],
@@ -3066,7 +3038,6 @@
         "maxRequestBytes": {
           "description": "Maximum size of request body to buffer (default: 8192)",
           "type": "integer",
-          "format": "uint32",
           "minimum": 0,
           "default": 0,
           "title": "Max Request Bytes"
@@ -3135,13 +3106,6 @@
       },
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
-        {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
           "properties": {
@@ -3153,7 +3117,6 @@
                 },
                 "port": {
                   "type": "integer",
-                  "format": "uint16",
                   "minimum": 0,
                   "maximum": 65535
                 }
@@ -3175,8 +3138,8 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "description": "Hostname or IP address",
+              "type": "string"
             }
           },
           "required": [
@@ -3202,11 +3165,17 @@
     },
     "FailureMode2": {
       "type": "string",
-      "enum": [
-        "failClosed",
-        "failOpen"
-      ],
-      "title": "Failure Mode2"
+      "title": "Failure Mode2",
+      "oneOf": [
+        {
+          "const": "failClosed",
+          "title": "Fail Closed"
+        },
+        {
+          "const": "failOpen",
+          "title": "Fail Open"
+        }
+      ]
     },
     "LocalTransformationConfig": {
       "type": "object",
@@ -3320,7 +3289,6 @@
       "properties": {
         "attempts": {
           "type": "integer",
-          "format": "uint8",
           "minimum": 1,
           "maximum": 255,
           "default": 1,
@@ -3337,7 +3305,6 @@
           "type": "array",
           "items": {
             "type": "integer",
-            "format": "uint16",
             "minimum": 1,
             "maximum": 65535
           },

@@ -1,13 +1,15 @@
-import { PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { Global, css } from "@emotion/react";
 import styled from "@emotion/styled";
+import type { MenuProps } from "antd";
 import {
   Badge,
   Button,
   Card,
   Dropdown,
   Empty,
+  Modal,
   Space,
-  Tag,
   Tooltip,
   Tree,
 } from "antd";
@@ -16,14 +18,17 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   Headphones,
+  MoreVertical,
   Network,
+  Pencil,
   PlusCircle,
   Route,
   Server,
   TriangleAlert,
 } from "lucide-react";
 import type { Key, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ProtocolTag } from "../../../components/ProtocolTag";
 import type {
@@ -34,6 +39,7 @@ import type {
   RoutingHierarchy,
   ValidationError,
 } from "../hooks/useRoutingHierarchy";
+import { NODE_LABELS, applyDelete, extractErrorMessage } from "./nodeEditUtils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -95,41 +101,67 @@ const TreeCard = styled(Card)`
   }
 
   /* Override AntD's selected-node colour so it works in both light and dark mode */
-  .ant-tree
-    .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
     background: var(--color-bg-selected) !important;
   }
 `;
 
+/** ⋮ button — always in DOM so column is consistent; fades in on row hover. */
+const MoreButton = styled(Button)`
+  flex-shrink: 0;
+  height: 20px;
+  width: 20px;
+  min-width: 20px;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+`;
+
+/** Single-row layout. MoreButton is revealed on hover OR while its dropdown is open. */
 const NodeRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 28px;
-  padding: 2px 0;
-  flex-wrap: wrap;
+  gap: 6px;
+  padding: 3px 2px;
+  flex-wrap: nowrap;
+  width: 100%;
+  cursor: pointer;
+
+  &:hover ${MoreButton},
+  &:has(.ant-dropdown-open) ${MoreButton} {
+    opacity: 1;
+    pointer-events: auto;
+  }
 `;
 
+/** Primary label: grows to fill space, truncates with ellipsis. */
 const NodeLabel = styled.span`
   font-weight: 500;
   color: var(--color-text-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 `;
 
-const NodeMeta = styled.span`
-  font-size: 12px;
-  color: var(--color-text-secondary);
-`;
-
-const AddButton = styled(Button)`
-  padding: 0 4px;
-  height: 20px;
-  font-size: 11px;
-  line-height: 18px;
-`;
 
 // ---------------------------------------------------------------------------
 // Node title builders
 // ---------------------------------------------------------------------------
+
+/** Shows a Modal.confirm for destructive actions (avoids inline Popconfirm in menus). */
+function confirmDelete(title: string, content: string, onOk: () => void) {
+  Modal.confirm({
+    title,
+    content,
+    okText: "Delete",
+    okButtonProps: { danger: true },
+    onOk,
+    centered: true,
+  });
+}
 
 function ValidationBadges({ errors }: { errors: ValidationError[] }) {
   if (errors.length === 0) return null;
@@ -159,14 +191,65 @@ function buildBindTitle(
   bind: BindNode,
   onAdd: (target: EditTarget) => void,
   navigate: (path: string) => void,
+  onDelete: (target: EditTarget, parentPath: string) => void,
 ): ReactNode {
+  const bindPath = `/traffic/routing/bind/${bind.bind.port}`;
+  const deleteTarget: EditTarget = {
+    type: "bind",
+    bindPort: bind.bind.port,
+    isNew: false,
+    schemaCategory: "binds",
+    initialData: bind.bind as unknown as Record<string, unknown>,
+  };
+
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        navigate(bindPath + "?edit=true");
+      },
+    },
+    {
+      key: "add-listener",
+      label: "Add Listener",
+      icon: <PlusCircle size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAdd({
+          type: "listener",
+          bindPort: bind.bind.port,
+          isNew: true,
+          schemaCategory: "listeners",
+          initialData: { routes: null, tcpRoutes: null },
+        });
+      },
+    },
+    { type: "divider" },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        confirmDelete(
+          `Delete Port ${bind.bind.port}?`,
+          "This will remove the bind and all its listeners.",
+          () => onDelete(deleteTarget, "/traffic/routing"),
+        );
+      },
+    },
+  ];
+
   return (
     <NodeRow
       onClick={(e) => {
         e.stopPropagation();
-        navigate(`/traffic/routing/bind/${bind.bind.port}`);
+        navigate(bindPath);
       }}
-      style={{ cursor: "pointer" }}
     >
       <Network
         size={14}
@@ -176,30 +259,20 @@ function buildBindTitle(
       {bind.bind.tunnelProtocol && (
         <ProtocolTag protocol={bind.bind.tunnelProtocol} />
       )}
-      <NodeMeta>
-        {bind.listeners.length} listener{bind.listeners.length !== 1 ? "s" : ""}
-      </NodeMeta>
       <ValidationBadges errors={bind.validationErrors} />
-      <AddButton
-        type="text"
-        size="small"
-        icon={<PlusCircle size={12} />}
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd({
-            type: "listener",
-            bindPort: bind.bind.port,
-            isNew: true,
-            schemaCategory: "listeners",
-            initialData: {
-              routes: null,
-              tcpRoutes: null,
-            },
-          });
-        }}
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        placement="bottomRight"
+        overlayClassName="hierarchy-menu"
       >
-        Add Listener
-      </AddButton>
+        <MoreButton
+          type="text"
+          size="small"
+          icon={<MoreVertical size={14} />}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Dropdown>
     </NodeRow>
   );
 }
@@ -208,111 +281,97 @@ function buildListenerTitle(
   ln: ListenerNode,
   onAdd: (target: EditTarget) => void,
   navigate: (path: string) => void,
+  onDelete: (target: EditTarget, parentPath: string) => void,
   bindPort: number,
   listenerIndex: number,
 ): ReactNode {
   const protocol = ln.listener.protocol ?? "HTTP";
-  const hostname = ln.listener.hostname ?? "*";
   const listenerPath = `/traffic/routing/bind/${bindPort}/listener/${listenerIndex}`;
+  const bindPath = `/traffic/routing/bind/${bindPort}`;
 
   // Enforce mutual exclusion: routes and tcpRoutes cannot coexist on a listener.
   const hasHttpRoutes = (ln.listener.routes?.length ?? 0) > 0;
   const hasTcpRoutes = (ln.listener.tcpRoutes?.length ?? 0) > 0;
-  // If neither type is set yet, allow both; otherwise lock to what's already there.
   const canAddHttp = !hasTcpRoutes;
   const canAddTcp = !hasHttpRoutes;
-
-  const httpRouteCount = ln.listener.routes?.length ?? 0;
-  const tcpRouteCount = ln.listener.tcpRoutes?.length ?? 0;
-  const totalRoutes = httpRouteCount + tcpRouteCount;
 
   const hostnameDefaults =
     ln.listener.hostname && ln.listener.hostname !== "*"
       ? [ln.listener.hostname]
       : [];
 
-  const addHttpRoute = (e: { stopPropagation: () => void }) => {
-    e.stopPropagation();
-    onAdd({
-      type: "route",
-      bindPort,
-      listenerIndex,
-      isNew: true,
-      schemaCategory: "routes",
-      initialData: {
-        hostnames: hostnameDefaults,
-        matches: [{ path: { pathPrefix: "/" } }],
+  const deleteTarget: EditTarget = {
+    type: "listener",
+    bindPort,
+    listenerIndex,
+    isNew: false,
+    schemaCategory: "listeners",
+    initialData: ln.listener as unknown as Record<string, unknown>,
+  };
+
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        navigate(listenerPath + "?edit=true");
       },
-    });
-  };
-
-  const addTcpRoute = (e: { stopPropagation: () => void }) => {
-    e.stopPropagation();
-    onAdd({
-      type: "route",
-      bindPort,
-      listenerIndex,
-      isNew: true,
-      schemaCategory: "tcpRoutes",
-      initialData: { hostnames: hostnameDefaults },
-    });
-  };
-
-  // Render add-route control: single button when only one type is allowed,
-  // dropdown when both are allowed.
-  let addRouteControl: ReactNode;
-  if (canAddHttp && canAddTcp) {
-    addRouteControl = (
-      <Dropdown
-        trigger={["click"]}
-        menu={{
-          items: [
-            {
-              key: "http",
-              label: "HTTP Route",
-              onClick: ({ domEvent }) => addHttpRoute(domEvent),
-            },
-            {
-              key: "tcp",
-              label: "TCP Route",
-              onClick: ({ domEvent }) => addTcpRoute(domEvent),
-            },
-          ],
-        }}
-      >
-        <AddButton
-          type="text"
-          size="small"
-          icon={<PlusCircle size={12} />}
-          onClick={(e) => e.stopPropagation()}
-        >
-          Add Route
-        </AddButton>
-      </Dropdown>
-    );
-  } else if (canAddHttp) {
-    addRouteControl = (
-      <AddButton
-        type="text"
-        size="small"
-        icon={<PlusCircle size={12} />}
-        onClick={addHttpRoute}
-      >
-        Add HTTP Route
-      </AddButton>
-    );
-  } else if (canAddTcp) {
-    addRouteControl = (
-      <AddButton
-        type="text"
-        size="small"
-        icon={<PlusCircle size={12} />}
-        onClick={addTcpRoute}
-      >
-        Add TCP Route
-      </AddButton>
-    );
-  }
+    },
+    {
+      key: "add-http-route",
+      label: "Add HTTP Route",
+      icon: <PlusCircle size={13} />,
+      disabled: !canAddHttp,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAdd({
+          type: "route",
+          bindPort,
+          listenerIndex,
+          isNew: true,
+          schemaCategory: "routes",
+          initialData: {
+            hostnames: hostnameDefaults,
+            matches: [{ path: { pathPrefix: "/" } }],
+          },
+        });
+      },
+    },
+    {
+      key: "add-tcp-route",
+      label: "Add TCP Route",
+      icon: <PlusCircle size={13} />,
+      disabled: !canAddTcp,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAdd({
+          type: "route",
+          bindPort,
+          listenerIndex,
+          isNew: true,
+          schemaCategory: "tcpRoutes",
+          initialData: { hostnames: hostnameDefaults },
+        });
+      },
+    },
+    { type: "divider" },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        confirmDelete(
+          `Delete "${ln.listener.name ?? "this listener"}"?`,
+          "This will remove the listener and all its routes.",
+          () => onDelete(deleteTarget, bindPath),
+        );
+      },
+    },
+  ];
 
   return (
     <NodeRow
@@ -320,7 +379,6 @@ function buildListenerTitle(
         e.stopPropagation();
         navigate(listenerPath);
       }}
-      style={{ cursor: "pointer" }}
     >
       <Headphones
         size={14}
@@ -328,19 +386,20 @@ function buildListenerTitle(
       />
       <NodeLabel>{ln.listener.name ?? "(unnamed listener)"}</NodeLabel>
       <ProtocolTag protocol={protocol} />
-      {hostname !== "*" && (
-        <Tag bordered={false} style={{ fontSize: 11 }}>
-          {hostname}
-        </Tag>
-      )}
-      <NodeMeta>
-        {totalRoutes} route{totalRoutes !== 1 ? "s" : ""}
-        {hasTcpRoutes && !hasHttpRoutes && (
-          <span style={{ marginLeft: 4, opacity: 0.7 }}>(TCP)</span>
-        )}
-      </NodeMeta>
       <ValidationBadges errors={ln.validationErrors} />
-      {addRouteControl}
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        placement="bottomRight"
+        overlayClassName="hierarchy-menu"
+      >
+        <MoreButton
+          type="text"
+          size="small"
+          icon={<MoreVertical size={14} />}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Dropdown>
     </NodeRow>
   );
 }
@@ -372,13 +431,51 @@ function describeBackend(backend: Record<string, unknown>): {
 function buildBackendTitle(
   bn: BackendNode,
   navigate: (path: string) => void,
+  onDelete: (target: EditTarget, parentPath: string) => void,
   bindPort: number,
   listenerIndex: number,
   routeIndex: number,
 ): ReactNode {
-  const { label, detail } = describeBackend(bn.backend);
+  const { label } = describeBackend(bn.backend);
   const routeSeg = bn.isTcpRoute ? "tcproute" : "route";
   const backendPath = `/traffic/routing/bind/${bindPort}/listener/${listenerIndex}/${routeSeg}/${routeIndex}/backend/${bn.backendIndex}`;
+  const routePath = `/traffic/routing/bind/${bindPort}/listener/${listenerIndex}/${routeSeg}/${routeIndex}`;
+
+  const deleteTarget: EditTarget = {
+    type: "backend",
+    bindPort,
+    listenerIndex,
+    routeIndex,
+    backendIndex: bn.backendIndex,
+    isNew: false,
+    schemaCategory: bn.isTcpRoute ? "tcpRouteBackends" : "routeBackends",
+    initialData: bn.backend as Record<string, unknown>,
+  };
+
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        navigate(backendPath + "?edit=true");
+      },
+    },
+    { type: "divider" },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        confirmDelete("Delete this backend?", "This cannot be undone.", () =>
+          onDelete(deleteTarget, routePath),
+        );
+      },
+    },
+  ];
 
   return (
     <NodeRow
@@ -386,21 +483,25 @@ function buildBackendTitle(
         e.stopPropagation();
         navigate(backendPath);
       }}
-      style={{ cursor: "pointer" }}
     >
       <Server
         size={13}
         style={{ color: "var(--color-primary)", flexShrink: 0 }}
       />
       <NodeLabel>{label}</NodeLabel>
-      {detail && (
-        <NodeMeta style={{ fontFamily: "monospace" }}>{detail}</NodeMeta>
-      )}
-      {typeof bn.backend.weight === "number" && bn.backend.weight !== 1 && (
-        <Tag bordered={false} style={{ fontSize: 11 }}>
-          weight {bn.backend.weight}
-        </Tag>
-      )}
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        placement="bottomRight"
+        overlayClassName="hierarchy-menu"
+      >
+        <MoreButton
+          type="text"
+          size="small"
+          icon={<MoreVertical size={14} />}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Dropdown>
     </NodeRow>
   );
 }
@@ -409,26 +510,68 @@ function buildRouteTitle(
   rn: RouteNode,
   onAdd: (target: EditTarget) => void,
   navigate: (path: string) => void,
+  onDelete: (target: EditTarget, parentPath: string) => void,
   bindPort: number,
   listenerIndex: number,
 ): ReactNode {
-  type MatchPathUnion = { exact?: string; pathPrefix?: string; regex?: string };
-  const httpRoute = rn.isTcp
-    ? null
-    : (rn.route as { matches?: Array<{ path?: unknown }> });
-  const paths = (httpRoute?.matches ?? [])
-    .map((m) => {
-      const p = m.path as MatchPathUnion;
-      if (p?.exact != null) return p.exact;
-      if (p?.pathPrefix != null) return p.pathPrefix + "*";
-      if (p?.regex != null) return `~${p.regex}`;
-      return null;
-    })
-    .filter(Boolean) as string[];
-
   const backendSchemaCategory = rn.isTcp ? "tcpRouteBackends" : "routeBackends";
   const routeSeg = rn.isTcp ? "tcproute" : "route";
   const routePath = `/traffic/routing/bind/${bindPort}/listener/${listenerIndex}/${routeSeg}/${rn.categoryIndex}`;
+  const listenerPath = `/traffic/routing/bind/${bindPort}/listener/${listenerIndex}`;
+
+  const deleteTarget: EditTarget = {
+    type: "route",
+    bindPort,
+    listenerIndex,
+    routeIndex: rn.categoryIndex,
+    isNew: false,
+    schemaCategory: rn.isTcp ? "tcpRoutes" : "routes",
+    initialData: rn.route as unknown as Record<string, unknown>,
+  };
+
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        navigate(routePath + "?edit=true");
+      },
+    },
+    {
+      key: "add-backend",
+      label: "Add Backend",
+      icon: <PlusCircle size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAdd({
+          type: "backend",
+          bindPort,
+          listenerIndex,
+          routeIndex: rn.categoryIndex,
+          isNew: true,
+          schemaCategory: backendSchemaCategory,
+          initialData: {},
+        });
+      },
+    },
+    { type: "divider" },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        confirmDelete(
+          `Delete "${rn.route.name ?? "this route"}"?`,
+          "This will remove the route and all its backends.",
+          () => onDelete(deleteTarget, listenerPath),
+        );
+      },
+    },
+  ];
 
   return (
     <NodeRow
@@ -436,28 +579,13 @@ function buildRouteTitle(
         e.stopPropagation();
         navigate(routePath);
       }}
-      style={{ cursor: "pointer" }}
     >
       <Route
         size={14}
         style={{ color: "var(--color-primary)", flexShrink: 0 }}
       />
       <NodeLabel>{rn.route.name ?? "(unnamed route)"}</NodeLabel>
-      {rn.isTcp && (
-        <Tag bordered={false} color="blue" style={{ fontSize: 11 }}>
-          TCP
-        </Tag>
-      )}
-      {paths.slice(0, 2).map((p, i) => (
-        <Tag
-          key={i}
-          bordered={false}
-          style={{ fontSize: 11, fontFamily: "monospace" }}
-        >
-          {p}
-        </Tag>
-      ))}
-      {paths.length > 2 && <NodeMeta>+{paths.length - 2} more</NodeMeta>}
+      {rn.isTcp && <ProtocolTag protocol="TCP" />}
       {rn.validationErrors.length > 0 && (
         <Tooltip
           title={rn.validationErrors.map((e) => e.message).join("\n")}
@@ -474,25 +602,19 @@ function buildRouteTitle(
           />
         </Tooltip>
       )}
-      <AddButton
-        type="text"
-        size="small"
-        icon={<PlusCircle size={12} />}
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd({
-            type: "backend",
-            bindPort,
-            listenerIndex,
-            routeIndex: rn.categoryIndex,
-            isNew: true,
-            schemaCategory: backendSchemaCategory,
-            initialData: {},
-          });
-        }}
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        placement="bottomRight"
+        overlayClassName="hierarchy-menu"
       >
-        Add Backend
-      </AddButton>
+        <MoreButton
+          type="text"
+          size="small"
+          icon={<MoreVertical size={14} />}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Dropdown>
     </NodeRow>
   );
 }
@@ -505,22 +627,37 @@ function buildTreeData(
   hierarchy: RoutingHierarchy,
   onAdd: (target: EditTarget) => void,
   navigate: (path: string) => void,
+  onDelete: (target: EditTarget, parentPath: string) => void,
 ): DataNode[] {
   return (hierarchy.binds ?? []).map((bindNode) => ({
     key: `bind-${bindNode.bind.port}`,
     icon: null,
     selectable: false,
-    title: buildBindTitle(bindNode, onAdd, navigate),
+    title: buildBindTitle(bindNode, onAdd, navigate, onDelete),
     children: (bindNode.listeners ?? []).map((ln, li) => ({
       key: `listener-${bindNode.bind.port}-${li}`,
       icon: null,
       selectable: false,
-      title: buildListenerTitle(ln, onAdd, navigate, bindNode.bind.port, li),
+      title: buildListenerTitle(
+        ln,
+        onAdd,
+        navigate,
+        onDelete,
+        bindNode.bind.port,
+        li,
+      ),
       children: (ln.routes ?? []).map((rn) => ({
         key: `route-${bindNode.bind.port}-${li}-${rn.isTcp ? "tcp" : "http"}-${rn.categoryIndex}`,
         icon: null,
         selectable: false,
-        title: buildRouteTitle(rn, onAdd, navigate, bindNode.bind.port, li),
+        title: buildRouteTitle(
+          rn,
+          onAdd,
+          navigate,
+          onDelete,
+          bindNode.bind.port,
+          li,
+        ),
         isLeaf: rn.backends.length === 0,
         children: rn.backends.map((bn) => ({
           key: `backend-${bindNode.bind.port}-${li}-${rn.categoryIndex}-${bn.backendIndex}`,
@@ -530,6 +667,7 @@ function buildTreeData(
           title: buildBackendTitle(
             bn,
             navigate,
+            onDelete,
             bindNode.bind.port,
             li,
             rn.categoryIndex,
@@ -558,10 +696,32 @@ export function HierarchyTree({
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handleDelete = useCallback(
+    async (target: EditTarget, parentPath: string) => {
+      try {
+        await applyDelete(target);
+        toast.success(`${NODE_LABELS[target.type]} deleted`);
+        // Navigate to parent if the current URL is within the deleted item's path.
+        if (
+          location.pathname.startsWith(parentPath.replace(/\/$/, "") + "/") ||
+          location.pathname === parentPath
+        ) {
+          navigate(parentPath);
+        } else {
+          // Still navigate to parent to avoid a stale URL
+          navigate(parentPath);
+        }
+      } catch (e: unknown) {
+        toast.error(extractErrorMessage(e) ?? "Failed to delete");
+      }
+    },
+    [navigate, location.pathname],
+  );
+
   const treeData = useMemo(
-    () => buildTreeData(hierarchy, onEditNode, navigate),
+    () => buildTreeData(hierarchy, onEditNode, navigate, handleDelete),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hierarchy, onEditNode],
+    [hierarchy, onEditNode, handleDelete],
   );
 
   const [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
@@ -622,6 +782,24 @@ export function HierarchyTree({
   }
 
   return (
+    <>
+    <Global styles={css`
+      .hierarchy-menu .ant-dropdown-menu-item {
+        transition: background-color 0.12s ease !important;
+      }
+      .hierarchy-menu .ant-dropdown-menu-item:hover {
+        background-color: rgba(128, 128, 128, 0.3) !important;
+      }
+      .hierarchy-menu .ant-dropdown-menu-item:active {
+        background-color: rgba(128, 128, 128, 0.4) !important;
+      }
+      .hierarchy-menu .ant-dropdown-menu-item-danger:hover {
+        background-color: rgba(255, 77, 79, 0.2) !important;
+      }
+      .hierarchy-menu .ant-dropdown-menu-item-danger:active {
+        background-color: rgba(255, 77, 79, 0.22) !important;
+      }
+    `} />
     <TreeCard
       title={
         <span
@@ -675,5 +853,6 @@ export function HierarchyTree({
         style={{ padding: "8px 12px" }}
       />
     </TreeCard>
+    </>
   );
 }

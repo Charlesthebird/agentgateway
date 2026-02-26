@@ -2,6 +2,7 @@
  * Configuration API functions
  */
 
+import { mutate } from "swr";
 import { get, post } from "./client";
 import { cleanupConfig } from "./helpers";
 import type { LocalConfig } from "./types";
@@ -14,11 +15,13 @@ export async function fetchConfig(): Promise<LocalConfig> {
 }
 
 /**
- * Updates the configuration
+ * Updates the configuration and invalidates the SWR cache so all components
+ * using useConfig() automatically refetch the latest data.
  */
 export async function updateConfig(config: LocalConfig): Promise<void> {
   const cleanedConfig = cleanupConfig(config);
   await post<void>("/config", cleanedConfig);
+  await mutate("/config");
 }
 
 /**

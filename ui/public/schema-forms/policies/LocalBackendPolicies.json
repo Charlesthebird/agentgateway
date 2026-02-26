@@ -205,14 +205,14 @@
               "type": "null"
             }
           ],
-          "title": "Path"
+          "title": "Path",
+          "description": "URL path match condition"
         },
         "status": {
           "type": [
             "integer",
             "null"
           ],
-          "format": "uint16",
           "minimum": 1,
           "maximum": 65535,
           "title": "Status"
@@ -225,11 +225,17 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "auto",
-            "none"
-          ],
-          "title": "Option 1"
+          "title": "Option 1",
+          "oneOf": [
+            {
+              "const": "auto",
+              "title": "Auto"
+            },
+            {
+              "const": "none",
+              "title": "None"
+            }
+          ]
         },
         {
           "type": "object",
@@ -241,21 +247,18 @@
           "required": [
             "full"
           ],
-          "additionalProperties": false,
           "title": "Full"
         },
         {
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "type": "string"
             }
           },
           "required": [
             "host"
           ],
-          "additionalProperties": false,
           "title": "Host"
         },
         {
@@ -263,7 +266,6 @@
           "properties": {
             "port": {
               "type": "integer",
-              "format": "uint16",
               "minimum": 1,
               "maximum": 65535
             }
@@ -271,7 +273,6 @@
           "required": [
             "port"
           ],
-          "additionalProperties": false,
           "title": "Port"
         }
       ],
@@ -289,7 +290,6 @@
           "required": [
             "full"
           ],
-          "additionalProperties": false,
           "title": "Full"
         },
         {
@@ -302,7 +302,6 @@
           "required": [
             "prefix"
           ],
-          "additionalProperties": false,
           "title": "Prefix"
         }
       ],
@@ -401,7 +400,8 @@
           "additionalProperties": {
             "$ref": "#/$defs/RouteType"
           },
-          "title": "Routes"
+          "title": "Routes",
+          "description": "HTTP routes"
         }
       },
       "additionalProperties": false,
@@ -514,7 +514,6 @@
         },
         "status": {
           "type": "integer",
-          "format": "uint16",
           "minimum": 1,
           "maximum": 65535,
           "default": 403,
@@ -544,7 +543,6 @@
       ],
       "items": {
         "type": "integer",
-        "format": "uint8",
         "minimum": 0,
         "maximum": 255
       },
@@ -574,11 +572,17 @@
     },
     "Action": {
       "type": "string",
-      "enum": [
-        "mask",
-        "reject"
-      ],
-      "title": "Action"
+      "title": "Action",
+      "oneOf": [
+        {
+          "const": "mask",
+          "title": "Mask"
+        },
+        {
+          "const": "reject",
+          "title": "Reject"
+        }
+      ]
     },
     "RegexRule": {
       "anyOf": [
@@ -589,7 +593,6 @@
               "$ref": "#/$defs/Builtin"
             }
           },
-          "additionalProperties": false,
           "required": [
             "builtin"
           ],
@@ -602,7 +605,6 @@
               "type": "string"
             }
           },
-          "additionalProperties": false,
           "required": [
             "pattern"
           ],
@@ -613,21 +615,37 @@
     },
     "Builtin": {
       "type": "string",
-      "enum": [
-        "ssn",
-        "creditCard",
-        "phoneNumber",
-        "email",
-        "caSin"
-      ],
-      "title": "Builtin"
+      "title": "Builtin",
+      "oneOf": [
+        {
+          "const": "ssn",
+          "title": "Ssn"
+        },
+        {
+          "const": "creditCard",
+          "title": "Credit Card"
+        },
+        {
+          "const": "phoneNumber",
+          "title": "Phone Number"
+        },
+        {
+          "const": "email",
+          "title": "Email"
+        },
+        {
+          "const": "caSin",
+          "title": "Ca Sin"
+        }
+      ]
     },
     "Webhook": {
       "type": "object",
       "properties": {
         "target": {
           "$ref": "#/$defs/SimpleLocalBackend",
-          "title": "Target"
+          "title": "Target",
+          "description": "Resource this policy attaches to"
         },
         "forwardHeaderMatches": {
           "type": "array",
@@ -646,13 +664,6 @@
     "SimpleLocalBackend": {
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "invalid"
-          ],
-          "title": "Option 1"
-        },
-        {
           "description": "Service reference. Service must be defined in the top level services list.",
           "type": "object",
           "properties": {
@@ -664,7 +675,6 @@
                 },
                 "port": {
                   "type": "integer",
-                  "format": "uint16",
                   "minimum": 0,
                   "maximum": 65535
                 }
@@ -679,7 +689,6 @@
           "required": [
             "service"
           ],
-          "additionalProperties": false,
           "title": "Service"
         },
         {
@@ -687,14 +696,13 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string",
-              "description": "Format: host:port (e.g. \"example.com:8080\")"
+              "description": "Hostname or IP address",
+              "type": "string"
             }
           },
           "required": [
             "host"
           ],
-          "additionalProperties": false,
           "title": "Host"
         },
         {
@@ -708,7 +716,6 @@
           "required": [
             "backend"
           ],
-          "additionalProperties": false,
           "title": "Backend"
         }
       ],
@@ -716,16 +723,16 @@
     },
     "NamespacedHostname": {
       "type": "string",
-      "title": "Namespaced Hostname",
-      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
-      "pattern": "^[^/]+/[^/]+$"
+      "pattern": "^[^/]+/[^/]+$",
+      "description": "Service name in \"namespace/hostname\" format (e.g. \"default/my-service\")"
     },
     "HeaderMatch": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name"
+          "title": "Name",
+          "description": "Unique name for this resource"
         },
         "value": {
           "$ref": "#/$defs/HeaderValueMatch",
@@ -751,7 +758,6 @@
           "required": [
             "exact"
           ],
-          "additionalProperties": false,
           "title": "Exact"
         },
         {
@@ -764,7 +770,6 @@
           "required": [
             "regex"
           ],
-          "additionalProperties": false,
           "title": "Regex"
         }
       ],
@@ -783,7 +788,8 @@
         },
         "policies": {
           "$ref": "#/$defs/LocalBackendPolicies",
-          "title": "Policies"
+          "title": "Policies",
+          "description": "Policies to apply to this resource"
         }
       },
       "additionalProperties": false,
@@ -967,7 +973,8 @@
             "string",
             "null"
           ],
-          "title": "Hostname"
+          "title": "Hostname",
+          "description": "Hostname or domain to match (wildcards like *.example.com are supported)"
         },
         "insecure": {
           "type": "boolean",
@@ -1018,7 +1025,6 @@
           "required": [
             "passthrough"
           ],
-          "additionalProperties": false,
           "title": "Passthrough"
         },
         {
@@ -1031,7 +1037,6 @@
           "required": [
             "key"
           ],
-          "additionalProperties": false,
           "title": "Key"
         },
         {
@@ -1044,7 +1049,6 @@
           "required": [
             "gcp"
           ],
-          "additionalProperties": false,
           "title": "Gcp"
         },
         {
@@ -1057,7 +1061,6 @@
           "required": [
             "aws"
           ],
-          "additionalProperties": false,
           "title": "Aws"
         },
         {
@@ -1070,7 +1073,6 @@
           "required": [
             "azure"
           ],
-          "additionalProperties": false,
           "title": "Azure"
         }
       ],
@@ -1113,7 +1115,6 @@
               ]
             }
           },
-          "additionalProperties": false,
           "required": [
             "type"
           ],
@@ -1135,7 +1136,6 @@
               "default": null
             }
           },
-          "additionalProperties": false,
           "title": "Type"
         }
       ],
@@ -1143,13 +1143,11 @@
     },
     "IdToken": {
       "type": "string",
-      "format": "const",
       "const": "idToken",
       "title": "Id Token"
     },
     "AccessToken": {
       "type": "string",
-      "format": "const",
       "const": "accessToken",
       "title": "Access Token"
     },
@@ -1178,7 +1176,6 @@
               ]
             }
           },
-          "additionalProperties": false,
           "required": [
             "accessKeyId",
             "secretAccessKey"
@@ -1187,8 +1184,7 @@
         },
         {
           "description": "Use implicit AWS authentication (environment variables, IAM roles, etc.)",
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         }
       ],
       "title": "Aws Auth"
@@ -1272,7 +1268,6 @@
           "required": [
             "explicitConfig"
           ],
-          "additionalProperties": false,
           "title": "Explicit Config"
         },
         {
@@ -1287,7 +1282,6 @@
           "required": [
             "developerImplicit"
           ],
-          "additionalProperties": false,
           "title": "Developer Implicit"
         }
       ],
@@ -1305,7 +1299,6 @@
           "required": [
             "clientId"
           ],
-          "additionalProperties": false,
           "title": "Client Id"
         },
         {
@@ -1318,7 +1311,6 @@
           "required": [
             "objectId"
           ],
-          "additionalProperties": false,
           "title": "Object Id"
         },
         {
@@ -1331,7 +1323,6 @@
           "required": [
             "resourceId"
           ],
-          "additionalProperties": false,
           "title": "Resource Id"
         }
       ],
@@ -1398,7 +1389,6 @@
         },
         "retries": {
           "type": "integer",
-          "format": "uint32",
           "minimum": 0,
           "default": 9,
           "title": "Retries"
@@ -1412,13 +1402,11 @@
       "properties": {
         "secs": {
           "type": "integer",
-          "format": "uint64",
           "minimum": 0,
           "title": "Secs"
         },
         "nanos": {
           "type": "integer",
-          "format": "uint32",
           "minimum": 0,
           "title": "Nanos"
         }
@@ -1642,7 +1630,6 @@
             "integer",
             "null"
           ],
-          "format": "uint",
           "minimum": 0,
           "default": 1024,
           "title": "Min Tokens"

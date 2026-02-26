@@ -216,7 +216,7 @@ function ListenerDetailView({ data }: { data: Record<string, unknown> }) {
         <span>
           {totalRoutes} route{totalRoutes !== 1 ? "s" : ""}
           {tcpRouteCount > 0 && httpRouteCount === 0 && (
-            <Tag bordered={false} color="blue" style={{ marginLeft: 6, fontSize: 11 }}>TCP</Tag>
+            <ProtocolTag protocol="TCP" style={{ marginLeft: 6 }} />
           )}
         </span>
       ),
@@ -248,7 +248,7 @@ function RouteDetailView({
 }) {
   const coreItems = [
     { key: "name", label: "Name", children: renderValue("name", data["name"]) },
-    { key: "type", label: "Type", children: isTcp ? <Tag color="blue" bordered={false}>TCP</Tag> : <Tag bordered={false}>HTTP</Tag> },
+    { key: "type", label: "Type", children: <ProtocolTag protocol={isTcp ? "TCP" : "HTTP"} /> },
     ...(data["ruleName"]
       ? [{ key: "ruleName", label: "Rule Name", children: renderValue("ruleName", data["ruleName"]) }]
       : []),

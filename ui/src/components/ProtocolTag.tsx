@@ -45,9 +45,9 @@ const PROTOCOL_STYLES: Record<
     bg: "rgba(250, 140, 22, 0.08)",
     border: "rgba(250, 140, 22, 0.35)",
     color: "#d46b08",
-    darkBg: "rgba(250, 140, 22, 0.18)",
-    darkBorder: "rgba(255, 169, 64, 0.5)",
-    darkColor: "#ffa940",
+    darkBg: "rgba(250, 140, 22, 0.30)",
+    darkBorder: "rgba(255, 169, 64, 0.75)",
+    darkColor: "#ffbe5c",
   },
   HBONE: {
     bg: "rgba(114, 46, 209, 0.08)",

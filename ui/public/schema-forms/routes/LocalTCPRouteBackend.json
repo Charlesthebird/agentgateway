@@ -4,10 +4,10 @@
   "properties": {
     "weight": {
       "type": "integer",
-      "format": "uint",
       "minimum": 0,
       "default": 1,
-      "title": "Weight"
+      "title": "Weight",
+      "description": "Load-balancing weight — higher values receive proportionally more traffic"
     },
     "policies": {
       "anyOf": [
@@ -19,17 +19,11 @@
           "type": "null"
         }
       ],
-      "title": "Policies"
+      "title": "Policies",
+      "description": "Policies to apply to this resource"
     }
   },
   "oneOf": [
-    {
-      "type": "string",
-      "enum": [
-        "invalid"
-      ],
-      "title": "Option 1"
-    },
     {
       "description": "Service reference. Service must be defined in the top level services list.",
       "type": "object",
@@ -42,7 +36,6 @@
             },
             "port": {
               "type": "integer",
-              "format": "uint16",
               "minimum": 0,
               "maximum": 65535
             }
@@ -64,8 +57,8 @@
       "type": "object",
       "properties": {
         "host": {
-          "type": "string",
-          "description": "Format: host:port (e.g. \"example.com:8080\")"
+          "description": "Hostname or IP address",
+          "type": "string"
         }
       },
       "required": [
@@ -138,7 +131,8 @@
             "string",
             "null"
           ],
-          "title": "Hostname"
+          "title": "Hostname",
+          "description": "Hostname or domain to match (wildcards like *.example.com are supported)"
         },
         "insecure": {
           "type": "boolean",
@@ -178,9 +172,8 @@
     },
     "NamespacedHostname": {
       "type": "string",
-      "title": "Namespaced Hostname",
-      "description": "Format: namespace/hostname (e.g. \"default/my-service\")",
-      "pattern": "^[^/]+/[^/]+$"
+      "pattern": "^[^/]+/[^/]+$",
+      "description": "Service name in \"namespace/hostname\" format (e.g. \"default/my-service\")"
     }
   },
   "description": "Local TCP Route Backend connection with matching conditions"

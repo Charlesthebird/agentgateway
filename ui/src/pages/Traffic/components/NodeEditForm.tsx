@@ -1,4 +1,5 @@
 import { DeleteOutlined } from "@ant-design/icons";
+import styled from "@emotion/styled";
 import Form from "@rjsf/antd";
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import { Button, Popconfirm, Space, Spin } from "antd";
@@ -10,6 +11,7 @@ import {
   ArrayFieldTemplate,
   ExclusiveObjectFieldTemplate,
   FieldTemplate,
+  NullTitleFieldTemplate,
   OneOfField,
   SelectWidget,
 } from "../../../components/FormTemplates";
@@ -29,6 +31,16 @@ import {
   extractErrorMessage,
 } from "./nodeEditUtils";
 import type { ExclusiveGroup } from "./nodeEditUtils";
+
+// Matches the SectionTitle style used in NodeDetailView for visual consistency.
+const SectionTitle = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+`;
 
 interface NodeEditFormProps {
   target: EditTarget;
@@ -133,7 +145,9 @@ export function NodeEditForm({
     ] ?? [];
 
   const exclusiveGroupUiSchema = (): UiSchema => {
-    const ui: UiSchema = {};
+    // Suppress both schema title and description — the form header is rendered
+    // manually as a SectionTitle matching the detail view's style.
+    const ui: UiSchema = { "ui:title": "", "ui:description": "" };
     for (const group of activeGroups) {
       const activeKey = activeGroupKeys[group.groupLabel] ?? group.defaultKey;
       for (const opt of group.options) {
@@ -218,8 +232,10 @@ export function NodeEditForm({
   ) : null;
 
   return (
-    <Form
-      schema={schema}
+    <>
+      <SectionTitle>{NODE_LABELS[target.type]} details</SectionTitle>
+      <Form
+        schema={schema}
       validator={validator}
       formData={formData}
       uiSchema={exclusiveGroupUiSchema()}
@@ -246,6 +262,7 @@ export function NodeEditForm({
         ObjectFieldTemplate: ExclusiveObjectFieldTemplate,
         FieldTemplate,
         ArrayFieldTemplate,
+        TitleFieldTemplate: NullTitleFieldTemplate,
       }}
       showErrorList="top"
       disabled={saving}
@@ -270,5 +287,6 @@ export function NodeEditForm({
         </Space>
       </Space>
     </Form>
+    </>
   );
 }

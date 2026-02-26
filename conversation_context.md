@@ -1,167 +1,75 @@
-# Agent Gateway UI Development - Conversation Context
+# Agent Gateway UI - Context
 
-## Overview
+_Last updated: Feb 26, 2026_
 
-This document tracks the development of the Agent Gateway UI, covering routing page functionality, form validation, improved UX, and full-page build-out across all sidebar sections.
+## Dev Notes
+- Lint: `yarn run lint` from `ui/`
+- Pre-existing lint errors exist — don't fix unless necessary
+- Config types: `ui/src/config.d.ts` → `ui/src/api/types.ts`
+- DO NOT add `padding: var(--spacing-xl)` in page containers — MainLayout already adds it
 
-## Latest: URL-based routing detail view
+## Sidebar (DO NOT CHANGE)
+OLD: /dashboard, /listeners, /routes, /backends, /policies, /playground  
+LLM: /llm, /llm/models, /llm/logs, /llm/metrics, /llm/playground  
+MCP: /mcp, /mcp/servers, /mcp/logs, /mcp/metrics, /mcp/playground  
+Traffic: /traffic, /traffic/routing, /traffic/logs [disabled], /traffic/metrics [disabled]  
+CEL: /cel-playground
 
-- Clicking any resource (bind, listener, route, backend) in the hierarchy tree navigates to a URL like `/traffic/routing/bind/8080/listener/0/route/0` — fully bookmarkable and refreshable.
-- `TrafficRoutingPage` now uses a **split layout**: when a sub-route is active, a 380px tree sidebar sits left and the full-width `NodeDetailPage` fills the right.
-- `NodeDetailPage.tsx` (new): reads URL params, resolves the resource from the hierarchy, shows `NodeDetailView` with a breadcrumb trail and an "Edit" button. Edit opens `NodeEditDrawer`; after delete, navigates to the parent URL.
-- `NodeEditDrawer` gained `onDeleted?: () => void` — called instead of `onSaved` after a successful delete.
-- `HierarchyTree` uses `useNavigate` / `useLocation` internally; row clicks navigate to URL; Add buttons still call `onEditNode`. The current URL-matching node is highlighted via `selectedKeys`.
-- `SchemaCategory` in `NodeEditDrawer` includes `"binds"` → `LocalBind` in the `listeners/` schema folder.
-- `App.tsx` registers nested `<Route>` elements under `/traffic/routing` for all bind/listener/route/backend URL patterns.
+All pages ✅ built. Only actively change Traffic Routing files unless instructed otherwise.
 
-## Current State (as of Feb 26, 2026)
-
-All pages in the UI project have been built out or improved. The sidebar structure is preserved unchanged.
-
----
-
-## Sidebar Structure (DO NOT CHANGE)
-
+## Config Schema
 ```
-OLD (legacy)
-  - Home (/dashboard)
-  - Listeners (/listeners)
-  - Routes (/routes)
-  - Backends (/backends)
-  - Policies (/policies)
-  - Playground (/playground)
-
-LLM
-  - LLM Overview (/llm)
-  - Models (/llm/models)
-  - Logs (/llm/logs)
-  - Metrics (/llm/metrics)
-  - Playground (/llm/playground)
-
-MCP
-  - MCP Overview (/mcp)
-  - Servers (/mcp/servers)
-  - Logs (/mcp/logs)
-  - Metrics (/mcp/metrics)
-  - Playground (/mcp/playground)
-
-Traffic
-  - Traffic Overview (/traffic)
-  - Routing (/traffic/routing)
-  - Logs (/traffic/logs)   [disabled]
-  - Metrics (/traffic/metrics) [disabled]
-
-CEL Playground (/cel-playground)
+binds[]: port, tunnelProtocol
+  listeners[]: name, protocol, hostname
+    routes[]: name, matches, backends, policies  (HTTP; mutually exclusive with tcpRoutes)
+    tcpRoutes[]: name, backends
+backends[]: name + oneOf {host, service, ai, mcp, dynamic}
+policies, frontendPolicies, llm, mcp
 ```
 
----
+## Traffic Routing Architecture
 
-## Pages Status
+### URL routing
+`/traffic/routing/bind/:port/listener/:li/(tcp)?route/:ri/backend/:bi`  
+App.tsx registers nested Routes; all map to `NodeDetailPage`.
 
-### Traffic Section
-- **TrafficRoutingPage** (/traffic/routing): ✅ Fully implemented - HierarchyTree + NodeEditDrawer with view/edit mode
-- **TrafficOverviewPage** (/traffic): ✅ Shows routing stats (binds/listeners/routes), health, links to routing
-- **TrafficLogsPage** (/traffic/logs): ✅ Professional "Coming soon" state
-- **TrafficMetricsPage** (/traffic/metrics): ✅ Professional "Coming soon" state
+### Layout (TrafficRoutingPage)
+- No sub-route active → full-width overview
+- Sub-route active → 380px `Sidebar` (HierarchyTree) + `DetailPanel` (Outlet → NodeDetailPage)
+- Full-width `PageHeader` with breadcrumbs, title "Routing", Edit/Cancel buttons
+- `isEditing` state lives in TrafficRoutingPage, reset on path change
 
-### LLM Section
-- **LLMOverviewPage** (/llm): ✅ Shows model count, providers, policies summary; links to models
-- **LLMModelsPage** (/llm/models): ✅ Master-detail view of models with provider tags, params, guardrails
-- **LLMLogsPage** (/llm/logs): ✅ Professional "Coming soon" state
-- **LLMMetricsPage** (/llm/metrics): ✅ Professional "Coming soon" state
-- **LLMPlaygroundPage** (/llm/playground): ✅ Functional UI with model selector, chat interface (stub responses)
+### Key files
+| File | Role |
+|------|------|
+| `TrafficRoutingPage.tsx` | Layout, URL param parsing, EditTarget resolution, isEditing state |
+| `NodeDetailPage.tsx` | Outlet; renders NodeDetailView or NodeEditForm based on isEditing |
+| `NodeDetailView.tsx` | Read-only type-specific Descriptions tables |
+| `NodeEditForm.tsx` | RJSF form; strips child fields from schema+data; shows `<type> details` SectionTitle |
+| `NodeEditDrawer.tsx` | Thin drawer wrapper around NodeEditForm (used only for Add new) |
+| `HierarchyTree.tsx` | Tree; row clicks navigate; Add+Delete buttons fade in on hover (CSS); delete calls applyDelete + navigate to parent |
+| `nodeEditUtils.ts` | applyEdit, applyDelete, NODE_LABELS, SCHEMA_TYPE_MAP, CHILD_FIELDS_TO_HIDE, MUTUAL_EXCLUSIVE_GROUPS |
+| `useRoutingHierarchy.ts` | Builds BindNode[] tree from config |
 
-### MCP Section
-- **MCPOverviewPage** (/mcp): ✅ Shows target count, port, stateful mode; lists targets
-- **MCPServersPage** (/mcp/servers): ✅ Master-detail view of MCP targets with type+address display
-- **MCPLogsPage** (/mcp/logs): ✅ Professional "Coming soon" state
-- **MCPMetricsPage** (/mcp/metrics): ✅ Professional "Coming soon" state
-- **MCPPlaygroundPage** (/mcp/playground): ✅ Functional UI with target selector, method selector, JSON params, output panel
-
-### Dashboard
-- **DashboardPage** (/dashboard): ✅ Gateway-wide overview: traffic stats, LLM model count, MCP target count, clickable section cards
-
-### OLD Section (legacy, preserved)
-- **ListenersPage**: Functional with table + old form navigation
-- **RoutesPage**: Functional with table + old form navigation
-- **BackendsPage**: Functional with table + old form navigation
-- **PoliciesPage**: Functional with table + old form navigation
-- **PlaygroundPage**: Fully implemented A2A/MCP playground
-
-### CEL Playground
-- **CELPlaygroundPage**: Fully implemented Monaco editor + CEL expression evaluation
-
----
-
-## Key Architecture
-
-### API Hooks (ui/src/api/hooks.ts)
-- `useConfig()` - Full config
-- `useConfigDump()` - Config dump
-- `useListeners()` - Derived listeners from config
-- `useRoutes()` - Derived routes from config
-- `useBackends()` - Derived backends from config
-- `usePolicies()` - Derived policies from config
-- `useLLMConfig()` - `config.llm` 
-- `useMCPConfig()` - `config.mcp`
-
-### Traffic Routing System (most complex)
-
-**Components:**
-- `HierarchyTree.tsx` - Tree view; clicking rows opens detail view
-- `NodeEditDrawer.tsx` - Drawer with view/edit mode toggle
-  - View mode: `NodeDetailView` with formatted Descriptions
-  - Edit mode: RJSF form with schema loaded from `/schema-forms/`
-- `NodeDetailView.tsx` - Type-specific detail views (bind/listener/route)
-- `RoutingMetrics.tsx` - Config stats bar
-- `RoutingHierarchyContext.tsx` - React context for hierarchy
-
-**Hooks:**
-- `useRoutingHierarchy.ts` - Builds `BindNode[]` tree with HTTP + TCP routes, validation errors
-
-**Key behaviors:**
-- Click row → view mode (details)
-- Click "Edit" button (in drawer header or bottom button) → edit mode (RJSF form)
-- "Add" buttons stay on rows for quick access
-- TCP routes shown with blue "TCP" tag; `categoryIndex` used for correct routing
-- Mutual exclusion: routes and tcpRoutes cannot coexist on a listener
-
-### Form System
-- **RJSF** with Ant Design theme
+### Form system (RJSF + Ant Design)
 - Custom fields: `OneOfField`, `AnyOfField`
-- Custom templates: `ExclusiveObjectFieldTemplate`, `FieldTemplate`, `ArrayFieldTemplate`
-- Schema loaded from `/public/schema-forms/{category}/{type}.json`
+- Custom templates: `ExclusiveObjectFieldTemplate` (delegates to `CollapsibleObjectFieldTemplate`), `FieldTemplate`, `ArrayFieldTemplate`, `NullTitleFieldTemplate`
+- Schemas: `/public/schema-forms/{listeners|routes|backends}/{Type}.json`
+- `uiSchema: { "ui:title": "", "ui:description": "" }` suppresses RJSF root title/description (manual SectionTitle shown instead)
+- `CollapsibleObjectFieldTemplate`: renders all fields flat (no collapse); section titles via `<Title level={5}>`
+- `CHILD_FIELDS_TO_HIDE`: hides child arrays (listeners/routes/backends) from edit forms; `applyEdit` re-injects them on save
+- `MUTUAL_EXCLUSIVE_GROUPS`: currently empty (routes/tcpRoutes handled via tree Add buttons + runtime check in applyEdit)
+- `validateFormats: false` in Ajv to silence unknown format warnings (uint16, etc.)
 
----
+### Sidebar active state
+`MainLayout.tsx`: uses prefix matching so `/traffic/routing/*` keeps "Routing" menu item highlighted.
 
-## Config Schema Reference (config-overview.md)
-
-```
-config: Global settings
-binds: Port bindings
-  listeners: Protocol + hostname matchers
-    routes: HTTP/HTTPS routes (matches, backends, policies)
-    tcpRoutes: TCP routes (name, backends)
-backends: Named backend definitions (host, policies)
-policies: Standalone policies
-frontendPolicies: Global/listener-level policies
-llm: LLM config
-  models[]: name, provider, params (model, apiKey, etc.), guardrails
-  policies: jwtAuth, extAuthz, basicAuth, apiKey, authorization
-mcp: MCP config
-  targets[]: name + one of {sse, mcp, stdio, openapi}
-  port, statefulMode, prefixMode, policies
-```
-
----
-
-## Development Notes
-
-- **Linting**: Run `yarn run lint` from `ui/` directory
-- **No double padding**: Pages should NOT have `padding: var(--spacing-xl)` in their Container - `StyledContent` in MainLayout already adds it. The traffic routing page and old pages have this bug (pre-existing).
-- **Pre-existing lint errors**: Many files have pre-existing `@typescript-eslint/no-explicit-any` and similar errors. Don't fix them unless necessary.
-- **TypeScript**: Config types auto-generated in `ui/src/config.d.ts`, re-exported via `ui/src/api/types.ts`
-
----
-
-_Last updated: February 26, 2026_
+### HierarchyTree behaviors
+- Row click → navigate to URL
+- Add buttons (Add Listener / Add Route / Add Backend) → open NodeEditDrawer
+- Both Add and Delete buttons live in `HoverActions` (opacity:0 → 1 on NodeRow:hover, CSS transition)
+- Delete: `Popconfirm` → `applyDelete(target)` → toast → navigate to parent path
+- "Configuration" title click → navigate to /traffic/routing
+- Collapse/Expand all: icon-only button with Tooltip
+- Backend icon: `Server` (lucide), color: `var(--color-primary)`
+- Selected node: `var(--color-bg-selected)` override for dark mode

@@ -9,5 +9,6 @@ export type {
 } from "./ExclusiveObjectFieldTemplate";
 export { FieldTemplate } from "./FieldTemplate";
 export { HideLabelContext } from "./HideLabelContext";
+export { NullTitleFieldTemplate } from "./NullTitleFieldTemplate";
 export { OneOfField } from "./OneOfField";
 export { SelectWidget } from "./SelectWidget";

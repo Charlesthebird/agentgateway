@@ -48,7 +48,8 @@
             "string",
             "null"
           ],
-          "title": "Hostname"
+          "title": "Hostname",
+          "description": "Hostname or domain to match (wildcards like *.example.com are supported)"
         },
         "insecure": {
           "type": "boolean",

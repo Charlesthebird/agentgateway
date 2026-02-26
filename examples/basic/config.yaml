@@ -13,7 +13,7 @@ binds:
       ruleName: asdfasdf
       hostnames:
       - b.com
-    - name: myroute
+    - name: myrouteasdf
       hostnames:
       - b.com
   - name: lkjlkjl
@@ -24,7 +24,13 @@ binds:
         method: GET
       backends:
       - weight: 1
-        dynamic: {}
+        mcp:
+          targets:
+          - name: asdf
+            sse:
+              host: aaa
+          statefulMode: stateful
+          prefixMode: always
       - weight: 53
         policies:
           mcpAuthorization:
@@ -32,16 +38,19 @@ binds:
             - asdf
           backendAuth:
             passthrough: {}
-        host: asdf:42
-      name: myroute
-      ruleName: test
-    - matches:
-      - path:
-          pathPrefix: /
-      name: asdfasdfasdf
+        host: asdf:423
+      - weight: 1
+        dynamic: {}
+      name: myrouteabc
+      ruleName: test1233
   tunnelProtocol: direct
 - port: 8081
   listeners:
   - protocol: HBONE
     name: asdf
+    routes:
+    - matches:
+      - path:
+          pathPrefix: /
+      name: testasdf
   tunnelProtocol: direct
