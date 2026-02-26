@@ -150,7 +150,9 @@ export async function applyEdit(
 
   if (target.type === "bind") {
     if (target.isNew) {
-      newConfig.binds.push(formData as unknown as LocalBind);
+      // Ensure listeners always exists so useRoutingHierarchy can safely map over it.
+      const newBind = { listeners: [], ...formData } as unknown as LocalBind;
+      newConfig.binds.push(newBind);
     } else {
       if (bindIdx === -1) throw new Error("Bind not found");
       const existing = newConfig.binds[bindIdx] as unknown as Record<string, unknown>;

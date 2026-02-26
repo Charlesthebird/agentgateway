@@ -57,8 +57,7 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
         .filter((listener) => Object.keys(listener).length > 0);
 
       return cleanedBind;
-    })
-    .filter((bind) => bind.listeners.length > 0);
+    });
 
   // Clean up workloads and services - only include if they have content
   if (

@@ -156,6 +156,8 @@
 |`binds[].listeners[].routes[].policies.mcpAuthentication.jwks.(any)file`||
 |`binds[].listeners[].routes[].policies.mcpAuthentication.jwks.(any)url`||
 |`binds[].listeners[].routes[].policies.mcpAuthentication.mode`||
+|`binds[].listeners[].routes[].policies.mcpAuthentication.jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`binds[].listeners[].routes[].policies.mcpAuthentication.jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`binds[].listeners[].routes[].policies.a2a`|Mark this traffic as A2A to enable A2A processing and telemetry.|
 |`binds[].listeners[].routes[].policies.ai`|Mark this as LLM traffic to enable LLM processing.|
 |`binds[].listeners[].routes[].policies.ai.promptGuard`||
@@ -583,6 +585,7 @@
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`binds[].listeners[].routes[].policies.ai.defaults`||
 |`binds[].listeners[].routes[].policies.ai.overrides`||
+|`binds[].listeners[].routes[].policies.ai.transformations`||
 |`binds[].listeners[].routes[].policies.ai.prompts`||
 |`binds[].listeners[].routes[].policies.ai.prompts.append`||
 |`binds[].listeners[].routes[].policies.ai.prompts.append[].role`||
@@ -652,6 +655,7 @@
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)descriptors[].entries[].value`||
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)descriptors[].type`||
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)timeout`|Timeout for the request|
+|`binds[].listeners[].routes[].policies.remoteRateLimit.(any)failureMode`|Behavior when the remote rate limit service is unavailable or returns an error.<br>Defaults to failClosed, denying requests with a 500 status on service failure.|
 |`binds[].listeners[].routes[].policies.jwtAuth`|Authenticate incoming JWT requests.|
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)mode`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)providers`||
@@ -660,12 +664,16 @@
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)providers[].jwks`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)providers[].jwks.(any)file`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)providers[].jwks.(any)url`||
+|`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)providers[].jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)providers[].jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)mode`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)issuer`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)audiences`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)jwks`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)jwks.(any)file`||
 |`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)jwks.(any)url`||
+|`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`binds[].listeners[].routes[].policies.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`binds[].listeners[].routes[].policies.basicAuth`|Authenticate incoming requests using Basic Authentication with htpasswd.|
 |`binds[].listeners[].routes[].policies.basicAuth.htpasswd`|.htpasswd file contents/reference|
 |`binds[].listeners[].routes[].policies.basicAuth.htpasswd.(any)file`||
@@ -865,6 +873,7 @@
 |`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.defaults`||
 |`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.overrides`||
+|`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.transformations`||
 |`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.prompts`||
 |`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.prompts.append`||
 |`binds[].listeners[].routes[].backends[].(1)mcp.targets[].policies.ai.prompts.append[].role`||
@@ -1056,6 +1065,7 @@
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.defaults`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.overrides`||
+|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.transformations`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.prompts`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.prompts.append`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.prompts.append[].role`||
@@ -1246,6 +1256,7 @@
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.defaults`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.overrides`||
+|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.transformations`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.prompts`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.prompts.append`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.prompts.append[].role`||
@@ -1411,6 +1422,7 @@
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`binds[].listeners[].routes[].backends[].policies.ai.defaults`||
 |`binds[].listeners[].routes[].backends[].policies.ai.overrides`||
+|`binds[].listeners[].routes[].backends[].policies.ai.transformations`||
 |`binds[].listeners[].routes[].backends[].policies.ai.prompts`||
 |`binds[].listeners[].routes[].backends[].policies.ai.prompts.append`||
 |`binds[].listeners[].routes[].backends[].policies.ai.prompts.append[].role`||
@@ -1515,12 +1527,16 @@
 |`binds[].listeners[].policies.jwtAuth.(any)(any)providers[].jwks`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)providers[].jwks.(any)file`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)providers[].jwks.(any)url`||
+|`binds[].listeners[].policies.jwtAuth.(any)(any)providers[].jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`binds[].listeners[].policies.jwtAuth.(any)(any)providers[].jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`binds[].listeners[].policies.jwtAuth.(any)(any)mode`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)issuer`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)audiences`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)jwks`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)jwks.(any)file`||
 |`binds[].listeners[].policies.jwtAuth.(any)(any)jwks.(any)url`||
+|`binds[].listeners[].policies.jwtAuth.(any)(any)jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`binds[].listeners[].policies.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`binds[].listeners[].policies.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`binds[].listeners[].policies.extAuthz.(any)(1)service`||
 |`binds[].listeners[].policies.extAuthz.(any)(1)service.name`||
@@ -1708,6 +1724,8 @@
 |`policies[].policy.mcpAuthentication.jwks.(any)file`||
 |`policies[].policy.mcpAuthentication.jwks.(any)url`||
 |`policies[].policy.mcpAuthentication.mode`||
+|`policies[].policy.mcpAuthentication.jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`policies[].policy.mcpAuthentication.jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`policies[].policy.a2a`|Mark this traffic as A2A to enable A2A processing and telemetry.|
 |`policies[].policy.ai`|Mark this as LLM traffic to enable LLM processing.|
 |`policies[].policy.ai.promptGuard`||
@@ -2135,6 +2153,7 @@
 |`policies[].policy.ai.promptGuard.response[].rejection.headers.remove`||
 |`policies[].policy.ai.defaults`||
 |`policies[].policy.ai.overrides`||
+|`policies[].policy.ai.transformations`||
 |`policies[].policy.ai.prompts`||
 |`policies[].policy.ai.prompts.append`||
 |`policies[].policy.ai.prompts.append[].role`||
@@ -2204,6 +2223,7 @@
 |`policies[].policy.remoteRateLimit.(any)descriptors[].entries[].value`||
 |`policies[].policy.remoteRateLimit.(any)descriptors[].type`||
 |`policies[].policy.remoteRateLimit.(any)timeout`|Timeout for the request|
+|`policies[].policy.remoteRateLimit.(any)failureMode`|Behavior when the remote rate limit service is unavailable or returns an error.<br>Defaults to failClosed, denying requests with a 500 status on service failure.|
 |`policies[].policy.jwtAuth`|Authenticate incoming JWT requests.|
 |`policies[].policy.jwtAuth.(any)(any)mode`||
 |`policies[].policy.jwtAuth.(any)(any)providers`||
@@ -2212,12 +2232,16 @@
 |`policies[].policy.jwtAuth.(any)(any)providers[].jwks`||
 |`policies[].policy.jwtAuth.(any)(any)providers[].jwks.(any)file`||
 |`policies[].policy.jwtAuth.(any)(any)providers[].jwks.(any)url`||
+|`policies[].policy.jwtAuth.(any)(any)providers[].jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`policies[].policy.jwtAuth.(any)(any)providers[].jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`policies[].policy.jwtAuth.(any)(any)mode`||
 |`policies[].policy.jwtAuth.(any)(any)issuer`||
 |`policies[].policy.jwtAuth.(any)(any)audiences`||
 |`policies[].policy.jwtAuth.(any)(any)jwks`||
 |`policies[].policy.jwtAuth.(any)(any)jwks.(any)file`||
 |`policies[].policy.jwtAuth.(any)(any)jwks.(any)url`||
+|`policies[].policy.jwtAuth.(any)(any)jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`policies[].policy.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`policies[].policy.basicAuth`|Authenticate incoming requests using Basic Authentication with htpasswd.|
 |`policies[].policy.basicAuth.htpasswd`|.htpasswd file contents/reference|
 |`policies[].policy.basicAuth.htpasswd.(any)file`||
@@ -2394,6 +2418,7 @@
 |`backends[].policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`backends[].policies.ai.defaults`||
 |`backends[].policies.ai.overrides`||
+|`backends[].policies.ai.transformations`||
 |`backends[].policies.ai.prompts`||
 |`backends[].policies.ai.prompts.append`||
 |`backends[].policies.ai.prompts.append[].role`||
@@ -2456,6 +2481,7 @@
 |`backends[].policies.tcp.connectTimeout.secs`||
 |`backends[].policies.tcp.connectTimeout.nanos`||
 |`llm`||
+|`llm.port`||
 |`llm.models`|models defines the set of models that can be served by this gateway. The model name refers to the<br>model in the users request that is matched; the model sent to the actual LLM can be overridden<br>on a per-model basis.|
 |`llm.models[].name`|name is the name of the model we are matching from a users request. If params.model is set, that<br>will be used in the request to the LLM provider. If not, the incoming model is used.|
 |`llm.models[].params`|params customizes parameters for the outgoing request|
@@ -2469,6 +2495,7 @@
 |`llm.models[].provider`|provider of the LLM we are connecting too|
 |`llm.models[].defaults`|defaults allows setting default values for the request. If these are not present in the request body, they will be set.<br>To override even when set, use `overrides`.|
 |`llm.models[].overrides`|overrides allows setting values for the request, overriding any existing values|
+|`llm.models[].transformation`|transformation allows setting values from CEL expressions for the request, overriding any existing values.|
 |`llm.models[].requestHeaders`|requestHeaders modifies headers in requests to the LLM provider.|
 |`llm.models[].requestHeaders.add`||
 |`llm.models[].requestHeaders.set`||
@@ -2522,6 +2549,7 @@
 |`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.promptGuard`||
 |`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.defaults`||
 |`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.overrides`||
+|`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.transformations`||
 |`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.prompts`||
 |`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.prompts.append`||
 |`llm.models[].guardrails.request[].(1)openAIModeration.policies.ai.prompts.append[].role`||
@@ -2613,6 +2641,7 @@
 |`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.promptGuard`||
 |`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.defaults`||
 |`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.overrides`||
+|`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.transformations`||
 |`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.prompts`||
 |`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.prompts.append`||
 |`llm.models[].guardrails.request[].(1)bedrockGuardrails.policies.ai.prompts.append[].role`||
@@ -2704,6 +2733,7 @@
 |`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.promptGuard`||
 |`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.defaults`||
 |`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.overrides`||
+|`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.transformations`||
 |`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.prompts`||
 |`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.prompts.append`||
 |`llm.models[].guardrails.request[].(1)googleModelArmor.policies.ai.prompts.append[].role`||
@@ -2822,6 +2852,7 @@
 |`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.promptGuard`||
 |`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.defaults`||
 |`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.overrides`||
+|`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.transformations`||
 |`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.prompts`||
 |`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.prompts.append`||
 |`llm.models[].guardrails.response[].(1)bedrockGuardrails.policies.ai.prompts.append[].role`||
@@ -2913,6 +2944,7 @@
 |`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.promptGuard`||
 |`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.defaults`||
 |`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.overrides`||
+|`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.transformations`||
 |`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.prompts`||
 |`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.prompts.append`||
 |`llm.models[].guardrails.response[].(1)googleModelArmor.policies.ai.prompts.append[].role`||
@@ -2996,12 +3028,16 @@
 |`llm.policies.jwtAuth.(any)(any)providers[].jwks`||
 |`llm.policies.jwtAuth.(any)(any)providers[].jwks.(any)file`||
 |`llm.policies.jwtAuth.(any)(any)providers[].jwks.(any)url`||
+|`llm.policies.jwtAuth.(any)(any)providers[].jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`llm.policies.jwtAuth.(any)(any)providers[].jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`llm.policies.jwtAuth.(any)(any)mode`||
 |`llm.policies.jwtAuth.(any)(any)issuer`||
 |`llm.policies.jwtAuth.(any)(any)audiences`||
 |`llm.policies.jwtAuth.(any)(any)jwks`||
 |`llm.policies.jwtAuth.(any)(any)jwks.(any)file`||
 |`llm.policies.jwtAuth.(any)(any)jwks.(any)url`||
+|`llm.policies.jwtAuth.(any)(any)jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`llm.policies.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`llm.policies.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`llm.policies.extAuthz.(any)(1)service`||
 |`llm.policies.extAuthz.(any)(1)service.name`||
@@ -3187,6 +3223,7 @@
 |`mcp.targets[].policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`mcp.targets[].policies.ai.defaults`||
 |`mcp.targets[].policies.ai.overrides`||
+|`mcp.targets[].policies.ai.transformations`||
 |`mcp.targets[].policies.ai.prompts`||
 |`mcp.targets[].policies.ai.prompts.append`||
 |`mcp.targets[].policies.ai.prompts.append[].role`||
@@ -3312,6 +3349,8 @@
 |`mcp.policies.mcpAuthentication.jwks.(any)file`||
 |`mcp.policies.mcpAuthentication.jwks.(any)url`||
 |`mcp.policies.mcpAuthentication.mode`||
+|`mcp.policies.mcpAuthentication.jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`mcp.policies.mcpAuthentication.jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`mcp.policies.a2a`|Mark this traffic as A2A to enable A2A processing and telemetry.|
 |`mcp.policies.ai`|Mark this as LLM traffic to enable LLM processing.|
 |`mcp.policies.ai.promptGuard`||
@@ -3739,6 +3778,7 @@
 |`mcp.policies.ai.promptGuard.response[].rejection.headers.remove`||
 |`mcp.policies.ai.defaults`||
 |`mcp.policies.ai.overrides`||
+|`mcp.policies.ai.transformations`||
 |`mcp.policies.ai.prompts`||
 |`mcp.policies.ai.prompts.append`||
 |`mcp.policies.ai.prompts.append[].role`||
@@ -3808,6 +3848,7 @@
 |`mcp.policies.remoteRateLimit.(any)descriptors[].entries[].value`||
 |`mcp.policies.remoteRateLimit.(any)descriptors[].type`||
 |`mcp.policies.remoteRateLimit.(any)timeout`|Timeout for the request|
+|`mcp.policies.remoteRateLimit.(any)failureMode`|Behavior when the remote rate limit service is unavailable or returns an error.<br>Defaults to failClosed, denying requests with a 500 status on service failure.|
 |`mcp.policies.jwtAuth`|Authenticate incoming JWT requests.|
 |`mcp.policies.jwtAuth.(any)(any)mode`||
 |`mcp.policies.jwtAuth.(any)(any)providers`||
@@ -3816,12 +3857,16 @@
 |`mcp.policies.jwtAuth.(any)(any)providers[].jwks`||
 |`mcp.policies.jwtAuth.(any)(any)providers[].jwks.(any)file`||
 |`mcp.policies.jwtAuth.(any)(any)providers[].jwks.(any)url`||
+|`mcp.policies.jwtAuth.(any)(any)providers[].jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`mcp.policies.jwtAuth.(any)(any)providers[].jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`mcp.policies.jwtAuth.(any)(any)mode`||
 |`mcp.policies.jwtAuth.(any)(any)issuer`||
 |`mcp.policies.jwtAuth.(any)(any)audiences`||
 |`mcp.policies.jwtAuth.(any)(any)jwks`||
 |`mcp.policies.jwtAuth.(any)(any)jwks.(any)file`||
 |`mcp.policies.jwtAuth.(any)(any)jwks.(any)url`||
+|`mcp.policies.jwtAuth.(any)(any)jwtValidationOptions`|JWT validation options controlling which claims must be present in a token.<br><br>The `required_claims` set specifies which RFC 7519 registered claims must<br>exist in the token payload before validation proceeds. Only the following<br>values are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered<br>claims such as `iat` and `jti` are **not** enforced by the underlying<br>`jsonwebtoken` library and will be silently ignored.<br><br>This only enforces **presence**. Standard claims like `exp` and `nbf`<br>have their values validated independently (e.g., expiry is always checked<br>when the `exp` claim is present, regardless of this setting).<br><br>Defaults to `["exp"]`.|
+|`mcp.policies.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`mcp.policies.basicAuth`|Authenticate incoming requests using Basic Authentication with htpasswd.|
 |`mcp.policies.basicAuth.htpasswd`|.htpasswd file contents/reference|
 |`mcp.policies.basicAuth.htpasswd.(any)file`||

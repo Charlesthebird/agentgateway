@@ -193,7 +193,7 @@ export function useRoutingHierarchy(): RoutingHierarchy {
     let totalValidationErrors = 0;
 
     const binds: BindNode[] = (config?.binds ?? []).map((bind) => {
-      const listenerNodes: ListenerNode[] = bind.listeners.map((listener) => {
+      const listenerNodes: ListenerNode[] = (bind.listeners ?? []).map((listener) => {
         totalListeners++;
         const listenerErrors = validateListener(
           listener,

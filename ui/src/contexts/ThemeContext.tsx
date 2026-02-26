@@ -1,4 +1,4 @@
-import { ConfigProvider } from "antd";
+import { App, ConfigProvider } from "antd";
 import type { ReactNode } from "react";
 import React, {
   createContext,
@@ -54,7 +54,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
       }}
     >
       <ConfigProvider theme={currentThemeConfig} componentSize="middle">
-        {children}
+        <App>{children}</App>
       </ConfigProvider>
     </ThemeContext.Provider>
   );

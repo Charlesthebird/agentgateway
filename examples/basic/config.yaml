@@ -13,6 +13,11 @@ binds:
       ruleName: asdfasdf
       hostnames:
       - b.com
+      backends:
+      - weight: 1
+        service:
+          name: test/abc
+          port: 123
     - name: myrouteasdf
       hostnames:
       - b.com
@@ -54,3 +59,9 @@ binds:
           pathPrefix: /
       name: testasdf
   tunnelProtocol: direct
+- listeners: []
+  port: 2222
+  tunnelProtocol: direct
+- listeners: []
+  port: 65535
+  tunnelProtocol: hboneGateway

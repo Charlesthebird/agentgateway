@@ -3,12 +3,12 @@ import { Global, css } from "@emotion/react";
 import styled from "@emotion/styled";
 import type { MenuProps } from "antd";
 import {
+  App,
   Badge,
   Button,
   Card,
   Dropdown,
   Empty,
-  Modal,
   Space,
   Tooltip,
   Tree,
@@ -151,17 +151,8 @@ const NodeLabel = styled.span`
 // Node title builders
 // ---------------------------------------------------------------------------
 
-/** Shows a Modal.confirm for destructive actions (avoids inline Popconfirm in menus). */
-function confirmDelete(title: string, content: string, onOk: () => void) {
-  Modal.confirm({
-    title,
-    content,
-    okText: "Delete",
-    okButtonProps: { danger: true },
-    onOk,
-    centered: true,
-  });
-}
+/** Signature for the confirmDelete helper threaded through tree builders. */
+type ConfirmDeleteFn = (title: string, content: string, onOk: () => void) => void;
 
 function ValidationBadges({ errors }: { errors: ValidationError[] }) {
   if (errors.length === 0) return null;
@@ -192,6 +183,7 @@ function buildBindTitle(
   onAdd: (target: EditTarget) => void,
   navigate: (path: string) => void,
   onDelete: (target: EditTarget, parentPath: string) => void,
+  confirmDelete: ConfirmDeleteFn,
 ): ReactNode {
   const bindPath = `/traffic/routing/bind/${bind.bind.port}`;
   const deleteTarget: EditTarget = {
@@ -284,6 +276,7 @@ function buildListenerTitle(
   onDelete: (target: EditTarget, parentPath: string) => void,
   bindPort: number,
   listenerIndex: number,
+  confirmDelete: ConfirmDeleteFn,
 ): ReactNode {
   const protocol = ln.listener.protocol ?? "HTTP";
   const listenerPath = `/traffic/routing/bind/${bindPort}/listener/${listenerIndex}`;
@@ -435,6 +428,7 @@ function buildBackendTitle(
   bindPort: number,
   listenerIndex: number,
   routeIndex: number,
+  confirmDelete: ConfirmDeleteFn,
 ): ReactNode {
   const { label } = describeBackend(bn.backend);
   const routeSeg = bn.isTcpRoute ? "tcproute" : "route";
@@ -513,6 +507,7 @@ function buildRouteTitle(
   onDelete: (target: EditTarget, parentPath: string) => void,
   bindPort: number,
   listenerIndex: number,
+  confirmDelete: ConfirmDeleteFn,
 ): ReactNode {
   const backendSchemaCategory = rn.isTcp ? "tcpRouteBackends" : "routeBackends";
   const routeSeg = rn.isTcp ? "tcproute" : "route";
@@ -628,12 +623,13 @@ function buildTreeData(
   onAdd: (target: EditTarget) => void,
   navigate: (path: string) => void,
   onDelete: (target: EditTarget, parentPath: string) => void,
+  confirmDelete: ConfirmDeleteFn,
 ): DataNode[] {
   return (hierarchy.binds ?? []).map((bindNode) => ({
     key: `bind-${bindNode.bind.port}`,
     icon: null,
     selectable: false,
-    title: buildBindTitle(bindNode, onAdd, navigate, onDelete),
+    title: buildBindTitle(bindNode, onAdd, navigate, onDelete, confirmDelete),
     children: (bindNode.listeners ?? []).map((ln, li) => ({
       key: `listener-${bindNode.bind.port}-${li}`,
       icon: null,
@@ -645,6 +641,7 @@ function buildTreeData(
         onDelete,
         bindNode.bind.port,
         li,
+        confirmDelete,
       ),
       children: (ln.routes ?? []).map((rn) => ({
         key: `route-${bindNode.bind.port}-${li}-${rn.isTcp ? "tcp" : "http"}-${rn.categoryIndex}`,
@@ -657,6 +654,7 @@ function buildTreeData(
           onDelete,
           bindNode.bind.port,
           li,
+          confirmDelete,
         ),
         isLeaf: rn.backends.length === 0,
         children: rn.backends.map((bn) => ({
@@ -671,6 +669,7 @@ function buildTreeData(
             bindNode.bind.port,
             li,
             rn.categoryIndex,
+            confirmDelete,
           ),
         })),
       })),
@@ -695,33 +694,39 @@ export function HierarchyTree({
 }: HierarchyTreeProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { modal } = App.useApp();
+
+  const confirmDelete = useCallback<ConfirmDeleteFn>(
+    (title, content, onOk) => {
+      modal.confirm({
+        title,
+        content,
+        okText: "Delete",
+        okButtonProps: { danger: true },
+        onOk,
+        centered: true,
+      });
+    },
+    [modal],
+  );
 
   const handleDelete = useCallback(
     async (target: EditTarget, parentPath: string) => {
       try {
         await applyDelete(target);
         toast.success(`${NODE_LABELS[target.type]} deleted`);
-        // Navigate to parent if the current URL is within the deleted item's path.
-        if (
-          location.pathname.startsWith(parentPath.replace(/\/$/, "") + "/") ||
-          location.pathname === parentPath
-        ) {
-          navigate(parentPath);
-        } else {
-          // Still navigate to parent to avoid a stale URL
-          navigate(parentPath);
-        }
+        navigate(parentPath);
       } catch (e: unknown) {
         toast.error(extractErrorMessage(e) ?? "Failed to delete");
       }
     },
-    [navigate, location.pathname],
+    [navigate],
   );
 
   const treeData = useMemo(
-    () => buildTreeData(hierarchy, onEditNode, navigate, handleDelete),
+    () => buildTreeData(hierarchy, onEditNode, navigate, handleDelete, confirmDelete),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hierarchy, onEditNode, handleDelete],
+    [hierarchy, onEditNode, handleDelete, confirmDelete],
   );
 
   const [expandedKeys, setExpandedKeys] = useState<Key[]>([]);

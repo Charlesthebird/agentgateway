@@ -110,11 +110,38 @@ function renderValue(key: string, value: unknown): ReactNode {
       );
     }
 
-    // Array of objects — show count
+    // Array of objects — render each item's fields
     return (
-      <span style={{ color: "var(--color-text-secondary)" }}>
-        {value.length} item{value.length !== 1 ? "s" : ""}
-      </span>
+      <Space direction="vertical" size={6} style={{ width: "100%" }}>
+        {value.map((item, i) => {
+          const obj = item as Record<string, unknown>;
+          const entries = Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
+          // Use "name" as a header if present, otherwise "Item N"
+          const header = typeof obj["name"] === "string" ? obj["name"] : `Item ${i + 1}`;
+          const bodyEntries = entries.filter(([k]) => k !== "name");
+          return (
+            <div
+              key={i}
+              style={{
+                borderLeft: "2px solid var(--color-border)",
+                paddingLeft: 8,
+              }}
+            >
+              <div style={{ fontWeight: 500, marginBottom: 2 }}>{header}</div>
+              <Space direction="vertical" size={1}>
+                {bodyEntries.map(([k, v]) => (
+                  <span key={k} style={{ fontSize: 12 }}>
+                    <span style={{ color: "var(--color-text-secondary)", marginRight: 4 }}>
+                      {camelToLabel(k)}:
+                    </span>
+                    {renderValue(k, v)}
+                  </span>
+                ))}
+              </Space>
+            </div>
+          );
+        })}
+      </Space>
     );
   }
   if (typeof value === "object") {

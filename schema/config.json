@@ -1642,6 +1642,14 @@
         "mode": {
           "$ref": "#/$defs/McpAuthenticationMode",
           "default": "strict"
+        },
+        "jwtValidationOptions": {
+          "$ref": "#/$defs/JWTValidationOptions",
+          "default": {
+            "requiredClaims": [
+              "exp"
+            ]
+          }
         }
       },
       "additionalProperties": false,
@@ -1734,6 +1742,24 @@
         }
       ]
     },
+    "JWTValidationOptions": {
+      "description": "JWT validation options controlling which claims must be present in a token.\n\nThe `required_claims` set specifies which RFC 7519 registered claims must\nexist in the token payload before validation proceeds. Only the following\nvalues are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered\nclaims such as `iat` and `jti` are **not** enforced by the underlying\n`jsonwebtoken` library and will be silently ignored.\n\nThis only enforces **presence**. Standard claims like `exp` and `nbf`\nhave their values validated independently (e.g., expiry is always checked\nwhen the `exp` claim is present, regardless of this setting).\n\nDefaults to `[\"exp\"]`.",
+      "type": "object",
+      "properties": {
+        "requiredClaims": {
+          "description": "Claims that must be present in the token before validation.\nOnly \"exp\", \"nbf\", \"aud\", \"iss\", \"sub\" are enforced; others\n(including \"iat\" and \"jti\") are ignored.\nDefaults to [\"exp\"]. Use an empty list to require no claims.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "exp"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "A2aPolicy": {
       "type": "object",
       "additionalProperties": false
@@ -1764,6 +1790,15 @@
             "null"
           ],
           "additionalProperties": true
+        },
+        "transformations": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          }
         },
         "prompts": {
           "anyOf": [
@@ -2696,6 +2731,9 @@
         }
       ]
     },
+    "Expression": {
+      "type": "string"
+    },
     "PromptEnrichment": {
       "type": "object",
       "properties": {
@@ -2853,6 +2891,11 @@
             "string",
             "null"
           ]
+        },
+        "failureMode": {
+          "description": "Behavior when the remote rate limit service is unavailable or returns an error.\nDefaults to failClosed, denying requests with a 500 status on service failure.",
+          "$ref": "#/$defs/FailureMode",
+          "default": "failClosed"
         }
       },
       "required": [
@@ -2962,6 +3005,21 @@
         "value"
       ]
     },
+    "FailureMode": {
+      "description": "Defines how the proxy behaves when the remote rate limit service is\nunavailable or returns an error.\n\nDefaults to `FailClosed`. When failing closed, a 500 Internal Server Error\nis returned when the service is unavailable. When failing open, requests are\nallowed through despite the service failure.\n\n# Configuration\n\nBoth camelCase (`failOpen`, `failClosed`) and PascalCase (`FailOpen`,\n`FailClosed`) are accepted in configuration files",
+      "oneOf": [
+        {
+          "description": "Deny the request with a 500 status when the rate limit service is unavailable (default).",
+          "type": "string",
+          "const": "failClosed"
+        },
+        {
+          "description": "Allow the request through when the rate limit service is unavailable.",
+          "type": "string",
+          "const": "failOpen"
+        }
+      ]
+    },
     "LocalJwtConfig": {
       "anyOf": [
         {
@@ -3004,6 +3062,14 @@
             },
             "jwks": {
               "$ref": "#/$defs/FileInlineOrRemote"
+            },
+            "jwtValidationOptions": {
+              "$ref": "#/$defs/JWTValidationOptions",
+              "default": {
+                "requiredClaims": [
+                  "exp"
+                ]
+              }
             }
           },
           "additionalProperties": false,
@@ -3050,6 +3116,14 @@
         },
         "jwks": {
           "$ref": "#/$defs/FileInlineOrRemote"
+        },
+        "jwtValidationOptions": {
+          "$ref": "#/$defs/JWTValidationOptions",
+          "default": {
+            "requiredClaims": [
+              "exp"
+            ]
+          }
         }
       },
       "additionalProperties": false,
@@ -3163,7 +3237,7 @@
         },
         "failureMode": {
           "description": "Behavior when the authorization service is unavailable or returns an error",
-          "$ref": "#/$defs/FailureMode",
+          "$ref": "#/$defs/FailureMode2",
           "default": "deny"
         },
         "includeRequestHeaders": {
@@ -3351,10 +3425,7 @@
         }
       ]
     },
-    "Expression": {
-      "type": "string"
-    },
-    "FailureMode": {
+    "FailureMode2": {
       "oneOf": [
         {
           "type": "string",
@@ -3411,7 +3482,7 @@
       "properties": {
         "failureMode": {
           "description": "Behavior when the ext_proc service is unavailable or returns an error",
-          "$ref": "#/$defs/FailureMode2",
+          "$ref": "#/$defs/FailureMode3",
           "default": "failClosed"
         },
         "metadataContext": {
@@ -3511,7 +3582,7 @@
         }
       ]
     },
-    "FailureMode2": {
+    "FailureMode3": {
       "type": "string",
       "enum": [
         "failClosed",
@@ -5067,6 +5138,15 @@
     "LocalLLMConfig": {
       "type": "object",
       "properties": {
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535
+        },
         "models": {
           "description": "models defines the set of models that can be served by this gateway. The model name refers to the\nmodel in the users request that is matched; the model sent to the actual LLM can be overridden\non a per-model basis.",
           "type": "array",
@@ -5121,6 +5201,16 @@
             "null"
           ],
           "additionalProperties": true
+        },
+        "transformation": {
+          "description": "transformation allows setting values from CEL expressions for the request, overriding any existing values.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          }
         },
         "requestHeaders": {
           "description": "requestHeaders modifies headers in requests to the LLM provider.",
@@ -5327,11 +5417,13 @@
       "type": "object",
       "properties": {
         "port": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint16",
           "minimum": 0,
-          "maximum": 65535,
-          "default": 3000
+          "maximum": 65535
         },
         "targets": {
           "type": "array",
