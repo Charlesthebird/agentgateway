@@ -30,7 +30,7 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.7.0"
+version = "0.0.0" # We do not use this version
 edition = "2024"
 rust-version = "1.90"
 license = "Apache-2.0"
@@ -50,7 +50,7 @@ anyhow = "1.0"
 arc-swap = "1.7.1"
 arcstr = { version = "1.2", features = ["serde"] }
 assert_matches = "1.5.0"
-async-openai = { version = "0.32.2", default-features = false, features = ["chat-completion-types", "embedding-types", "moderation-types", "response-types", "realtime-types"] }
+async-openai = { version = "0.33.0", default-features = false, features = ["chat-completion-types", "moderation-types", "response-types", "realtime-types"] }
 async-stream = "0.3"
 async-trait = "0.1"
 aws-config = "1.8"

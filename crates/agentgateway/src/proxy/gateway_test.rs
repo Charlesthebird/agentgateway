@@ -497,7 +497,10 @@ async fn cors_headers_present_on_auth_rejected_response() {
 
 #[tokio::test]
 async fn llm_openai() {
-	let mock = body_mock(include_bytes!("../llm/tests/response_basic.json")).await;
+	let mock = body_mock(include_bytes!(
+		"../llm/tests/response/completions/basic.json"
+	))
+	.await;
 	let (_mock, _bind, io) = setup_llm_mock(
 		mock,
 		AIProvider::OpenAI(openai::Provider { model: None }),
@@ -513,12 +516,20 @@ async fn llm_openai() {
 		"gen_ai.usage.input_tokens": 17,
 		"gen_ai.usage.output_tokens": 23
 	});
-	assert_llm(io, include_bytes!("../llm/tests/request_basic.json"), want).await;
+	assert_llm(
+		io,
+		include_bytes!("../llm/tests/requests/completions/basic.json"),
+		want,
+	)
+	.await;
 }
 
 #[tokio::test]
 async fn llm_openai_tokenize() {
-	let mock = body_mock(include_bytes!("../llm/tests/response_basic.json")).await;
+	let mock = body_mock(include_bytes!(
+		"../llm/tests/response/completions/basic.json"
+	))
+	.await;
 	let (_mock, _bind, io) = setup_llm_mock(
 		mock,
 		AIProvider::OpenAI(openai::Provider { model: None }),
@@ -534,12 +545,20 @@ async fn llm_openai_tokenize() {
 		"gen_ai.usage.input_tokens": 17,
 		"gen_ai.usage.output_tokens": 23
 	});
-	assert_llm(io, include_bytes!("../llm/tests/request_basic.json"), want).await;
+	assert_llm(
+		io,
+		include_bytes!("../llm/tests/requests/completions/basic.json"),
+		want,
+	)
+	.await;
 }
 
 #[tokio::test]
 async fn llm_log_body() {
-	let mock = body_mock(include_bytes!("../llm/tests/response_basic.json")).await;
+	let mock = body_mock(include_bytes!(
+		"../llm/tests/response/completions/basic.json"
+	))
+	.await;
 	let x = serde_json::to_string(&json!({
 		"config": {
 			"logging": {
@@ -573,7 +592,12 @@ async fn llm_log_body() {
 			{"role":"user","content":"What is the name of the LLM provider?"},
 		]
 	});
-	assert_llm(io, include_bytes!("../llm/tests/request_basic.json"), want).await;
+	assert_llm(
+		io,
+		include_bytes!("../llm/tests/requests/completions/basic.json"),
+		want,
+	)
+	.await;
 }
 
 #[tokio::test]
@@ -899,6 +923,17 @@ async fn send_http_version(t: &TestBind, v: Version) -> Response {
 #[tokio::test]
 async fn header_manipulation() {
 	let mock = simple_mock().await;
+	let backend_xfm = transformation_cel::LocalTransformationConfig {
+		request: Some(transformation_cel::LocalTransform {
+			set: vec![("x-backend-xfm-req".into(), "\"backend-xfm-req\"".into())],
+			..Default::default()
+		}),
+		response: Some(transformation_cel::LocalTransform {
+			add: vec![("x-backend-xfm-resp".into(), "\"backend-xfm-resp\"".into())],
+			..Default::default()
+		}),
+	};
+	let backend_xfm = Transformation::try_from_local_config(backend_xfm, true).unwrap();
 	let bind = base_gateway(&mock).with_route(Route {
 		key: "route2".into(),
 		name: RouteName {
@@ -940,6 +975,7 @@ async fn header_manipulation() {
 					set: vec![],
 					remove: vec![],
 				}),
+				BackendPolicy::Transformation(backend_xfm),
 			],
 		}],
 	});
@@ -949,6 +985,7 @@ async fn header_manipulation() {
 	assert_eq!(res.status(), 200);
 	assert_eq!(res.hdr("x-route-resp"), "route-resp");
 	assert_eq!(res.hdr("x-backend-resp"), "backend-resp");
+	assert_eq!(res.hdr("x-backend-xfm-resp"), "backend-xfm-resp");
 	let body = read_body(res.into_body()).await;
 	assert_eq!(
 		body.headers.get("x-route-req").unwrap().as_bytes(),
@@ -957,6 +994,10 @@ async fn header_manipulation() {
 	assert_eq!(
 		body.headers.get("x-backend-req").unwrap().as_bytes(),
 		b"backend-req"
+	);
+	assert_eq!(
+		body.headers.get("x-backend-xfm-req").unwrap().as_bytes(),
+		b"backend-xfm-req"
 	);
 }
 
