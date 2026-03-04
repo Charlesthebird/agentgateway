@@ -30,6 +30,16 @@
       "additionalProperties": true,
       "title": "Overrides"
     },
+    "transformations": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "$ref": "#/$defs/Expression"
+      },
+      "title": "Transformations"
+    },
     "prompts": {
       "anyOf": [
         {
@@ -829,6 +839,16 @@
           "additionalProperties": true,
           "title": "Overrides"
         },
+        "transformations": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          },
+          "title": "Transformations"
+        },
         "prompts": {
           "anyOf": [
             {
@@ -871,6 +891,10 @@
       },
       "additionalProperties": false,
       "title": "Policy"
+    },
+    "Expression": {
+      "type": "string",
+      "title": "Expression"
     },
     "PromptEnrichment": {
       "type": "object",

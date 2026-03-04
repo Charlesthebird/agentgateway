@@ -20,5 +20,6 @@ export type {
   LocalRouteBackend,
   LocalSimpleMcpConfig,
   LocalTCPRoute,
+  LocalTCPRouteBackend,
   LocalTLSServerConfig,
 } from "../config";

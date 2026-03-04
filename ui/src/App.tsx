@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
+import { EditorSettingsProvider } from "./contexts/EditorSettingsContext";
 import { BackendsPage } from "./pages/Backends/BackendsPage";
 import { CELPlaygroundPage } from "./pages/CELPlayground/CELPlaygroundPage";
 import { DashboardPage } from "./pages/Dashboard/DashboardPage";
@@ -13,12 +14,14 @@ import { LLMMetricsPage } from "./pages/LLM/LLMMetricsPage";
 import { LLMModelsPage } from "./pages/LLM/LLMModelsPage";
 import { LLMOverviewPage } from "./pages/LLM/LLMOverviewPage";
 import { LLMPlaygroundPage } from "./pages/LLM/LLMPlaygroundPage";
+import { LLMPoliciesPage } from "./pages/LLM/LLMPoliciesPage";
 import { MCPOverviewPage } from "./pages/MCP/MCPOverviewPage";
 import {
   MCPLogsPage,
   MCPMetricsPage,
   MCPPlaygroundPage,
 } from "./pages/MCP/MCPPages";
+import { MCPPoliciesPage } from "./pages/MCP/MCPPoliciesPage";
 import { MCPServersPage } from "./pages/MCP/MCPServersPage";
 import { PlaygroundPage } from "./pages/Playground/PlaygroundPage";
 import { PoliciesPage } from "./pages/Policies/PoliciesPage";
@@ -31,6 +34,8 @@ import {
   TrafficOverviewPage,
   TrafficRoutingPage,
 } from "./pages/Traffic/TrafficPages";
+import { Traffic2Page, ResourceFormPage, RawConfigPage } from "./pages/Traffic2";
+import { Traffic3Page, RawConfigPage as Traffic3RawConfigPage } from "./pages/Traffic3";
 
 function App() {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
@@ -57,8 +62,9 @@ function App() {
     >
       <BrowserRouter>
         <ErrorBoundary>
-          <ConfirmProvider>
-            <MainLayout>
+          <EditorSettingsProvider>
+            <ConfirmProvider>
+              <MainLayout>
               <Routes>
                 <Route
                   path="/"
@@ -79,6 +85,7 @@ function App() {
                 {/* LLM Section */}
                 <Route path="/llm" element={<LLMOverviewPage />} />
                 <Route path="/llm/models" element={<LLMModelsPage />} />
+                <Route path="/llm/policies" element={<LLMPoliciesPage />} />
                 <Route path="/llm/logs" element={<LLMLogsPage />} />
                 <Route path="/llm/metrics" element={<LLMMetricsPage />} />
                 <Route path="/llm/playground" element={<LLMPlaygroundPage />} />
@@ -86,6 +93,7 @@ function App() {
                 {/* MCP Section */}
                 <Route path="/mcp" element={<MCPOverviewPage />} />
                 <Route path="/mcp/servers" element={<MCPServersPage />} />
+                <Route path="/mcp/policies" element={<MCPPoliciesPage />} />
                 <Route path="/mcp/logs" element={<MCPLogsPage />} />
                 <Route path="/mcp/metrics" element={<MCPMetricsPage />} />
                 <Route path="/mcp/playground" element={<MCPPlaygroundPage />} />
@@ -107,6 +115,21 @@ function App() {
                   element={<TrafficMetricsPage />}
                 />
 
+                {/* Traffic2 - TypeScript Forms */}
+                <Route path="/traffic2" element={<Traffic2Page />} />
+                <Route path="/traffic2/raw-config" element={<RawConfigPage />} />
+                <Route path="/traffic2/:resourceType/:action" element={<ResourceFormPage />} />
+
+                {/* Traffic3 - Manual TypeScript Schemas */}
+                <Route path="/traffic3" element={<Traffic3Page />} />
+                <Route path="/traffic3/raw-config" element={<Traffic3RawConfigPage />} />
+                <Route path="/traffic3/bind/:port" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li/route/:ri" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li/route/:ri/backend/:bi" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri/backend/:bi" element={<Traffic3Page />} />
+
                 {/* CEL Playground */}
                 <Route path="/cel-playground" element={<CELPlaygroundPage />} />
 
@@ -119,8 +142,9 @@ function App() {
                   element={<Navigate to="/dashboard" replace />}
                 />
               </Routes>
-            </MainLayout>
-          </ConfirmProvider>
+              </MainLayout>
+            </ConfirmProvider>
+          </EditorSettingsProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </ConfigProvider>

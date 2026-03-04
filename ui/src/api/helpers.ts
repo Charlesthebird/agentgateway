@@ -25,8 +25,10 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
           // Only include fields that have values
           if (listener.protocol) cleanedListener.protocol = listener.protocol;
           if (listener.name) cleanedListener.name = listener.name;
+          if (listener.namespace) cleanedListener.namespace = listener.namespace;
           if (listener.hostname) cleanedListener.hostname = listener.hostname;
           if (listener.tls) cleanedListener.tls = listener.tls;
+          if (listener.policies) cleanedListener.policies = listener.policies;
 
           // Include routes if non-null (even empty []). The active exclusive
           // field must be present for the API to recognise the listener mode.
@@ -40,6 +42,7 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
               };
 
               if (route.name) cleanedRoute.name = route.name;
+              if (route.namespace) cleanedRoute.namespace = route.namespace;
               if (route.ruleName) cleanedRoute.ruleName = route.ruleName;
               if (route.policies) cleanedRoute.policies = route.policies;
 
@@ -49,7 +52,19 @@ export function cleanupConfig(config: LocalConfig): LocalConfig {
 
           // Include tcpRoutes if non-null (even empty [])
           if (listener.tcpRoutes !== null && listener.tcpRoutes !== undefined) {
-            cleanedListener.tcpRoutes = listener.tcpRoutes;
+            cleanedListener.tcpRoutes = listener.tcpRoutes.map((tcpRoute) => {
+              const cleanedTCPRoute: Record<string, unknown> = {
+                hostnames: tcpRoute.hostnames,
+                backends: tcpRoute.backends,
+              };
+
+              if (tcpRoute.name) cleanedTCPRoute.name = tcpRoute.name;
+              if (tcpRoute.namespace) cleanedTCPRoute.namespace = tcpRoute.namespace;
+              if (tcpRoute.ruleName) cleanedTCPRoute.ruleName = tcpRoute.ruleName;
+              if (tcpRoute.policies) cleanedTCPRoute.policies = tcpRoute.policies;
+
+              return cleanedTCPRoute;
+            });
           }
 
           return cleanedListener as LocalListener;

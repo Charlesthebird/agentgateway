@@ -1035,6 +1035,15 @@
           "$ref": "#/$defs/McpAuthenticationMode",
           "default": "strict",
           "title": "Mode"
+        },
+        "jwtValidationOptions": {
+          "$ref": "#/$defs/JWTValidationOptions",
+          "default": {
+            "requiredClaims": [
+              "exp"
+            ]
+          },
+          "title": "Jwt Validation Options"
         }
       },
       "additionalProperties": false,
@@ -1137,6 +1146,26 @@
       ],
       "title": "Mcp Authentication Mode"
     },
+    "JWTValidationOptions": {
+      "description": "JWT validation options controlling which claims must be present in a token.\n\nThe `required_claims` set specifies which RFC 7519 registered claims must\nexist in the token payload before validation proceeds. Only the following\nvalues are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered\nclaims such as `iat` and `jti` are **not** enforced by the underlying\n`jsonwebtoken` library and will be silently ignored.\n\nThis only enforces **presence**. Standard claims like `exp` and `nbf`\nhave their values validated independently (e.g., expiry is always checked\nwhen the `exp` claim is present, regardless of this setting).\n\nDefaults to `[\"exp\"]`.",
+      "type": "object",
+      "properties": {
+        "requiredClaims": {
+          "description": "Claims that must be present in the token before validation.\nOnly \"exp\", \"nbf\", \"aud\", \"iss\", \"sub\" are enforced; others\n(including \"iat\" and \"jti\") are ignored.\nDefaults to [\"exp\"]. Use an empty list to require no claims.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "exp"
+          ],
+          "title": "Required Claims"
+        }
+      },
+      "additionalProperties": false,
+      "title": "JWT Validation Options"
+    },
     "A2aPolicy": {
       "type": "object",
       "additionalProperties": false,
@@ -1172,6 +1201,16 @@
           ],
           "additionalProperties": true,
           "title": "Overrides"
+        },
+        "transformations": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          },
+          "title": "Transformations"
         },
         "prompts": {
           "anyOf": [
@@ -2248,6 +2287,10 @@
       ],
       "title": "Response Guard"
     },
+    "Expression": {
+      "type": "string",
+      "title": "Expression"
+    },
     "PromptEnrichment": {
       "type": "object",
       "properties": {
@@ -2437,6 +2480,12 @@
             "null"
           ],
           "title": "Timeout"
+        },
+        "failureMode": {
+          "description": "Behavior when the remote rate limit service is unavailable or returns an error.\nDefaults to failClosed, denying requests with a 500 status on service failure.",
+          "$ref": "#/$defs/FailureMode",
+          "default": "failClosed",
+          "title": "Failure Mode"
         }
       },
       "required": [
@@ -2549,6 +2598,24 @@
       ],
       "title": "KV"
     },
+    "FailureMode": {
+      "description": "Defines how the proxy behaves when the remote rate limit service is\nunavailable or returns an error.\n\nDefaults to `FailClosed`. When failing closed, a 500 Internal Server Error\nis returned when the service is unavailable. When failing open, requests are\nallowed through despite the service failure.\n\n# Configuration\n\nBoth camelCase (`failOpen`, `failClosed`) and PascalCase (`FailOpen`,\n`FailClosed`) are accepted in configuration files",
+      "oneOf": [
+        {
+          "description": "Deny the request with a 500 status when the rate limit service is unavailable (default).",
+          "type": "string",
+          "const": "failClosed",
+          "title": "Fail Closed"
+        },
+        {
+          "description": "Allow the request through when the rate limit service is unavailable.",
+          "type": "string",
+          "const": "failOpen",
+          "title": "Fail Open"
+        }
+      ],
+      "title": "Failure Mode"
+    },
     "LocalJwtConfig": {
       "anyOf": [
         {
@@ -2591,6 +2658,14 @@
             },
             "jwks": {
               "$ref": "#/$defs/FileInlineOrRemote"
+            },
+            "jwtValidationOptions": {
+              "$ref": "#/$defs/JWTValidationOptions",
+              "default": {
+                "requiredClaims": [
+                  "exp"
+                ]
+              }
             }
           },
           "required": [
@@ -2645,6 +2720,15 @@
         "jwks": {
           "$ref": "#/$defs/FileInlineOrRemote",
           "title": "Jwks"
+        },
+        "jwtValidationOptions": {
+          "$ref": "#/$defs/JWTValidationOptions",
+          "default": {
+            "requiredClaims": [
+              "exp"
+            ]
+          },
+          "title": "Jwt Validation Options"
         }
       },
       "additionalProperties": false,
@@ -2776,7 +2860,7 @@
         },
         "failureMode": {
           "description": "Behavior when the authorization service is unavailable or returns an error",
-          "$ref": "#/$defs/FailureMode",
+          "$ref": "#/$defs/FailureMode2",
           "default": "deny",
           "title": "Failure Mode"
         },
@@ -2966,11 +3050,7 @@
       ],
       "title": "Protocol2"
     },
-    "Expression": {
-      "type": "string",
-      "title": "Expression"
-    },
-    "FailureMode": {
+    "FailureMode2": {
       "oneOf": [
         {
           "type": "string",
@@ -3001,7 +3081,7 @@
           "title": "Deny With Status"
         }
       ],
-      "title": "Failure Mode"
+      "title": "Failure Mode2"
     },
     "HeaderOrPseudo": {
       "type": "string",
@@ -3038,7 +3118,7 @@
       "properties": {
         "failureMode": {
           "description": "Behavior when the ext_proc service is unavailable or returns an error",
-          "$ref": "#/$defs/FailureMode2",
+          "$ref": "#/$defs/FailureMode3",
           "default": "failClosed",
           "title": "Failure Mode"
         },
@@ -3138,9 +3218,9 @@
       ],
       "title": "Ext Proc"
     },
-    "FailureMode2": {
+    "FailureMode3": {
       "type": "string",
-      "title": "Failure Mode2",
+      "title": "Failure Mode3",
       "oneOf": [
         {
           "const": "failClosed",

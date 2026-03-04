@@ -70,8 +70,10 @@ gen: generate-apis generate-schema format
 .PHONY: generate-schema
 generate-schema:
 	@cargo xtask schema
-	@yarn --cwd=ui run generate-cel-schema
-	@yarn --cwd=ui run generate-config-schema
+	@yarn --cwd=ui run generate-cel-schema & yarn --cwd=ui run generate-config-schema & wait
+	@cp schema/config.json ui/public/config-schema.json
+	@cp schema/cel.json ui/public/cel-schema.json
+	@cp ui/src/cel.d.ts ui/public/cel.d.ts
 
 # Code generation for xds apis
 .PHONY: generate-apis

@@ -71,7 +71,7 @@ export function NodeEditForm({
         target.schemaCategory as keyof typeof CHILD_FIELDS_TO_HIDE
       ] ?? [];
     if (childFields.length === 0) return rawSchema;
-    const properties = { ...(rawSchema.properties as Record<string, unknown>) };
+    const properties = { ...rawSchema.properties };
     for (const f of childFields) delete properties[f];
     return {
       ...rawSchema,

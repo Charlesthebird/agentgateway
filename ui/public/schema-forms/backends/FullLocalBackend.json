@@ -398,6 +398,16 @@
           "additionalProperties": true,
           "title": "Overrides"
         },
+        "transformations": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          },
+          "title": "Transformations"
+        },
         "prompts": {
           "anyOf": [
             {
@@ -979,6 +989,10 @@
         }
       ],
       "title": "Response Guard"
+    },
+    "Expression": {
+      "type": "string",
+      "title": "Expression"
     },
     "PromptEnrichment": {
       "type": "object",

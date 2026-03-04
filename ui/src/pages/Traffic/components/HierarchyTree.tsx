@@ -161,7 +161,7 @@ function ValidationBadges({ errors }: { errors: ValidationError[] }) {
   return (
     <Tooltip
       title={errors.map((e) => e.message).join("\n")}
-      overlayStyle={{ whiteSpace: "pre-wrap" }}
+      styles={{ root: { whiteSpace: "pre-wrap" } }}
     >
       {errCount > 0 && (
         <Badge
@@ -584,7 +584,7 @@ function buildRouteTitle(
       {rn.validationErrors.length > 0 && (
         <Tooltip
           title={rn.validationErrors.map((e) => e.message).join("\n")}
-          overlayStyle={{ whiteSpace: "pre-wrap" }}
+          styles={{ root: { whiteSpace: "pre-wrap" } }}
         >
           <TriangleAlert
             size={14}

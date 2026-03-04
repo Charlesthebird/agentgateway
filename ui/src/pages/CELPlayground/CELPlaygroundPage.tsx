@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { Button, Card, Col, Row, Select, Space } from "antd";
 import yaml from "js-yaml";
-import { PlayCircle, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, PlayCircle, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../../api/client";
@@ -32,6 +32,34 @@ const EditorHeader = styled.div`
 
 const EditorContent = styled.div`
   padding: var(--spacing-lg);
+`;
+
+const ExpandButton = styled.button`
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 1;
+    color: var(--color-text-base);
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
 `;
 
 const TemplateList = styled.div`
@@ -145,7 +173,8 @@ export const CELPlaygroundPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [resultValue, setResultValue] = useState<unknown | null>(null);
   const [resultError, setResultError] = useState<string | null>(null);
-  const hasResult = resultValue !== undefined || resultError !== null;
+  const [hasEvaluated, setHasEvaluated] = useState<boolean>(false);
+  const [resultExpanded, setResultExpanded] = useState<boolean>(false);
 
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   const editorTheme = isDark ? "vs-dark" : "vs";
@@ -181,6 +210,8 @@ export const CELPlaygroundPage = () => {
         const text = await res.text();
         setResultValue(null);
         setResultError("Evaluation failed: " + res.status + " " + text);
+        setHasEvaluated(true);
+        toast("Invalid CEL expression", { icon: "⚠️" });
         return;
       }
 
@@ -188,14 +219,25 @@ export const CELPlaygroundPage = () => {
       if (json.error) {
         setResultValue(null);
         setResultError(json.error);
+        setHasEvaluated(true);
+        toast.error("Evaluation failed");
+      } else if (json.result === false) {
+        setResultValue(null);
+        setResultError("Expression evaluated to false");
+        setHasEvaluated(true);
+        toast.error("Evaluation returned false");
       } else {
         setResultError(null);
         setResultValue(json.result);
+        setHasEvaluated(true);
+        toast.success("Evaluation successful");
       }
     } catch (err: any) {
       const message = err?.message ? String(err.message) : String(err);
       setResultValue(null);
       setResultError("Request error: " + message);
+      setHasEvaluated(true);
+      toast.error("Request failed");
     } finally {
       setLoading(false);
     }
@@ -207,6 +249,7 @@ export const CELPlaygroundPage = () => {
     setInputData(TEMPLATES["http"]);
     setResultValue(null);
     setResultError(null);
+    setHasEvaluated(false);
     toast("Reset to example template");
   };
 
@@ -285,30 +328,13 @@ export const CELPlaygroundPage = () => {
     setInputData(yaml.dump(template.context));
     setResultValue(null);
     setResultError(null);
+    setHasEvaluated(false);
   };
 
   return (
     <Container>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div>
         <h1>CEL Playground</h1>
-        <Space>
-          <Button
-            onClick={handleEvaluate}
-            disabled={loading}
-            icon={<PlayCircle />}
-          >
-            Evaluate
-          </Button>
-          <Button icon={<RotateCcw />} onClick={handleReset}>
-            Reset
-          </Button>
-        </Space>
       </div>
 
       <StyledAlert
@@ -319,12 +345,115 @@ export const CELPlaygroundPage = () => {
         closable
       />
 
-      <Row gutter={16}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <EditorCard style={{ position: "relative" }}>
+            <EditorHeader>
+              <strong>Result</strong>
+            </EditorHeader>
+            <EditorContent>
+              {!hasEvaluated ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "70px",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "14px",
+                  }}
+                >
+                  Click "Evaluate" to see results
+                </div>
+              ) : resultError ? (
+                <div
+                  style={{
+                    borderRadius: "6px",
+                    background: "var(--color-error-bg)",
+                    border: "1px solid var(--color-error-border)",
+                    padding: "12px",
+                    height: resultExpanded ? "300px" : "70px",
+                    overflow: "auto",
+                    transition: "height 0.2s ease",
+                  }}
+                >
+                  <pre
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--color-error)",
+                      whiteSpace: "pre",
+                      fontFamily: "Monaco, monospace",
+                      margin: 0,
+                    }}
+                  >
+                    {resultError}
+                  </pre>
+                </div>
+              ) : resultValue !== null ? (
+                <MonacoEditorComponent
+                  value={JSON.stringify(resultValue, null, 2)}
+                  onChange={() => {}}
+                  language="json"
+                  height={resultExpanded ? "300px" : "70px"}
+                  theme={editorTheme}
+                  options={{
+                    readOnly: true,
+                    wordWrap: "off",
+                  }}
+                />
+              ) : null}
+            </EditorContent>
+            {hasEvaluated && (
+              <ExpandButton
+                type="button"
+                onClick={() => setResultExpanded(!resultExpanded)}
+              >
+                {resultExpanded ? (
+                  <>
+                    <ChevronUp size={14} />
+                    Collapse
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={14} />
+                    Expand
+                  </>
+                )}
+              </ExpandButton>
+            )}
+          </EditorCard>
+        </Col>
+
         <Col xs={24} lg={16}>
           <Space direction="vertical" style={{ width: "100%" }} size="large">
             <EditorCard>
               <EditorHeader>
-                <strong>CEL Expression</strong>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <strong>CEL Expression</strong>
+                  <Space>
+                    <Button
+                      onClick={handleEvaluate}
+                      disabled={loading}
+                      icon={<PlayCircle size={14} />}
+                      type="primary"
+                    >
+                      Evaluate
+                    </Button>
+                    <Button
+                      icon={<RotateCcw size={14} />}
+                      onClick={handleReset}
+                    >
+                      Reset
+                    </Button>
+                  </Space>
+                </div>
               </EditorHeader>
               <EditorContent>
                 <MonacoEditorComponent
@@ -387,72 +516,6 @@ export const CELPlaygroundPage = () => {
                 />
               </EditorContent>
             </EditorCard>
-
-            {hasResult && (
-              <EditorCard>
-                <EditorHeader>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <strong>Result</strong>
-                    <Button
-                      type="text"
-                      size="small"
-                      onClick={handleCopyResult}
-                      style={{
-                        fontSize: "12px",
-                        height: "24px",
-                        padding: "0 8px",
-                      }}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                </EditorHeader>
-                <EditorContent>
-                  {resultError ? (
-                    <div
-                      style={{
-                        borderRadius: "6px",
-                        background: "var(--color-error-bg)",
-                        border: "1px solid var(--color-error-border)",
-                        padding: "16px",
-                        height: "200px",
-                        overflow: "auto",
-                      }}
-                    >
-                      <pre
-                        style={{
-                          fontSize: "13px",
-                          color: "var(--color-error)",
-                          whiteSpace: "pre-wrap",
-                          fontFamily: "Monaco, monospace",
-                          margin: 0,
-                        }}
-                      >
-                        {resultError}
-                      </pre>
-                    </div>
-                  ) : resultValue !== null ? (
-                    <MonacoEditorComponent
-                      value={JSON.stringify(resultValue, null, 2)}
-                      onChange={() => {}}
-                      language="json"
-                      height="200px"
-                      theme={editorTheme}
-                      options={{
-                        readOnly: true,
-                      }}
-                    />
-                  ) : null}
-                </EditorContent>
-              </EditorCard>
-            )}
           </Space>
         </Col>
 

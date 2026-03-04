@@ -18,16 +18,19 @@ import {
   Sun,
   Workflow,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts";
 import { AgentgatewayLogo } from "../AgentgatewayLogo";
+import { Breadcrumbs } from "../Breadcrumbs";
 
 const { Sider, Content, Header } = AntLayout;
 
 const StyledLayout = styled(AntLayout)`
+  display: flex;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  overflow: hidden;
 `;
 
 const StyledSider = styled(Sider)`
@@ -52,14 +55,22 @@ const StyledHeader = styled(Header)`
   border-bottom: 1px solid var(--color-border-secondary);
   padding: 0 var(--spacing-xl);
   height: var(--header-height);
+  min-height: var(--header-height);
+`;
+
+const ContentWrapper = styled(AntLayout)`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 `;
 
 const StyledContent = styled(Content)`
-  display: flex;
-  flex-direction: column;
+  flex: 1;
   overflow-y: auto;
   background: var(--color-bg-layout);
   padding: var(--spacing-xl);
+  min-height: 0;
 `;
 
 const Logo = styled.div`
@@ -89,12 +100,6 @@ const Logo = styled.div`
   }
 `;
 
-const HeaderTitle = styled.div`
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-lg);
-  color: var(--color-text-base);
-`;
-
 const ThemeToggleButton = styled(Button)`
   display: flex;
   align-items: center;
@@ -115,6 +120,33 @@ const ThemeToggleButton = styled(Button)`
   }
 `;
 
+const StyledMenu = styled(Menu)`
+  /* Menu item hover and selected states */
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    transition: background-color 0.15s ease;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: var(--color-bg-hover) !important;
+    }
+
+    &:active {
+      background-color: var(--color-bg-selected) !important;
+    }
+  }
+
+  /* Selected state */
+  .ant-menu-item-selected {
+    background-color: var(--color-bg-selected) !important;
+  }
+
+  /* Submenu selected state */
+  .ant-menu-submenu-selected > .ant-menu-submenu-title {
+    background-color: var(--color-bg-hover) !important;
+  }
+`;
+
 type MenuItem = Required<MenuProps>["items"][number];
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
@@ -125,11 +157,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   const { theme, toggleTheme } = useTheme();
 
   // Find which parent menu should be open based on current path
-  const getOpenKeys = () => {
+  const getInitialOpenKey = () => {
     const path = location.pathname;
-    if (path.startsWith("/llm")) return ["llm"];
-    if (path.startsWith("/mcp")) return ["mcp"];
-    if (path.startsWith("/traffic")) return ["traffic"];
+    if (path.startsWith("/llm")) return "llm";
+    if (path.startsWith("/mcp")) return "mcp";
+    if (path.startsWith("/traffic")) return "traffic";
     if (
       [
         "/dashboard",
@@ -140,16 +172,22 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         "/playground",
       ].includes(path)
     ) {
-      return ["old"];
+      return "old";
     }
-    return [];
+    return null;
   };
 
-  const [openKeys, setOpenKeys] = useState<string[]>(getOpenKeys());
+  const [openKeys, setOpenKeys] = useState<string[]>(() => {
+    const initialKey = getInitialOpenKey();
+    return initialKey ? [initialKey] : [];
+  });
 
-  // Update open keys when location changes
+  // Ensure current section is open when location changes, but don't close others
   useEffect(() => {
-    setOpenKeys(getOpenKeys());
+    const currentKey = getInitialOpenKey();
+    if (currentKey && !openKeys.includes(currentKey)) {
+      setOpenKeys((prev) => [...prev, currentKey]);
+    }
   }, [location.pathname]);
 
   const menuItems: MenuItem[] = [
@@ -208,6 +246,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           label: "Models",
         },
         {
+          key: "/llm/policies",
+          icon: <Shield size={18} />,
+          label: "Policies",
+        },
+        {
           key: "/llm/logs",
           icon: <FileText size={18} />,
           label: "Logs",
@@ -239,6 +282,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           key: "/mcp/servers",
           icon: <Server size={18} />,
           label: "Servers",
+        },
+        {
+          key: "/mcp/policies",
+          icon: <Shield size={18} />,
+          label: "Policies",
         },
         {
           key: "/mcp/logs",
@@ -274,6 +322,16 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           label: "Routing",
         },
         {
+          key: "/traffic2",
+          icon: <Route size={18} />,
+          label: "Routing (TS Forms)",
+        },
+        {
+          key: "/traffic3",
+          icon: <Route size={18} />,
+          label: "Routing (Manual Schemas)",
+        },
+        {
           key: "/traffic/logs",
           icon: <FileText size={18} />,
           label: "Logs",
@@ -305,13 +363,43 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
     setOpenKeys(keys);
   };
 
-  // Format header title from path
-  const getHeaderTitle = () => {
-    const path = location.pathname;
-    if (path === "/dashboard") return "HOME";
-    if (path === "/") return "HOME";
-    return path.slice(1).toUpperCase().replace(/\//g, " / ");
-  };
+  const selectedKeys = useMemo(() => {
+    const knownPaths = [
+      "/traffic/routing",
+      "/traffic2",
+      "/traffic3",
+      "/traffic/logs",
+      "/traffic/metrics",
+      "/llm/models",
+      "/llm/policies",
+      "/llm/logs",
+      "/llm/metrics",
+      "/llm/playground",
+      "/mcp/servers",
+      "/mcp/policies",
+      "/mcp/logs",
+      "/mcp/metrics",
+      "/mcp/playground",
+    ];
+
+    // Find longest matching prefix
+    let longestMatch = location.pathname;
+    let maxLength = 0;
+
+    for (const path of knownPaths) {
+      if (
+        location.pathname === path ||
+        location.pathname.startsWith(path + "/")
+      ) {
+        if (path.length > maxLength) {
+          longestMatch = path;
+          maxLength = path.length;
+        }
+      }
+    }
+
+    return [longestMatch];
+  }, [location.pathname]);
 
   return (
     <StyledLayout>
@@ -320,40 +408,18 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           <AgentgatewayLogo />
           <span>agentgateway</span>
         </Logo>
-        <Menu
+        <StyledMenu
           mode="inline"
-          selectedKeys={[
-            // Match exact path or the longest known prefix so sub-pages
-            // (e.g. /traffic/routing/bind/8080) still highlight their menu item.
-            [
-              "/traffic/routing",
-              "/traffic/logs",
-              "/traffic/metrics",
-              "/llm/models",
-              "/llm/logs",
-              "/llm/metrics",
-              "/llm/playground",
-              "/mcp/servers",
-              "/mcp/logs",
-              "/mcp/metrics",
-              "/mcp/playground",
-            ]
-              .filter(
-                (k) =>
-                  location.pathname === k ||
-                  location.pathname.startsWith(k + "/"),
-              )
-              .sort((a, b) => b.length - a.length)[0] ?? location.pathname,
-          ]}
+          selectedKeys={selectedKeys}
           openKeys={openKeys}
           onOpenChange={handleOpenChange}
           items={menuItems}
           onClick={handleMenuClick}
         />
       </StyledSider>
-      <AntLayout>
+      <ContentWrapper>
         <StyledHeader>
-          <HeaderTitle>{getHeaderTitle()}</HeaderTitle>
+          <Breadcrumbs />
           <ThemeToggleButton
             type="text"
             icon={theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
@@ -362,7 +428,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           />
         </StyledHeader>
         <StyledContent>{children}</StyledContent>
-      </AntLayout>
+      </ContentWrapper>
     </StyledLayout>
   );
 };

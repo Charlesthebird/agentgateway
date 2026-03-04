@@ -36,41 +36,38 @@ export function CapabilitiesList({
 
   if (isLoading) {
     return (
-      <Card className="flex flex-col">
-        <Card
-          title={
-            <div className="flex items-center gap-2">
-              {connectionType === "a2a" ? (
-                <Bot className="h-5 w-5" />
-              ) : (
-                <Settings className="h-5 w-5" />
-              )}
-              {connectionType === "a2a"
-                ? a2aAgentCard?.name || "Unknown Agent"
-                : "Available Tools"}
-            </div>
-          }
-        >
-          <div className="flex items-center justify-center py-8 h-full">
-            <Spin size="large" />
-            <span className="ml-3">{loadingMessage}</span>
+      <Card
+        title={
+          <div className="flex items-center gap-2">
+            {connectionType === "a2a" ? (
+              <Bot className="h-5 w-5" />
+            ) : (
+              <Settings className="h-5 w-5" />
+            )}
+            {connectionType === "a2a"
+              ? a2aAgentCard?.name || "Unknown Agent"
+              : "Available Tools"}
           </div>
-        </Card>
+        }
+      >
+        <div className="flex items-center justify-center py-8 h-full">
+          <Spin size="large" />
+          <span className="ml-3">{loadingMessage}</span>
+        </div>
       </Card>
     );
   }
 
   if (connectionType === "a2a" && a2aAgentCard) {
     return (
-      <Card className="flex flex-col">
-        <Card
-          title={
-            <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              {a2aAgentCard.name || "Unknown Agent"}
-            </div>
-          }
-        >
+      <Card
+        title={
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            {a2aAgentCard.name || "Unknown Agent"}
+          </div>
+        }
+      >
           <div className="space-y-4">
             {/* Agent Card Details */}
             <div className="space-y-4">
@@ -152,7 +149,7 @@ export function CapabilitiesList({
                           cursor: "pointer",
                           backgroundColor:
                             selectedA2aSkillId === record.id
-                              ? "#f0f0f0"
+                              ? "var(--color-bg-selected)"
                               : "transparent",
                         },
                       })}
@@ -169,7 +166,6 @@ export function CapabilitiesList({
               </div>
             </div>
           </div>
-        </Card>
       </Card>
     );
   }
@@ -179,34 +175,31 @@ export function CapabilitiesList({
     (connectionType === "a2a" && a2aSkills.length === 0)
   ) {
     return (
-      <Card className="flex flex-col">
-        <Card
-          title={
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Available Tools
-            </div>
-          }
-        >
-          <div className="flex items-center justify-center py-8 h-full">
-            <span>{noItemsMessage}</span>
+      <Card
+        title={
+          <div className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Available Tools
           </div>
-        </Card>
+        }
+      >
+        <div className="flex items-center justify-center py-8 h-full">
+          <span>{noItemsMessage}</span>
+        </div>
       </Card>
     );
   }
 
   if (connectionType === "mcp") {
     return (
-      <Card className="flex flex-col">
-        <Card
-          title={
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Available Tools
-            </div>
-          }
-        >
+      <Card
+        title={
+          <div className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Available Tools
+          </div>
+        }
+      >
           <div className="overflow-y-auto max-h-[400px]">
             <Table
               dataSource={mcpTools}
@@ -219,7 +212,7 @@ export function CapabilitiesList({
                   cursor: "pointer",
                   backgroundColor:
                     selectedMcpToolName === record.name
-                      ? "#f0f0f0"
+                      ? "var(--color-bg-selected)"
                       : "transparent",
                 },
               })}
@@ -232,7 +225,6 @@ export function CapabilitiesList({
               />
             </Table>
           </div>
-        </Card>
       </Card>
     );
   }

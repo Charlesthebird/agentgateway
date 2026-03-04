@@ -621,3 +621,261 @@ pre code {
 .ant-card-body .ant-alert.ant-alert-info .ant-alert-icon {
   color: #1677ff !important;
 }
+
+/* Traffic3 Form Styling - Clean borderless design */
+/* Remove borders from form items */
+.ant-form-item {
+  border: none !important;
+  margin-bottom: var(--spacing-lg) !important;
+}
+
+/* Form item labels - clean and minimal */
+.ant-form-item-label {
+  padding-bottom: 4px !important;
+}
+
+.ant-form-item-label > label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-form-item-label > label.ant-form-item-required::before {
+  color: var(--color-error) !important;
+}
+
+/* Remove borders from inputs - use subtle background instead */
+.ant-input,
+.ant-input-number,
+.ant-input-number-input,
+.ant-picker,
+.ant-select-selector {
+  background-color: var(--color-bg-base) !important;
+  border: 1px solid transparent !important;
+  color: var(--color-text-base) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-theme="dark"] .ant-input,
+[data-theme="dark"] .ant-input-number,
+[data-theme="dark"] .ant-input-number-input,
+[data-theme="dark"] .ant-picker,
+[data-theme="dark"] .ant-select-selector {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Hover state - subtle border */
+.ant-input:hover,
+.ant-input-number:hover,
+.ant-input-number-input:hover,
+.ant-picker:hover,
+.ant-select-selector:hover {
+  border-color: var(--color-border-base) !important;
+  background-color: var(--color-bg-elevated) !important;
+}
+
+[data-theme="dark"] .ant-input:hover,
+[data-theme="dark"] .ant-input-number:hover,
+[data-theme="dark"] .ant-input-number-input:hover,
+[data-theme="dark"] .ant-picker:hover,
+[data-theme="dark"] .ant-select-selector:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Focus state - primary color border */
+.ant-input:focus,
+.ant-input-number:focus,
+.ant-input-number-input:focus,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1) !important;
+  background-color: var(--color-bg-base) !important;
+}
+
+[data-theme="dark"] .ant-input:focus,
+[data-theme="dark"] .ant-input-number:focus,
+[data-theme="dark"] .ant-input-number-input:focus,
+[data-theme="dark"] .ant-picker-focused,
+[data-theme="dark"] .ant-select-focused .ant-select-selector {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Disabled state */
+.ant-input-disabled,
+.ant-input-number-disabled,
+.ant-input-number-input-disabled,
+.ant-picker-disabled,
+.ant-select-disabled .ant-select-selector {
+  background-color: var(--color-bg-container) !important;
+  border-color: transparent !important;
+  color: var(--color-text-tertiary) !important;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .ant-input-disabled,
+[data-theme="dark"] .ant-input-number-disabled,
+[data-theme="dark"] .ant-input-number-input-disabled,
+[data-theme="dark"] .ant-picker-disabled,
+[data-theme="dark"] .ant-select-disabled .ant-select-selector {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Textarea */
+.ant-input-textarea textarea {
+  background-color: var(--color-bg-base) !important;
+  border: 1px solid transparent !important;
+  color: var(--color-text-base) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-theme="dark"] .ant-input-textarea textarea {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.ant-input-textarea textarea:hover {
+  border-color: var(--color-border-base) !important;
+  background-color: var(--color-bg-elevated) !important;
+}
+
+[data-theme="dark"] .ant-input-textarea textarea:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ant-input-textarea textarea:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1) !important;
+  background-color: var(--color-bg-base) !important;
+}
+
+[data-theme="dark"] .ant-input-textarea textarea:focus {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Checkbox and Radio - cleaner design */
+.ant-checkbox-inner,
+.ant-radio-inner {
+  background-color: var(--color-bg-base) !important;
+  border-color: var(--color-border-base) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-theme="dark"] .ant-checkbox-inner,
+[data-theme="dark"] .ant-radio-inner {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.ant-checkbox:hover .ant-checkbox-inner,
+.ant-radio:hover .ant-radio-inner {
+  border-color: var(--color-primary) !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner,
+.ant-radio-checked .ant-radio-inner {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Field descriptions and help text */
+.ant-form-item-extra,
+.ant-form-item-explain {
+  font-size: 12px !important;
+  color: var(--color-text-tertiary) !important;
+}
+
+/* Form validation - error state */
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-number,
+.ant-form-item-has-error .ant-input-number-input,
+.ant-form-item-has-error .ant-select-selector,
+.ant-form-item-has-error .ant-picker,
+.ant-form-item-has-error .ant-input-textarea textarea {
+  background-color: rgba(255, 77, 79, 0.05) !important;
+  border-color: var(--color-error) !important;
+}
+
+[data-theme="dark"] .ant-form-item-has-error .ant-input,
+[data-theme="dark"] .ant-form-item-has-error .ant-input-number,
+[data-theme="dark"] .ant-form-item-has-error .ant-input-number-input,
+[data-theme="dark"] .ant-form-item-has-error .ant-select-selector,
+[data-theme="dark"] .ant-form-item-has-error .ant-picker,
+[data-theme="dark"] .ant-form-item-has-error .ant-input-textarea textarea {
+  background-color: rgba(255, 77, 79, 0.1) !important;
+}
+
+.ant-form-item-has-error .ant-input:focus,
+.ant-form-item-has-error .ant-input-number:focus,
+.ant-form-item-has-error .ant-input-number-input:focus,
+.ant-form-item-has-error .ant-select-focused .ant-select-selector,
+.ant-form-item-has-error .ant-picker-focused,
+.ant-form-item-has-error .ant-input-textarea textarea:focus {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1) !important;
+}
+
+.ant-form-item-explain-error {
+  color: var(--color-error) !important;
+}
+
+/* Collapse/Fieldset styling for nested fields */
+.ant-collapse {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.ant-collapse-item {
+  border: none !important;
+  margin-bottom: var(--spacing-md) !important;
+}
+
+.ant-collapse-header {
+  background-color: var(--color-bg-elevated) !important;
+  border: none !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  border-radius: var(--border-radius-md) !important;
+  color: var(--color-text-base) !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="dark"] .ant-collapse-header {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.ant-collapse-header:hover {
+  background-color: var(--color-bg-hover) !important;
+}
+
+[data-theme="dark"] .ant-collapse-header:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ant-collapse-content {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.ant-collapse-content-box {
+  padding: var(--spacing-md) 0 !important;
+}
+
+/* Array field buttons */
+.array-item-toolbox {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+/* Object field styling */
+fieldset {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+legend {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
+  margin-bottom: var(--spacing-sm) !important;
+  padding: 0 !important;
+}

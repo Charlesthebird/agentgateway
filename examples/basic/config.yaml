@@ -2,10 +2,14 @@ binds:
 - port: 8082
   listeners:
   - protocol: TCP
-    name: testdsfsdfaaaaa
-    hostname: b.com
+    name: testdsfsdfaaaaabc
+    hostname: abcb.com
+    tls:
+      cert: /asdf
+      key: /asdffasdfsdfa
+      cipherSuites: []
     tcpRoutes:
-    - name: adsfaaaaaaa
+    - name: adsfaaaaaaaasdfasdfasdf
       namespace: sadf
       ruleName: d
     - name: test
@@ -21,7 +25,9 @@ binds:
     - name: myrouteasdf
       hostnames:
       - b.com
-  - name: lkjlkjl
+  - protocol: HTTP
+    name: lkjlkjl
+    hostname: '*'
     routes:
     - matches:
       - path:
@@ -29,25 +35,14 @@ binds:
         method: GET
       backends:
       - weight: 1
-        mcp:
-          targets:
-          - name: asdf
-            sse:
-              host: aaa
-          statefulMode: stateful
-          prefixMode: always
-      - weight: 53
-        policies:
-          mcpAuthorization:
-            rules:
-            - asdf
-          backendAuth:
-            passthrough: {}
-        host: asdf:423
-      - weight: 1
         dynamic: {}
       name: myrouteabc
       ruleName: test1233
+    - matches:
+      - path:
+          pathPrefix: /
+      name: test
+      ruleName: asdf
   tunnelProtocol: direct
 - port: 8081
   listeners:
@@ -64,4 +59,15 @@ binds:
   tunnelProtocol: direct
 - listeners: []
   port: 65535
-  tunnelProtocol: hboneGateway
+  tunnelProtocol: direct
+- listeners: []
+  port: 333
+  tunnelProtocol: hboneWaypoint
+- listeners: []
+  port: 121
+  tunnelProtocol: direct
+- port: 8080
+  listeners:
+  - protocol: HTTP
+    hostname: '*'
+    routes: []

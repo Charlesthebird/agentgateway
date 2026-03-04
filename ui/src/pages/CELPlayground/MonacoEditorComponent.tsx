@@ -1,5 +1,7 @@
-import { Editor } from "@monaco-editor/react";
+import { type OnMount } from "@monaco-editor/react";
 import { useCallback } from "react";
+import { configureMonacoYaml } from "monaco-yaml";
+import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
 
 interface MonacoEditorProps {
   value: string;
@@ -20,8 +22,8 @@ export const MonacoEditorComponent = ({
   options = {},
   onEvaluate,
 }: MonacoEditorProps) => {
-  const handleEditorMount = useCallback(
-    (editor: any, monaco: any) => {
+  const handleEditorMount: OnMount = useCallback(
+    async (editor, monaco) => {
       if (onEvaluate) {
         editor.addCommand(
           monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
@@ -34,16 +36,79 @@ export const MonacoEditorComponent = ({
         domNode.setAttribute("role", "textbox");
         domNode.setAttribute("aria-multiline", "true");
       }
+
+      // Add CEL types for JavaScript language (used for CEL expressions)
+      if (language === "javascript") {
+        try {
+          // Fetch CEL type definitions
+          const response = await fetch("/cel.d.ts");
+          if (response.ok) {
+            let celTypes = await response.text();
+
+            // Remove 'export' keyword to make ExecutorSerde globally available
+            celTypes = celTypes.replace(/export interface/g, 'interface');
+
+            // Add CEL type definitions and context variables
+            // CEL variables are available globally in the expression
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+              celTypes + `\n\n` +
+              `declare const request: ExecutorSerde['request'];
+declare const response: ExecutorSerde['response'];
+declare const jwt: ExecutorSerde['jwt'];
+declare const apiKey: ExecutorSerde['apiKey'];
+declare const basicAuth: ExecutorSerde['basicAuth'];
+declare const llm: ExecutorSerde['llm'];
+declare const llmRequest: ExecutorSerde['llmRequest'];
+declare const source: ExecutorSerde['source'];
+declare const mcp: ExecutorSerde['mcp'];
+declare const backend: ExecutorSerde['backend'];
+declare const extauthz: ExecutorSerde['extauthz'];
+declare const extproc: ExecutorSerde['extproc'];`,
+              "file:///cel-types.d.ts"
+            );
+          }
+        } catch (error) {
+          console.error("Failed to load CEL types:", error);
+        }
+      }
+
+      // Add CEL schema for YAML language (used for input data)
+      if (language === "yaml") {
+        try {
+          const response = await fetch("/cel-schema.json");
+          if (response.ok) {
+            const schema = await response.json();
+
+            // Configure YAML language with the CEL schema
+            // The schema includes default values which serve as examples
+            configureMonacoYaml(monaco, {
+              enableSchemaRequest: true,
+              hover: true,
+              completion: true,
+              validate: true,
+              format: true,
+              schemas: [
+                {
+                  uri: "http://agentgateway/cel-schema.json",
+                  fileMatch: ["*"],
+                  schema: schema,
+                },
+              ],
+            });
+          }
+        } catch (error) {
+          console.error("Failed to load CEL schema:", error);
+        }
+      }
     },
-    [onEvaluate],
+    [onEvaluate, language],
   );
 
   return (
-    <Editor
+    <MonacoEditorWithSettings
       height={height}
-      defaultLanguage={language}
       language={language}
-      theme={theme}
+      theme={theme === "vs-dark" ? "dark" : "light"}
       value={value}
       onChange={onChange}
       options={{

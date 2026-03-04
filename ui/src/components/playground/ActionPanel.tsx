@@ -73,24 +73,24 @@ export function ActionPanel({
 
   if (!isMcp && !isA2a) {
     return (
-      <Card>
-        <div className="flex items-center justify-center p-4 text-muted-foreground bg-card h-full">
-          Select one of the available{" "}
-          {connectionType === "a2a" ? "skills" : "tools"}
-        </div>
-      </Card>
+      <div className="flex items-center justify-center p-4 text-muted-foreground bg-card h-full">
+        Select one of the available{" "}
+        {connectionType === "a2a" ? "skills" : "tools"}
+      </div>
     );
   }
 
-  const title = isA2a ? a2aSelectedSkill?.name : mcpSelectedTool?.name;
+  const toolName = isA2a ? a2aSelectedSkill?.name : mcpSelectedTool?.name;
   const description = isA2a
     ? a2aSelectedSkill?.description
     : mcpSelectedTool?.description;
 
   return (
-    <Card>
-      <Card title={title}>
-        <p style={{ marginBottom: "1rem", color: "#666" }}>{description}</p>
+    <>
+      <div style={{ marginBottom: "1rem" }}>
+        <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>{toolName}</div>
+        <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "14px" }}>{description}</p>
+      </div>
         <div className="space-y-4 flex-grow flex flex-col">
           <div className="flex-grow space-y-4">
             {isMcp &&
@@ -335,6 +335,7 @@ export function ActionPanel({
             )}
             className="w-full mt-auto"
             type="primary"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             {isRequestRunning ? (
               <>
@@ -354,7 +355,6 @@ export function ActionPanel({
             )}
           </Button>
         </div>
-      </Card>
-    </Card>
+    </>
   );
 }

@@ -129,6 +129,14 @@
             },
             "jwks": {
               "$ref": "#/$defs/FileInlineOrRemote"
+            },
+            "jwtValidationOptions": {
+              "$ref": "#/$defs/JWTValidationOptions",
+              "default": {
+                "requiredClaims": [
+                  "exp"
+                ]
+              }
             }
           },
           "required": [
@@ -183,6 +191,15 @@
         "jwks": {
           "$ref": "#/$defs/FileInlineOrRemote",
           "title": "Jwks"
+        },
+        "jwtValidationOptions": {
+          "$ref": "#/$defs/JWTValidationOptions",
+          "default": {
+            "requiredClaims": [
+              "exp"
+            ]
+          },
+          "title": "Jwt Validation Options"
         }
       },
       "additionalProperties": false,
@@ -224,6 +241,26 @@
       ],
       "title": "File Inline Or Remote"
     },
+    "JWTValidationOptions": {
+      "description": "JWT validation options controlling which claims must be present in a token.\n\nThe `required_claims` set specifies which RFC 7519 registered claims must\nexist in the token payload before validation proceeds. Only the following\nvalues are recognized: `exp`, `nbf`, `aud`, `iss`, `sub`. Other registered\nclaims such as `iat` and `jti` are **not** enforced by the underlying\n`jsonwebtoken` library and will be silently ignored.\n\nThis only enforces **presence**. Standard claims like `exp` and `nbf`\nhave their values validated independently (e.g., expiry is always checked\nwhen the `exp` claim is present, regardless of this setting).\n\nDefaults to `[\"exp\"]`.",
+      "type": "object",
+      "properties": {
+        "requiredClaims": {
+          "description": "Claims that must be present in the token before validation.\nOnly \"exp\", \"nbf\", \"aud\", \"iss\", \"sub\" are enforced; others\n(including \"iat\" and \"jti\") are ignored.\nDefaults to [\"exp\"]. Use an empty list to require no claims.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "exp"
+          ],
+          "title": "Required Claims"
+        }
+      },
+      "additionalProperties": false,
+      "title": "JWT Validation Options"
+    },
     "ExtAuthz": {
       "type": "object",
       "properties": {
@@ -237,7 +274,7 @@
         },
         "failureMode": {
           "description": "Behavior when the authorization service is unavailable or returns an error",
-          "$ref": "#/$defs/FailureMode",
+          "$ref": "#/$defs/FailureMode2",
           "default": "deny",
           "title": "Failure Mode"
         },
@@ -431,7 +468,7 @@
       "type": "string",
       "title": "Expression"
     },
-    "FailureMode": {
+    "FailureMode2": {
       "oneOf": [
         {
           "type": "string",
@@ -462,7 +499,7 @@
           "title": "Deny With Status"
         }
       ],
-      "title": "Failure Mode"
+      "title": "Failure Mode2"
     },
     "HeaderOrPseudo": {
       "type": "string",
@@ -504,7 +541,7 @@
       "properties": {
         "failureMode": {
           "description": "Behavior when the ext_proc service is unavailable or returns an error",
-          "$ref": "#/$defs/FailureMode2",
+          "$ref": "#/$defs/FailureMode3",
           "default": "failClosed",
           "title": "Failure Mode"
         },
@@ -604,9 +641,9 @@
       ],
       "title": "Ext Proc"
     },
-    "FailureMode2": {
+    "FailureMode3": {
       "type": "string",
-      "title": "Failure Mode2",
+      "title": "Failure Mode3",
       "oneOf": [
         {
           "const": "failClosed",

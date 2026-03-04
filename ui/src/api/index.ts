@@ -16,3 +16,6 @@ export * from "./config";
 
 // SWR Hooks
 export * from "./hooks";
+
+// CRUD Operations
+export * from "./crud";

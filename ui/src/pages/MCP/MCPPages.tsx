@@ -1,12 +1,32 @@
 import styled from "@emotion/styled";
-import { Button, Card, Input, Select, Spin, Tag, Typography } from "antd";
-import { BarChart3, FileText, Send, Server } from "lucide-react";
-import { useState } from "react";
-import { useMCPConfig } from "../../api";
-import type { LocalMcpTarget } from "../../api/types";
+import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { SSEClientTransport as McpSseTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import {
+  McpError,
+  ListToolsResultSchema as McpListToolsResultSchema,
+  type ClientRequest as McpClientRequest,
+  type Request as McpRequest,
+  type Result as McpResult,
+  type Tool as McpTool,
+} from "@modelcontextprotocol/sdk/types.js";
+import { Button, Card, Col, Input, Row, Spin, Tag } from "antd";
+import { BarChart3, ChevronDown, ChevronUp, FileCode, FileText, Send, Settings } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { z } from "zod";
+import { useConfig } from "../../api/hooks";
+import { ActionPanel } from "../../components/playground/ActionPanel";
+import { CapabilitiesList } from "../../components/playground/CapabilitiesList";
+import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
+import { useTheme } from "../../contexts/ThemeContext";
+import type {
+  LocalBind,
+  LocalListener,
+  LocalRoute,
+} from "../../config";
 
-const { TextArea } = Input;
-const { Text } = Typography;
+// Schema for MCP tool invocation response
+const McpToolResponseSchema = z.any();
 
 const Container = styled.div`
   display: flex;
@@ -115,299 +135,589 @@ export const MCPMetricsPage = () => (
 // MCP Playground
 // ---------------------------------------------------------------------------
 
-function getTargetType(target: LocalMcpTarget): string {
-  const t = target as Record<string, unknown>;
-  if (t["sse"]) return "SSE";
-  if (t["mcp"]) return "MCP";
-  if (t["stdio"]) return "STDIO";
-  if (t["openapi"]) return "OpenAPI";
-  return "Unknown";
-}
+const RequestContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+`;
 
-const TYPE_COLORS: Record<string, string> = {
-  SSE: "cyan",
-  MCP: "blue",
-  STDIO: "purple",
-  OpenAPI: "geekblue",
-};
-
-const PlaygroundLayout = styled.div`
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: var(--spacing-lg);
-  align-items: start;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+const ResultCard = styled(Card)`
+  .ant-card-body {
+    padding: 0;
   }
 `;
 
-const OutputBox = styled.div`
-  background: var(--color-bg-layout);
-  border: 1px solid var(--color-border-secondary);
-  border-radius: 8px;
-  padding: 12px;
-  min-height: 200px;
-  font-family: monospace;
-  font-size: 13px;
-  white-space: pre-wrap;
-  word-break: break-all;
-  color: var(--color-text-base);
+const ResultHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  background: var(--color-bg-container);
 `;
 
-interface MCPRequest {
-  method: string;
-  params?: Record<string, unknown>;
-  result?: unknown;
-  error?: string;
+const ResultContent = styled.div`
+  padding: var(--spacing-lg);
+`;
+
+const SectionCard = styled(Card)`
+  .ant-card-head {
+    background: var(--color-bg-container);
+    border-bottom: 1px solid var(--color-border-secondary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: auto;
+    display: flex;
+    align-items: center;
+  }
+
+  .ant-card-head-title {
+    font-weight: 600;
+    font-size: 15px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  .ant-card-body {
+    padding: var(--spacing-lg);
+  }
+`;
+
+const RouteCard = styled(Card)`
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    &::before {
+      opacity: 0.03;
+    }
+  }
+
+  &:active {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+    &::before {
+      opacity: 0.05;
+    }
+  }
+`;
+
+const ExpandButton = styled.button`
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 1;
+    color: var(--color-text-base);
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+`;
+
+// Interface for route testing
+interface RouteInfo {
+  bindPort: number;
+  listener: LocalListener;
+  route: LocalRoute;
+  endpoint: string;
+  protocol: string;
+  routeIndex: number;
+  routePath: string;
+}
+
+// Define state interfaces for MCP
+interface ConnectionState {
+  authToken: string;
+  isConnected: boolean;
+  isConnecting: boolean;
+}
+
+interface McpState {
+  client: McpClient<McpRequest, any, McpResult> | null;
+  tools: McpTool[];
+  selectedTool: McpTool | null;
+  paramValues: Record<string, any>;
+  response: any;
+}
+
+interface UiState {
+  isRequestRunning: boolean;
+  isLoadingCapabilities: boolean;
 }
 
 export const MCPPlaygroundPage = () => {
-  const { data: mcp, isLoading } = useMCPConfig();
-  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
-  const [method, setMethod] = useState("tools/list");
-  const [paramsJson, setParamsJson] = useState("");
-  const [history, setHistory] = useState<MCPRequest[]>([]);
-  const [sending, setSending] = useState(false);
+  const { data: config, isLoading: configLoading } = useConfig();
+  const { theme } = useTheme();
+  const [routes, setRoutes] = useState<RouteInfo[]>([]);
+  const [selectedRoute, setSelectedRoute] = useState<RouteInfo | null>(null);
+  const [resultExpanded, setResultExpanded] = useState<boolean>(true);
 
-  const targets = mcp?.targets ?? [];
+  // MCP connection state
+  const [connectionState, setConnectionState] = useState<ConnectionState>({
+    authToken: "",
+    isConnected: false,
+    isConnecting: false,
+  });
 
-  const handleSend = async () => {
-    if (!selectedTarget || !method.trim()) return;
+  const [mcpState, setMcpState] = useState<McpState>({
+    client: null,
+    tools: [],
+    selectedTool: null,
+    paramValues: {},
+    response: null,
+  });
 
-    let params: Record<string, unknown> | undefined;
-    if (paramsJson.trim()) {
-      try {
-        params = JSON.parse(paramsJson);
-      } catch {
-        setHistory((prev) => [
-          ...prev,
-          { method, params: undefined, error: "Invalid JSON in params" },
-        ]);
-        return;
-      }
-    }
+  const [uiState, setUiState] = useState<UiState>({
+    isRequestRunning: false,
+    isLoadingCapabilities: false,
+  });
 
-    setSending(true);
-    const req: MCPRequest = { method, params };
-    setHistory((prev) => [...prev, req]);
+  // Extract routes from configuration that have MCP backends
+  useEffect(() => {
+    if (!config || !config.binds) return;
 
-    await new Promise((r) => setTimeout(r, 600));
+    const extractedRoutes: RouteInfo[] = [];
 
-    setHistory((prev) => {
-      const updated = [...prev];
-      const last = { ...updated[updated.length - 1] };
-      last.result =
-        "MCP Playground requires a live MCP server connection. This is a UI preview — connect a real MCP target to execute tool calls.";
-      updated[updated.length - 1] = last;
-      return updated;
+    config.binds.forEach((bind: LocalBind) => {
+      bind.listeners.forEach((listener: LocalListener) => {
+        if (listener.routes) {
+          listener.routes.forEach((route: LocalRoute, routeIndex: number) => {
+            // Only include routes with MCP backends
+            const hasMcpBackend = route.backends?.some((b: any) => b.mcp);
+            if (!hasMcpBackend) return;
+
+            const protocol = listener.protocol === "HTTPS" ? "https" : "http";
+            const hostname = listener.hostname || "localhost";
+            const port = bind.port;
+            const baseEndpoint = `${protocol}://${hostname}:${port}`;
+
+            let routePath = "/";
+            if (route.matches?.[0]?.path) {
+              const pathMatch = route.matches[0].path;
+              if ("exact" in pathMatch) {
+                routePath = pathMatch.exact;
+              } else if ("pathPrefix" in pathMatch) {
+                routePath = pathMatch.pathPrefix;
+              }
+            }
+
+            extractedRoutes.push({
+              bindPort: port,
+              listener,
+              route,
+              endpoint: baseEndpoint,
+              protocol,
+              routeIndex,
+              routePath,
+            });
+          });
+        }
+      });
     });
-    setSending(false);
+
+    setRoutes(extractedRoutes);
+  }, [config]);
+
+  const handleRouteSelect = useCallback((routeInfo: RouteInfo) => {
+    setSelectedRoute(routeInfo);
+    // Reset client state when changing routes
+    setConnectionState((prev) => ({
+      ...prev,
+      isConnected: false,
+    }));
+    setMcpState({
+      client: null,
+      tools: [],
+      selectedTool: null,
+      paramValues: {},
+      response: null,
+    });
+  }, []);
+
+  const handleAuthTokenChange = (token: string) => {
+    setConnectionState((prev) => ({ ...prev, authToken: token }));
   };
 
-  if (isLoading) {
+  // MCP connection function
+  const connect = async () => {
+    if (!selectedRoute) return;
+
+    setConnectionState((prev) => ({ ...prev, isConnecting: true }));
+
+    try {
+      const client = new McpClient(
+        { name: "agentgateway-dashboard", version: "0.1.0" },
+        { capabilities: {} },
+      );
+
+      const headers: Record<string, string> = {
+        Accept: "text/event-stream",
+        "Cache-Control": "no-cache",
+        "mcp-protocol-version": "2024-11-05",
+      };
+
+      if (connectionState.authToken && connectionState.authToken.trim()) {
+        headers["Authorization"] = `Bearer ${connectionState.authToken}`;
+      }
+
+      const sseUrl = selectedRoute.endpoint.endsWith("/")
+        ? `${selectedRoute.endpoint}sse`
+        : `${selectedRoute.endpoint}/sse`;
+      const transport = new McpSseTransport(new URL(sseUrl), {
+        eventSourceInit: {
+          fetch: (url, init) => {
+            return fetch(url, {
+              ...init,
+              headers: headers as HeadersInit,
+            });
+          },
+        },
+        requestInit: {
+          headers: headers as HeadersInit,
+          credentials: "omit",
+          mode: "cors",
+        },
+      });
+
+      await client.connect(transport);
+      setMcpState((prev) => ({ ...prev, client }));
+      setConnectionState((prev) => ({ ...prev, isConnected: true }));
+      toast.success("Connected to MCP endpoint");
+
+      setUiState((prev) => ({ ...prev, isLoadingCapabilities: true }));
+      const listToolsRequest: McpClientRequest = {
+        method: "tools/list",
+        params: {},
+      };
+      const toolsResponse = await client.request(
+        listToolsRequest,
+        McpListToolsResultSchema,
+      );
+      setMcpState((prev) => ({ ...prev, tools: toolsResponse.tools }));
+      setUiState((prev) => ({ ...prev, isLoadingCapabilities: false }));
+    } catch (error: any) {
+      console.error("Connection failed:", error);
+      let errorMessage = "Failed to connect";
+      if (error.message?.includes("CORS")) {
+        errorMessage =
+          "CORS error: Check if the endpoint allows requests from this origin";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+      setConnectionState((prev) => ({ ...prev, isConnected: false, isConnecting: false }));
+      setUiState((prev) => ({ ...prev, isLoadingCapabilities: false }));
+    } finally {
+      setConnectionState((prev) => ({ ...prev, isConnecting: false }));
+    }
+  };
+
+  const runMcpTool = async () => {
+    if (!mcpState.client || !mcpState.selectedTool) return;
+
+    setUiState((prev) => ({ ...prev, isRequestRunning: true }));
+    setMcpState((prev) => ({ ...prev, response: null }));
+
+    try {
+      const request: McpClientRequest = {
+        method: "tools/call",
+        params: {
+          name: mcpState.selectedTool.name,
+          arguments: mcpState.paramValues,
+        },
+      };
+      const result = await mcpState.client.request(
+        request,
+        McpToolResponseSchema,
+      );
+      setMcpState((prev) => ({ ...prev, response: result }));
+      toast.success(`Tool ${mcpState.selectedTool?.name} executed.`);
+    } catch (error: any) {
+      const message =
+        error instanceof McpError ? error.message : "Failed to run tool";
+      setMcpState((prev) => ({
+        ...prev,
+        response: { error: message, details: error },
+      }));
+      toast.error(message);
+    } finally {
+      setUiState((prev) => ({ ...prev, isRequestRunning: false }));
+    }
+  };
+
+  const handleMcpToolSelect = (tool: McpTool) => {
+    setMcpState((prev) => ({ ...prev, selectedTool: tool, response: null }));
+
+    // Initialize parameter values based on tool schema
+    const initialParams: Record<string, any> = {};
+    if (tool.inputSchema?.properties) {
+      Object.keys(tool.inputSchema.properties).forEach((key) => {
+        const prop = tool.inputSchema!.properties![key] as any;
+        switch (prop?.type) {
+          case "string":
+            initialParams[key] = "";
+            break;
+          case "number":
+            initialParams[key] = 0;
+            break;
+          case "boolean":
+            initialParams[key] = false;
+            break;
+          case "array":
+            initialParams[key] = [];
+            break;
+          case "object":
+            initialParams[key] = {};
+            break;
+          default:
+            initialParams[key] = "";
+        }
+      });
+    }
+    setMcpState((prev) => ({ ...prev, paramValues: initialParams }));
+  };
+
+  const handleMcpParamChange = (paramName: string, value: any) => {
+    setMcpState((prev) => ({
+      ...prev,
+      paramValues: { ...prev.paramValues, [paramName]: value },
+    }));
+  };
+
+  if (configLoading) {
     return (
       <Container>
         <PageTitle>MCP Playground</PageTitle>
         <div style={{ textAlign: "center", padding: 60 }}>
           <Spin size="large" />
+          <p style={{ marginTop: "1rem" }}>Loading routes...</p>
         </div>
+      </Container>
+    );
+  }
+
+  if (routes.length === 0) {
+    return (
+      <Container>
+        <PageTitle>MCP Playground</PageTitle>
+        <PageSubtitle>Test MCP server tool calls interactively</PageSubtitle>
+        <Card style={{ marginTop: "1rem" }}>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <p>
+              No routes with MCP backends configured. Please add routes with MCP
+              backends to your agentgateway configuration.
+            </p>
+          </div>
+        </Card>
       </Container>
     );
   }
 
   return (
     <Container>
-      <div>
-        <PageTitle>MCP Playground</PageTitle>
-        <PageSubtitle>Test MCP server tool calls interactively</PageSubtitle>
-      </div>
+      <PageTitle>MCP Playground</PageTitle>
+      <PageSubtitle>Test MCP server tool calls interactively</PageSubtitle>
 
-      <PlaygroundLayout>
-        {/* Settings */}
-        <Card title="Settings" size="small">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <div
+      {/* Connection Section */}
+      <SectionCard title={<><Settings size={18} /> Connection</>}>
+        {/* Route Selection */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
+          {routes.map((routeInfo, idx) => {
+            const isSelected = selectedRoute === routeInfo;
+            return (
+              <RouteCard
+                key={`${routeInfo.bindPort}-${routeInfo.routeIndex}`}
+                size="small"
                 style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--color-text-secondary)",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  background: isSelected
+                    ? "var(--color-bg-selected)"
+                    : "var(--color-bg-spotlight)",
+                  border: isSelected ? "2px solid var(--color-primary)" : undefined,
                 }}
+                onClick={() => handleRouteSelect(routeInfo)}
               >
-                Target
-              </div>
-              {targets.length === 0 ? (
-                <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>
-                  No MCP targets configured.{" "}
-                  <a href="/mcp/servers">Add targets</a> to get started.
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ fontWeight: 500 }}>
+                    {routeInfo.route.name || `Route ${idx + 1}`}
+                  </span>
+                  <Tag color="blue">Port {routeInfo.bindPort}</Tag>
+                  <Tag style={{ fontSize: "11px", fontFamily: "monospace" }}>
+                    {routeInfo.routePath}
+                  </Tag>
+                  <Tag color="purple">MCP</Tag>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: "12px",
+                      color: "var(--color-text-secondary)",
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    {routeInfo.endpoint}
+                  </span>
                 </div>
-              ) : (
-                <Select
-                  style={{ width: "100%" }}
-                  placeholder="Select a target"
-                  value={selectedTarget}
-                  onChange={setSelectedTarget}
-                  options={targets.map((t) => ({
-                    label: (
-                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <Tag
-                          color={TYPE_COLORS[getTargetType(t)] ?? "default"}
-                          style={{ fontSize: 10, marginRight: 0 }}
-                        >
-                          {getTargetType(t)}
-                        </Tag>
-                        {t.name}
-                      </span>
-                    ),
-                    value: t.name,
-                  }))}
-                />
-              )}
-            </div>
+              </RouteCard>
+            );
+          })}
+        </div>
 
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--color-text-secondary)",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                Method
-              </div>
-              <Select
-                style={{ width: "100%" }}
-                value={method}
-                onChange={setMethod}
-                options={[
-                  { label: "tools/list", value: "tools/list" },
-                  { label: "tools/call", value: "tools/call" },
-                  { label: "resources/list", value: "resources/list" },
-                  { label: "resources/read", value: "resources/read" },
-                  { label: "prompts/list", value: "prompts/list" },
-                  { label: "prompts/get", value: "prompts/get" },
-                  { label: "initialize", value: "initialize" },
-                ]}
+        {/* Auth Token and Connect Button */}
+        {selectedRoute && (
+          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "14px" }}>
+                Auth Token (optional)
+              </label>
+              <Input
+                placeholder="Bearer token for authentication"
+                value={connectionState.authToken}
+                onChange={(e) => handleAuthTokenChange(e.target.value)}
               />
             </div>
-
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "var(--color-text-secondary)",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
+            <div style={{ paddingTop: "30px" }}>
+              <Button
+                type="primary"
+                onClick={connect}
+                loading={connectionState.isConnecting}
+                disabled={!selectedRoute}
               >
-                Params (JSON)
-              </div>
-              <TextArea
-                placeholder='{"name": "tool_name"}'
-                value={paramsJson}
-                onChange={(e) => setParamsJson(e.target.value)}
-                autoSize={{ minRows: 3, maxRows: 8 }}
-                style={{ fontFamily: "monospace", fontSize: 12 }}
-              />
+                {connectionState.isConnected ? "Reconnect" : "Connect to MCP"}
+              </Button>
             </div>
-
-            <Button
-              type="primary"
-              icon={<Send size={14} />}
-              onClick={handleSend}
-              loading={sending}
-              disabled={!selectedTarget || !method.trim()}
-              block
-            >
-              Send
-            </Button>
-
-            <Button
-              size="small"
-              onClick={() => setHistory([])}
-              disabled={history.length === 0}
-            >
-              Clear History
-            </Button>
           </div>
-        </Card>
+        )}
+      </SectionCard>
 
-        {/* Output */}
-        <Card
-          title={
-            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Server size={16} />
-              Output
-            </span>
-          }
-        >
-          {history.length === 0 && !sending ? (
-            <div
-              style={{
-                minHeight: 300,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--color-text-tertiary)",
-                fontSize: 14,
-              }}
-            >
-              {targets.length === 0
-                ? "Configure MCP targets to start"
-                : selectedTarget
-                  ? "Click Send to execute a request"
-                  : "Select a target to begin"}
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {history.map((req, idx) => (
-                <div key={idx}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    → {req.method}
-                  </Text>
-                  {req.params && (
-                    <OutputBox style={{ marginTop: 4, minHeight: "auto", opacity: 0.7 }}>
-                      {JSON.stringify(req.params, null, 2)}
-                    </OutputBox>
-                  )}
-                  {req.result !== undefined && (
-                    <OutputBox style={{ marginTop: 4 }}>
-                      {typeof req.result === "string"
-                        ? req.result
-                        : JSON.stringify(req.result, null, 2)}
-                    </OutputBox>
-                  )}
-                  {req.error && (
-                    <OutputBox
+      {/* Tools and Testing Section */}
+      {selectedRoute && connectionState.isConnected && (
+        <Row gutter={[16, 16]}>
+          {/* Left Column: Available Tools */}
+          <Col xs={24} lg={8}>
+            <CapabilitiesList
+              connectionType="mcp"
+              isLoading={uiState.isLoadingCapabilities}
+              mcpTools={mcpState.tools}
+              a2aSkills={[]}
+              a2aAgentCard={null}
+              selectedMcpToolName={mcpState.selectedTool?.name || null}
+              selectedA2aSkillId={null}
+              onMcpToolSelect={handleMcpToolSelect}
+              onA2aSkillSelect={() => {}}
+            />
+          </Col>
+
+          {/* Right Column: Request and Response */}
+          <Col xs={24} lg={16}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Top: User Request */}
+              <SectionCard title={<><Send size={18} /> Request</>}>
+                <ActionPanel
+                  connectionType="mcp"
+                  mcpSelectedTool={mcpState.selectedTool}
+                  a2aSelectedSkill={null}
+                  mcpParamValues={mcpState.paramValues}
+                  a2aMessage=""
+                  isRequestRunning={uiState.isRequestRunning}
+                  onMcpParamChange={handleMcpParamChange}
+                  onA2aMessageChange={() => {}}
+                  onRunMcpTool={runMcpTool}
+                  onRunA2aSkill={() => {}}
+                />
+              </SectionCard>
+
+              {/* Bottom: Response */}
+              <div style={{ position: "relative" }}>
+                <SectionCard title={<><FileCode size={18} /> Response</>}>
+                  {mcpState.response ? (
+                    <div style={{ padding: 0 }}>
+                      <MonacoEditorWithSettings
+                        value={JSON.stringify(mcpState.response, null, 2)}
+                        language="json"
+                        height={resultExpanded ? "300px" : "70px"}
+                        theme={theme}
+                        readOnly
+                        options={{
+                          readOnly: true,
+                          minimap: { enabled: false },
+                          scrollBeyondLastLine: false,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
                       style={{
-                        marginTop: 4,
-                        borderColor: "var(--color-error)",
-                        color: "var(--color-error)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "70px",
+                        color: "var(--color-text-secondary)",
+                        fontSize: "14px",
                       }}
                     >
-                      Error: {req.error}
-                    </OutputBox>
+                      Select a tool and click "Run Tool" to see the response
+                    </div>
                   )}
-                </div>
-              ))}
-              {sending && (
-                <div style={{ textAlign: "center", padding: 16 }}>
-                  <Spin size="small" />
-                </div>
-              )}
+                </SectionCard>
+                {mcpState.response && (
+                  <ExpandButton
+                    type="button"
+                    onClick={() => setResultExpanded(!resultExpanded)}
+                  >
+                    {resultExpanded ? (
+                      <>
+                        <ChevronUp size={14} />
+                        Collapse
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown size={14} />
+                        Expand
+                      </>
+                    )}
+                  </ExpandButton>
+                )}
+              </div>
             </div>
-          )}
-        </Card>
-      </PlaygroundLayout>
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };
