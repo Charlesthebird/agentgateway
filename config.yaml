@@ -28,11 +28,19 @@ binds:
           - Mcp-Session-Id
         responseHeaderModifier:
           remove: []
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+      policies:
+        cors: {}
 - port: 8080
   tunnelProtocol: direct
   listeners:
   - protocol: HTTP
-    name: listener
+    name: listenerlkjjklkjl
     hostname: '*'
     routes:
     - hostnames: []

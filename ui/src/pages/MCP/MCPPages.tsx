@@ -10,20 +10,24 @@ import {
   type Tool as McpTool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { Button, Card, Col, Input, Row, Spin, Tag } from "antd";
-import { BarChart3, ChevronDown, ChevronUp, FileCode, FileText, Send, Settings } from "lucide-react";
+import {
+  BarChart3,
+  ChevronDown,
+  ChevronUp,
+  FileCode,
+  FileText,
+  Send,
+  Settings,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { z } from "zod";
 import { useConfig } from "../../api/hooks";
+import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
 import { ActionPanel } from "../../components/playground/ActionPanel";
 import { CapabilitiesList } from "../../components/playground/CapabilitiesList";
-import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
+import type { LocalBind, LocalListener, LocalRoute } from "../../config";
 import { useTheme } from "../../contexts/ThemeContext";
-import type {
-  LocalBind,
-  LocalListener,
-  LocalRoute,
-} from "../../config";
 
 // Schema for MCP tool invocation response
 const McpToolResponseSchema = z.any();
@@ -91,7 +95,11 @@ export const MCPLogsPage = () => (
         MCP tool call logs, request and response details, latency, and error
         traces will be displayed here.
       </p>
-      <Tag bordered={false} color="processing" style={{ padding: "4px 12px", fontSize: 13 }}>
+      <Tag
+        bordered={false}
+        color="processing"
+        style={{ padding: "4px 12px", fontSize: 13 }}
+      >
         Coming soon
       </Tag>
     </EmptyStateCard>
@@ -124,7 +132,11 @@ export const MCPMetricsPage = () => (
         Tool call counts, latency distributions, error rates, and per-target
         analytics will be available here.
       </p>
-      <Tag bordered={false} color="processing" style={{ padding: "4px 12px", fontSize: 13 }}>
+      <Tag
+        bordered={false}
+        color="processing"
+        style={{ padding: "4px 12px", fontSize: 13 }}
+      >
         Coming soon
       </Tag>
     </EmptyStateCard>
@@ -154,10 +166,6 @@ const ResultHeader = styled.div`
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border-secondary);
   background: var(--color-bg-container);
-`;
-
-const ResultContent = styled.div`
-  padding: var(--spacing-lg);
 `;
 
 const SectionCard = styled(Card)`
@@ -194,7 +202,7 @@ const RouteCard = styled(Card)`
   position: relative;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background: var(--color-primary);
@@ -442,7 +450,11 @@ export const MCPPlaygroundPage = () => {
       }
 
       toast.error(errorMessage);
-      setConnectionState((prev) => ({ ...prev, isConnected: false, isConnecting: false }));
+      setConnectionState((prev) => ({
+        ...prev,
+        isConnected: false,
+        isConnecting: false,
+      }));
       setUiState((prev) => ({ ...prev, isLoadingCapabilities: false }));
     } finally {
       setConnectionState((prev) => ({ ...prev, isConnecting: false }));
@@ -556,9 +568,22 @@ export const MCPPlaygroundPage = () => {
       <PageSubtitle>Test MCP server tool calls interactively</PageSubtitle>
 
       {/* Connection Section */}
-      <SectionCard title={<><Settings size={18} /> Connection</>}>
+      <SectionCard
+        title={
+          <>
+            <Settings size={18} /> Connection
+          </>
+        }
+      >
         {/* Route Selection */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
           {routes.map((routeInfo, idx) => {
             const isSelected = selectedRoute === routeInfo;
             return (
@@ -569,11 +594,19 @@ export const MCPPlaygroundPage = () => {
                   background: isSelected
                     ? "var(--color-bg-selected)"
                     : "var(--color-bg-spotlight)",
-                  border: isSelected ? "2px solid var(--color-primary)" : undefined,
+                  border: isSelected
+                    ? "2px solid var(--color-primary)"
+                    : undefined,
                 }}
                 onClick={() => handleRouteSelect(routeInfo)}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
                   <span style={{ fontWeight: 500 }}>
                     {routeInfo.route.name || `Route ${idx + 1}`}
                   </span>
@@ -600,9 +633,17 @@ export const MCPPlaygroundPage = () => {
 
         {/* Auth Token and Connect Button */}
         {selectedRoute && (
-          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+          <div
+            style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}
+          >
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "8px", fontSize: "14px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                }}
+              >
                 Auth Token (optional)
               </label>
               <Input
@@ -645,9 +686,17 @@ export const MCPPlaygroundPage = () => {
 
           {/* Right Column: Request and Response */}
           <Col xs={24} lg={16}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
               {/* Top: User Request */}
-              <SectionCard title={<><Send size={18} /> Request</>}>
+              <SectionCard
+                title={
+                  <>
+                    <Send size={18} /> Request
+                  </>
+                }
+              >
                 <ActionPanel
                   connectionType="mcp"
                   mcpSelectedTool={mcpState.selectedTool}
@@ -664,7 +713,13 @@ export const MCPPlaygroundPage = () => {
 
               {/* Bottom: Response */}
               <div style={{ position: "relative" }}>
-                <SectionCard title={<><FileCode size={18} /> Response</>}>
+                <SectionCard
+                  title={
+                    <>
+                      <FileCode size={18} /> Response
+                    </>
+                  }
+                >
                   {mcpState.response ? (
                     <div style={{ padding: 0 }}>
                       <MonacoEditorWithSettings

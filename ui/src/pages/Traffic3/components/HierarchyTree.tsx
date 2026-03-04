@@ -60,6 +60,15 @@ export type NodeType = "bind" | "listener" | "route" | "backend";
 
 const TreeCard = styled(Card)`
   .ant-card-body {
+    padding: var(--spacing-lg);
+  }
+
+  .ant-card-head {
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .ant-card-head-title {
     padding: 0;
   }
 
@@ -67,6 +76,39 @@ const TreeCard = styled(Card)`
   .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
     background: var(--color-bg-selected) !important;
   }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+`;
+
+const CardTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-secondary);
+`;
+
+const CardTitle = styled.h3`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-base);
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+`;
+
+const CardActions = styled.div`
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
 `;
 
 const NodeRow = styled.div`
@@ -1495,31 +1537,39 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
         `}
       />
       <TreeCard
-        title="Traffic Hierarchy"
-        extra={
-          <Space size="small">
-            <Dropdown menu={{ items: addMenuItems }} trigger={["click"]}>
-              <Button type="primary" size="small" icon={<PlusOutlined />}>
-                Add <DownOutlined />
-              </Button>
-            </Dropdown>
-            <Button
-              type="text"
-              size="small"
-              icon={
-                expandedKeys.length > 0 ? (
-                  <ChevronsDownUp size={16} />
-                ) : (
-                  <ChevronsUpDown size={16} />
-                )
-              }
-              onClick={
-                expandedKeys.length > 0 ? handleCollapseAll : handleExpandAll
-              }
-            >
-              {expandedKeys.length > 0 ? "Collapse All" : "Expand All"}
-            </Button>
-          </Space>
+        title={
+          <CardHeader>
+            <CardTitleRow>
+              <CardTitle onClick={() => navigate("/traffic3")}>
+                Traffic Hierarchy
+              </CardTitle>
+            </CardTitleRow>
+            <CardActions>
+              <Space size="small">
+                <Dropdown menu={{ items: addMenuItems }} trigger={["click"]}>
+                  <Button type="primary" size="small" icon={<PlusOutlined />}>
+                    Add <DownOutlined />
+                  </Button>
+                </Dropdown>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={
+                    expandedKeys.length > 0 ? (
+                      <ChevronsDownUp size={16} />
+                    ) : (
+                      <ChevronsUpDown size={16} />
+                    )
+                  }
+                  onClick={
+                    expandedKeys.length > 0 ? handleCollapseAll : handleExpandAll
+                  }
+                >
+                  {expandedKeys.length > 0 ? "Collapse All" : "Expand All"}
+                </Button>
+              </Space>
+            </CardActions>
+          </CardHeader>
         }
       >
         <Tree

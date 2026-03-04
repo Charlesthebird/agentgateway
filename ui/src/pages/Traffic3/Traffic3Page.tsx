@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { Button, Card, Spin, Statistic } from "antd";
 import { CodeOutlined } from "@ant-design/icons";
-import { Activity, AlertTriangle, Database, Network } from "lucide-react";
+import { AlertTriangle, CheckCircle, Headphones, Network, Route } from "lucide-react";
 import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { StyledAlert } from "../../components/StyledAlert";
@@ -27,6 +27,21 @@ const SplitRoot = styled.div`
   overflow: hidden;
 `;
 
+const MetricsHeader = styled.div`
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-layout);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+`;
+
+const AllMetrics = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+`;
+
 const SplitBody = styled.div`
   display: flex;
   flex: 1;
@@ -49,30 +64,37 @@ const DetailPanel = styled.div`
   overflow-y: auto;
 `;
 
-const TopMetrics = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
+const PlaceholderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--spacing-xl);
+`;
+
+const PlaceholderContent = styled.div`
+  text-align: center;
+  max-width: 400px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-base);
+    margin-bottom: var(--spacing-md);
+  }
+
+  p {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
 `;
 
 const OverviewContent = styled.div`
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 450px 1fr;
   gap: var(--spacing-xl);
   align-items: start;
-`;
-
-const RightColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-`;
-
-const SideMetrics = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
 `;
 
 const PageHeader = styled.div`
@@ -97,7 +119,7 @@ const Description = styled.p`
 const MetricCard = styled(Card)`
   &.ant-card {
     background: var(--color-bg-container);
-    border: 1px solid var(--color-border-base);
+    border: 1px solid var(--color-border);
   }
 
   .ant-card-body {
@@ -149,77 +171,6 @@ function parseTraffic3Path(pathname: string): UrlParams | null {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Metrics components
-// ---------------------------------------------------------------------------
-
-interface MetricsProps {
-  hierarchy: ReturnType<typeof useTraffic3Hierarchy>;
-}
-
-function TopMetricsRow({ hierarchy }: MetricsProps) {
-  const { stats } = hierarchy;
-
-  return (
-    <TopMetrics>
-      <MetricCard>
-        <MetricIcon color="var(--color-primary)">
-          <Network size={20} />
-        </MetricIcon>
-        <Statistic title="Binds" value={stats.totalBinds} suffix="ports" />
-      </MetricCard>
-
-      <MetricCard>
-        <MetricIcon color="var(--color-success)">
-          <Activity size={20} />
-        </MetricIcon>
-        <Statistic
-          title="Listeners"
-          value={stats.totalListeners}
-          suffix="configured"
-        />
-      </MetricCard>
-    </TopMetrics>
-  );
-}
-
-function SideMetricsColumn({ hierarchy }: MetricsProps) {
-  const { stats } = hierarchy;
-
-  return (
-    <SideMetrics>
-      <MetricCard>
-        <MetricIcon color="var(--color-info)">
-          <Database size={20} />
-        </MetricIcon>
-        <Statistic title="Routes" value={stats.totalRoutes} suffix="active" />
-      </MetricCard>
-
-      <MetricCard>
-        <MetricIcon
-          color={
-            stats.totalValidationErrors > 0
-              ? "var(--color-warning)"
-              : "var(--color-success)"
-          }
-        >
-          <AlertTriangle size={20} />
-        </MetricIcon>
-        <Statistic
-          title="Validation Issues"
-          value={stats.totalValidationErrors}
-          suffix={stats.totalValidationErrors === 1 ? "issue" : "issues"}
-          valueStyle={{
-            color:
-              stats.totalValidationErrors > 0
-                ? "var(--color-warning)"
-                : "var(--color-success)",
-          }}
-        />
-      </MetricCard>
-    </SideMetrics>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -277,15 +228,104 @@ export function Traffic3Page() {
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
+
+  // Determine if we should show a detail view or placeholder
+  const shouldShowDetail = urlParams && (
+    urlParams.li !== undefined ||
+    urlParams.ri !== undefined ||
+    urlParams.bi !== undefined ||
+    urlParams.policyType !== undefined
+  );
+
+  const alertContent = (
+    <StyledAlert
+      message="Manual TypeScript Schemas"
+      description="This page uses manually configured TypeScript form schemas (not auto-generated JSON). Forms are defined in traffic3/forms/ and use config.d.ts types directly for compile-time safety."
+      type="info"
+      showIcon
+      closable
+    />
+  );
+
+  const metricsCards = (
+    <AllMetrics>
+      <MetricCard>
+        <MetricIcon color="var(--color-primary)">
+          <Network size={20} />
+        </MetricIcon>
+        <Statistic title="Binds" value={hierarchy.stats.totalBinds} suffix="ports" />
+      </MetricCard>
+
+      <MetricCard>
+        <MetricIcon color="var(--color-success)">
+          <Headphones size={20} />
+        </MetricIcon>
+        <Statistic
+          title="Listeners"
+          value={hierarchy.stats.totalListeners}
+          suffix="configured"
+        />
+      </MetricCard>
+
+      <MetricCard>
+        <MetricIcon color="var(--color-info)">
+          <Route size={20} />
+        </MetricIcon>
+        <Statistic title="Routes" value={hierarchy.stats.totalRoutes} suffix="active" />
+      </MetricCard>
+
+      <MetricCard>
+        <MetricIcon
+          color={
+            hierarchy.stats.totalValidationErrors > 0
+              ? "var(--color-warning)"
+              : "var(--color-success)"
+          }
+        >
+          {hierarchy.stats.totalValidationErrors > 0 ? (
+            <AlertTriangle size={20} />
+          ) : (
+            <CheckCircle size={20} />
+          )}
+        </MetricIcon>
+        <Statistic
+          title="Validation Issues"
+          value={hierarchy.stats.totalValidationErrors}
+          suffix={hierarchy.stats.totalValidationErrors === 1 ? "issue" : "issues"}
+          valueStyle={{
+            color:
+              hierarchy.stats.totalValidationErrors > 0
+                ? "var(--color-warning)"
+                : "var(--color-success)",
+          }}
+        />
+      </MetricCard>
+    </AllMetrics>
+  );
+
   return urlParams ? (
-    /* Split layout: tree on left, detail view on right */
+    /* Split layout: tree on left, detail/placeholder on right */
     <SplitRoot>
+      <MetricsHeader>
+        {alertContent}
+      </MetricsHeader>
       <SplitBody>
         <Sidebar>
           <HierarchyTree hierarchy={hierarchy} />
         </Sidebar>
         <DetailPanel>
-          <NodeDetailView hierarchy={hierarchy} urlParams={urlParams} />
+          {shouldShowDetail ? (
+            <NodeDetailView hierarchy={hierarchy} urlParams={urlParams} />
+          ) : (
+            <PlaceholderContainer>
+              <PlaceholderContent>
+                <h3>Select an Item</h3>
+                <p>
+                  Choose a listener, route, backend, or policy from the hierarchy tree on the left to view and edit its configuration.
+                </p>
+              </PlaceholderContent>
+            </PlaceholderContainer>
+          )}
         </DetailPanel>
       </SplitBody>
     </SplitRoot>
@@ -308,20 +348,19 @@ export function Traffic3Page() {
         </Button>
       </PageHeader>
 
-      <TopMetricsRow hierarchy={hierarchy} />
+      {alertContent}
+      {metricsCards}
 
       <OverviewContent>
         <HierarchyTree hierarchy={hierarchy} />
-        <RightColumn>
-          <StyledAlert
-            message="Manual TypeScript Schemas"
-            description="This page uses manually configured TypeScript form schemas (not auto-generated JSON). Forms are defined in traffic3/forms/ and use config.d.ts types directly for compile-time safety."
-            type="info"
-            showIcon
-            closable
-          />
-          <SideMetricsColumn hierarchy={hierarchy} />
-        </RightColumn>
+        <PlaceholderContainer>
+          <PlaceholderContent>
+            <h3>Select an Item</h3>
+            <p>
+              Choose a bind, listener, route, backend, or policy from the hierarchy tree on the left to view and edit its configuration.
+            </p>
+          </PlaceholderContent>
+        </PlaceholderContainer>
       </OverviewContent>
     </FullContainer>
   );

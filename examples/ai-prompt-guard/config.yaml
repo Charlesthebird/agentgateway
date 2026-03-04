@@ -1,8 +1,10 @@
-# yaml-language-server: $schema=https://agentgateway.dev/schema/config
 binds:
-- port: 3000
+- port: 3001
   listeners:
-  - routes:
+  - protocol: HTTP
+    name: test
+    hostname: '*'
+    routes:
     - backends:
       - ai:
           name: openai
@@ -22,7 +24,7 @@ binds:
                 status: 400
                 headers:
                   set:
-                    content-type: "application/json"
+                    content-type: application/json
                 body: |
                   {
                     "error": {
@@ -39,8 +41,8 @@ binds:
                 status: 400
                 headers:
                   set:
-                    content-type: "application/json"
-                body: |
+                    content-type: application/json
+                body: |-
                   {
                     "error": {
                       "message": "Response blocked: Contains email",
@@ -48,3 +50,9 @@ binds:
                       "code": "pii_detected"
                     }
                   }
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
