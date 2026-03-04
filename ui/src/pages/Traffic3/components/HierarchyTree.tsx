@@ -1417,14 +1417,6 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
   }, [hierarchy.binds, mutate, navigate]);
 
   // Handlers for opening drawers to create top-level items
-  const handleAddPolicy = useCallback(() => {
-    setDrawerTarget({ type: "policy" });
-  }, []);
-
-  const handleAddBackend = useCallback(() => {
-    setDrawerTarget({ type: "backend" });
-  }, []);
-
   const handleAddLLM = useCallback(() => {
     setDrawerTarget({ type: "llm" });
   }, []);
@@ -1452,18 +1444,6 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
       label: "Bind",
       icon: <Network size={14} />,
       onClick: handleAddBind,
-    },
-    {
-      key: "backend",
-      label: "Backend",
-      icon: <Server size={14} />,
-      onClick: handleAddBackend,
-    },
-    {
-      key: "policy",
-      label: "Policy",
-      icon: <TriangleAlert size={14} />,
-      onClick: handleAddPolicy,
     },
     {
       type: "divider",
