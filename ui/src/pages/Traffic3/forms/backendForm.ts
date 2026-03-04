@@ -7,135 +7,236 @@ import type { LocalRouteBackend } from "../../../config";
  */
 export const schema: RJSFSchema = {
   type: "object",
-  additionalProperties: true, // Allow fields not explicitly defined (like weight, policies)
-  oneOf: [
-    {
-      title: "Service Backend",
-      type: "object",
-      additionalProperties: true,
-      required: ["service"],
-      properties: {
-        service: {
-          type: "object",
-          title: "Service",
-          required: ["name", "port"],
-          properties: {
-            name: {
-              type: "string",
-              title: "Service Name",
-              description: "Kubernetes service name or hostname",
-            },
-            namespace: {
-              type: "string",
-              title: "Namespace",
-              description: "Kubernetes namespace (optional)",
-            },
-            port: {
-              type: "integer",
-              title: "Port",
-              minimum: 1,
-              maximum: 65535,
-            },
-          },
-        },
-        weight: {
-          type: "integer",
-          title: "Weight",
-          minimum: 0,
-          default: 100,
-          description: "Load balancing weight",
-        },
-      },
+  additionalProperties: true,
+  required: ["backendType"],
+  properties: {
+    backendType: {
+      type: "string",
+      title: "Backend Type",
+      enum: ["service", "host", "dynamic", "mcp", "ai"],
+      default: "service",
+      description: "Type of backend to configure",
     },
-    {
-      title: "Host Backend",
-      type: "object",
-      additionalProperties: true,
-      required: ["host"],
-      properties: {
-        host: {
-          type: "string",
-          title: "Host",
-          description: "Hostname or IP address with optional port (host:port)",
-        },
-        weight: {
-          type: "integer",
-          title: "Weight",
-          minimum: 0,
-          default: 100,
-          description: "Load balancing weight",
-        },
-        tls: {
-          type: "object",
-          title: "TLS Settings",
-          properties: {
-            mode: {
-              type: "string",
-              title: "TLS Mode",
-              enum: ["DISABLED", "SIMPLE", "MUTUAL"],
-              default: "DISABLED",
-            },
-          },
-          required: ["mode"],
-          dependencies: {
-            mode: {
-              oneOf: [
-                {
-                  // DISABLED - no additional fields
-                  properties: {
-                    mode: { enum: ["DISABLED"] },
-                  },
-                },
-                {
-                  // SIMPLE - requires CA certificates
-                  properties: {
-                    mode: { enum: ["SIMPLE"] },
-                    caCertificates: {
-                      type: "string",
-                      title: "CA Certificates Path",
-                      description: "Path to CA certificates for server verification",
-                    },
-                    sni: {
-                      type: "string",
-                      title: "SNI Hostname",
-                      description: "Server Name Indication hostname",
-                    },
-                  },
-                },
-                {
-                  // MUTUAL - requires CA certificates and client cert/key
-                  properties: {
-                    mode: { enum: ["MUTUAL"] },
-                    caCertificates: {
-                      type: "string",
-                      title: "CA Certificates Path",
-                      description: "Path to CA certificates for server verification",
-                    },
-                    clientCertificate: {
-                      type: "string",
-                      title: "Client Certificate Path",
-                      description: "Path to client certificate for mutual TLS",
-                    },
-                    privateKey: {
-                      type: "string",
-                      title: "Private Key Path",
-                      description: "Path to private key for mutual TLS",
-                    },
-                    sni: {
-                      type: "string",
-                      title: "SNI Hostname",
-                      description: "Server Name Indication hostname",
-                    },
-                  },
-                  required: ["clientCertificate", "privateKey"],
-                },
-              ],
-            },
-          },
-        },
-      },
+    weight: {
+      type: "integer",
+      title: "Weight",
+      minimum: 0,
+      default: 1,
+      description: "Load balancing weight (default: 1)",
     },
-  ],
+    policies: {
+      type: "object",
+      title: "Backend Policies",
+      description: "Optional backend-level policies",
+      additionalProperties: true,
+    },
+  },
+  dependencies: {
+    backendType: {
+      oneOf: [
+        {
+          properties: {
+            backendType: { const: "service" },
+            service: {
+              type: "object",
+              title: "Service Configuration",
+              required: ["name", "port"],
+              properties: {
+                name: {
+                  type: "object",
+                  title: "Service Name",
+                  description: "Namespaced service hostname",
+                  required: ["namespace", "hostname"],
+                  properties: {
+                    namespace: {
+                      type: "string",
+                      title: "Namespace",
+                      description: "Service namespace",
+                    },
+                    hostname: {
+                      type: "string",
+                      title: "Hostname",
+                      description: "Service hostname",
+                    },
+                  },
+                },
+                port: {
+                  type: "integer",
+                  title: "Port",
+                  minimum: 1,
+                  maximum: 65535,
+                },
+              },
+            },
+          },
+          required: ["service"],
+        },
+        {
+          properties: {
+            backendType: { const: "host" },
+            host: {
+              type: "string",
+              title: "Host",
+              description: "Hostname or IP address with optional port (host:port)",
+            },
+            tls: {
+              type: "object",
+              title: "TLS Settings",
+              properties: {
+                mode: {
+                  type: "string",
+                  title: "TLS Mode",
+                  enum: ["DISABLED", "SIMPLE", "MUTUAL"],
+                  default: "DISABLED",
+                },
+              },
+              required: ["mode"],
+              dependencies: {
+                mode: {
+                  oneOf: [
+                    {
+                      properties: {
+                        mode: { enum: ["DISABLED"] },
+                      },
+                    },
+                    {
+                      properties: {
+                        mode: { enum: ["SIMPLE"] },
+                        caCertificates: {
+                          type: "string",
+                          title: "CA Certificates Path",
+                          description: "Path to CA certificates for server verification",
+                        },
+                        sni: {
+                          type: "string",
+                          title: "SNI Hostname",
+                          description: "Server Name Indication hostname",
+                        },
+                      },
+                    },
+                    {
+                      properties: {
+                        mode: { enum: ["MUTUAL"] },
+                        caCertificates: {
+                          type: "string",
+                          title: "CA Certificates Path",
+                          description: "Path to CA certificates for server verification",
+                        },
+                        clientCertificate: {
+                          type: "string",
+                          title: "Client Certificate Path",
+                          description: "Path to client certificate for mutual TLS",
+                        },
+                        privateKey: {
+                          type: "string",
+                          title: "Private Key Path",
+                          description: "Path to private key for mutual TLS",
+                        },
+                        sni: {
+                          type: "string",
+                          title: "SNI Hostname",
+                          description: "Server Name Indication hostname",
+                        },
+                      },
+                      required: ["clientCertificate", "privateKey"],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          required: ["host"],
+        },
+        {
+          properties: {
+            backendType: { const: "dynamic" },
+            dynamic: {
+              type: "object",
+              title: "Dynamic Routing Configuration",
+              description: "Backend determined dynamically at runtime",
+              additionalProperties: true,
+            },
+          },
+          required: ["dynamic"],
+        },
+        {
+          properties: {
+            backendType: { const: "mcp" },
+            mcp: {
+              type: "object",
+              title: "MCP Configuration",
+              description: "Model Context Protocol backend settings",
+              additionalProperties: true,
+              properties: {
+                targets: {
+                  type: "array",
+                  title: "MCP Targets",
+                  description: "List of MCP server targets",
+                  items: {
+                    type: "object",
+                    additionalProperties: true,
+                  },
+                },
+                statefulMode: {
+                  type: "string",
+                  title: "Stateful Mode",
+                  enum: ["stateless", "stateful"],
+                  default: "stateless",
+                },
+                prefixMode: {
+                  type: "string",
+                  title: "Prefix Mode",
+                  enum: ["always", "conditional"],
+                },
+              },
+            },
+          },
+          required: ["mcp"],
+        },
+        {
+          properties: {
+            backendType: { const: "ai" },
+            ai: {
+              type: "object",
+              title: "AI Provider Configuration",
+              description: "AI/LLM backend settings",
+              additionalProperties: true,
+              properties: {
+                name: {
+                  type: "string",
+                  title: "Provider Name",
+                  description: "Name of the AI provider",
+                },
+                provider: {
+                  type: "string",
+                  title: "Provider Type",
+                  enum: ["openAI", "gemini", "vertex", "anthropic", "bedrock", "azureOpenAI"],
+                  description: "AI provider to use",
+                },
+                hostOverride: {
+                  type: "string",
+                  title: "Host Override",
+                  description: "Optional host override for the provider",
+                },
+                pathOverride: {
+                  type: "string",
+                  title: "Path Override",
+                  description: "Optional path override for the provider",
+                },
+                tokenize: {
+                  type: "boolean",
+                  title: "Tokenize",
+                  default: false,
+                  description: "Enable tokenization",
+                },
+              },
+            },
+          },
+          required: ["ai"],
+        },
+      ],
+    },
+  },
 };
 
 /**
@@ -143,14 +244,29 @@ export const schema: RJSFSchema = {
  */
 export const uiSchema: UiSchema = {
   "ui:title": "Backend Configuration",
-  "ui:description": "Configure backend service or host",
+  "ui:description": "Configure backend destination for routing traffic",
+  backendType: {
+    "ui:widget": "select",
+    "ui:help": "Service: Kubernetes service | Host: Direct hostname/IP | Dynamic: Runtime-determined | MCP: Model Context Protocol | AI: LLM provider",
+  },
+  weight: {
+    "ui:widget": "updown",
+    "ui:help": "Higher weights receive more traffic. Default is 1.",
+  },
+  policies: {
+    "ui:help": "Optional: Backend-level policies for this destination",
+  },
   service: {
     name: {
-      "ui:placeholder": "my-service or my-service.namespace.svc.cluster.local",
-      "ui:help": "The name of the Kubernetes service or DNS hostname",
-    },
-    namespace: {
-      "ui:placeholder": "default",
+      "ui:help": "Namespaced service identifier",
+      namespace: {
+        "ui:placeholder": "default",
+        "ui:help": "Kubernetes namespace",
+      },
+      hostname: {
+        "ui:placeholder": "my-service",
+        "ui:help": "Service hostname (e.g., my-service or my-service.svc.cluster.local)",
+      },
     },
     port: {
       "ui:placeholder": "8080",
@@ -159,10 +275,6 @@ export const uiSchema: UiSchema = {
   host: {
     "ui:placeholder": "backend.example.com:8080 or 192.168.1.100:8080",
     "ui:help": "Hostname or IP address with optional port",
-  },
-  weight: {
-    "ui:widget": "updown",
-    "ui:help": "Higher weights receive more traffic. Default is 100.",
   },
   tls: {
     mode: {
@@ -188,11 +300,15 @@ export const uiSchema: UiSchema = {
  * Must match one of the oneOf options (Service Backend in this case)
  */
 export const defaultValues: Partial<LocalRouteBackend> = {
+  backendType: "service",
   service: {
-    name: "",
+    name: {
+      namespace: "default",
+      hostname: "service",
+    },
     port: 8080,
   },
-  weight: 100,
+  weight: 1,
 };
 
 /**
@@ -200,4 +316,56 @@ export const defaultValues: Partial<LocalRouteBackend> = {
  */
 export function isLocalRouteBackend(data: unknown): data is LocalRouteBackend {
   return typeof data === "object" && data !== null;
+}
+
+/**
+ * Transform function to strip UI-only fields before submission
+ * The backendType field is used in the form for UI purposes but should not be submitted.
+ * Also strips out all the unused backend type fields (only keeping the selected one).
+ */
+export function transformBeforeSubmit(data: unknown): unknown {
+  if (typeof data !== "object" || data === null) {
+    return data;
+  }
+
+  const { backendType, service, host, dynamic, mcp, ai, weight, policies, tls, ...otherFields } = data as Record<string, unknown> & {
+    backendType?: string;
+    service?: unknown;
+    host?: unknown;
+    dynamic?: unknown;
+    mcp?: unknown;
+    ai?: unknown;
+    weight?: unknown;
+    policies?: unknown;
+    tls?: unknown;
+  };
+
+  // Build the result with only the relevant backend type field
+  const result: Record<string, unknown> = { ...otherFields };
+
+  // Add the selected backend type field
+  if (backendType === "service" && service !== undefined && service !== null) {
+    result.service = service;
+  } else if (backendType === "host" && host !== undefined && host !== null) {
+    result.host = host;
+    if (tls !== undefined && tls !== null) {
+      result.tls = tls;
+    }
+  } else if (backendType === "dynamic" && dynamic !== undefined && dynamic !== null) {
+    result.dynamic = dynamic;
+  } else if (backendType === "mcp" && mcp !== undefined && mcp !== null) {
+    result.mcp = mcp;
+  } else if (backendType === "ai" && ai !== undefined && ai !== null) {
+    result.ai = ai;
+  }
+
+  // Add optional common fields
+  if (weight !== undefined && weight !== null) {
+    result.weight = weight;
+  }
+  if (policies !== undefined && policies !== null) {
+    result.policies = policies;
+  }
+
+  return result;
 }

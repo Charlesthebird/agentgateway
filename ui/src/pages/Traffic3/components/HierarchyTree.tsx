@@ -39,12 +39,14 @@ import type {
   BindNode,
   ListenerNode,
   RouteNode,
+  PolicyNode,
   Traffic3Hierarchy,
   ValidationError,
 } from "../hooks/useTraffic3Hierarchy";
 import * as api from "../../../api/crud";
 import { TopLevelDrawer } from "./TopLevelDrawer";
 import type { TopLevelEditTarget } from "./TopLevelEditForm";
+import { forms } from "../forms";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,10 +106,11 @@ const MoreButton = styled(Button)`
 
 function urlToSelectedKey(pathname: string): string | null {
   const m = pathname.match(
-    /\/traffic3\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+))?)?)?/,
+    /\/traffic3\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+)|\/policy\/([^/?]+))?)?)?/,
   );
   if (!m) return null;
-  const [, port, li, tcp, ri, bi] = m;
+  const [, port, li, tcp, ri, bi, policyType] = m;
+  if (policyType !== undefined) return `policy-${port}-${li}-${ri}-${policyType}`;
   if (bi !== undefined) return `backend-${port}-${li}-${ri}-${bi}`;
   if (ri !== undefined)
     return `route-${port}-${li}-${tcp ? "tcp" : "http"}-${ri}`;
@@ -155,6 +158,7 @@ function buildBindTitle(
   navigate: (path: string) => void,
   onDelete: (port: number, parentPath: string) => void,
   confirmDelete: ConfirmDeleteFn,
+  onAddListener: (port: number) => void,
 ): ReactNode {
   const bindPath = `/traffic3/bind/${bind.bind.port}`;
 
@@ -166,6 +170,15 @@ function buildBindTitle(
       onClick: ({ domEvent }) => {
         domEvent.stopPropagation();
         navigate(bindPath + "?edit=true");
+      },
+    },
+    {
+      key: "addListener",
+      label: "Add Listener",
+      icon: <PlusOutlined />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAddListener(bind.bind.port);
       },
     },
     { type: "divider" },
@@ -225,10 +238,12 @@ function buildListenerTitle(
   bindPort: number,
   listenerIndex: number,
   confirmDelete: ConfirmDeleteFn,
+  onAddRoute: (port: number, li: number, isTcp: boolean) => void,
 ): ReactNode {
   const protocol = ln.listener.protocol ?? "HTTP";
   const listenerPath = `/traffic3/bind/${bindPort}/listener/${listenerIndex}`;
   const bindPath = `/traffic3/bind/${bindPort}`;
+  const isTcp = protocol === "TCP" || protocol === "TLS";
 
   const menuItems: MenuProps["items"] = [
     {
@@ -238,6 +253,15 @@ function buildListenerTitle(
       onClick: ({ domEvent }) => {
         domEvent.stopPropagation();
         navigate(listenerPath + "?edit=true");
+      },
+    },
+    {
+      key: "addRoute",
+      label: isTcp ? "Add TCP Route" : "Add Route",
+      icon: <PlusOutlined />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAddRoute(bindPort, listenerIndex, isTcp);
       },
     },
     { type: "divider" },
@@ -271,6 +295,96 @@ function buildListenerTitle(
       <NodeLabel>{ln.listener.name ?? "(unnamed listener)"}</NodeLabel>
       <ProtocolTag protocol={protocol} />
       <ValidationBadges errors={ln.validationErrors} />
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={["click"]}
+        placement="bottomRight"
+        overlayClassName="hierarchy-menu"
+      >
+        <MoreButton
+          type="text"
+          size="small"
+          icon={<MoreVertical size={14} />}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Dropdown>
+    </NodeRow>
+  );
+}
+
+function buildPolicyTitle(
+  pn: PolicyNode,
+  navigate: (path: string) => void,
+  onDelete: (
+    port: number,
+    li: number,
+    ri: number,
+    isTcp: boolean,
+    policyType: string,
+    parentPath: string,
+  ) => void,
+  bindPort: number,
+  listenerIndex: number,
+  routeIndex: number,
+  confirmDelete: ConfirmDeleteFn,
+): ReactNode {
+  const routeSeg = pn.isTcpRoute ? "tcproute" : "route";
+  const policyPath = `/traffic3/bind/${bindPort}/listener/${listenerIndex}/${routeSeg}/${routeIndex}/policy/${pn.policyType}`;
+  const routePath = `/traffic3/bind/${bindPort}/listener/${listenerIndex}/${routeSeg}/${routeIndex}`;
+
+  // Format policy type for display (camelCase to Title Case)
+  const displayName = pn.policyType
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
+
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <Pencil size={13} />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        navigate(policyPath + "?edit=true");
+      },
+    },
+    { type: "divider" },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        confirmDelete(
+          `Delete ${displayName} policy?`,
+          "This cannot be undone.",
+          () =>
+            onDelete(
+              bindPort,
+              listenerIndex,
+              routeIndex,
+              pn.isTcpRoute,
+              pn.policyType,
+              routePath,
+            ),
+        );
+      },
+    },
+  ];
+
+  return (
+    <NodeRow
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(policyPath);
+      }}
+    >
+      <Settings
+        size={13}
+        style={{ color: "var(--color-primary)", flexShrink: 0 }}
+      />
+      <NodeLabel>{displayName}</NodeLabel>
       <Dropdown
         menu={{ items: menuItems }}
         trigger={["click"]}
@@ -412,10 +526,18 @@ function buildRouteTitle(
   bindPort: number,
   listenerIndex: number,
   confirmDelete: ConfirmDeleteFn,
+  onAddRouteBackend: (port: number, li: number, ri: number, isTcp: boolean) => void,
+  onAddRoutePolicy: (port: number, li: number, ri: number, isTcp: boolean, policyType: string) => void,
 ): ReactNode {
   const routeSeg = rn.isTcp ? "tcproute" : "route";
   const routePath = `/traffic3/bind/${bindPort}/listener/${listenerIndex}/${routeSeg}/${rn.categoryIndex}`;
   const listenerPath = `/traffic3/bind/${bindPort}/listener/${listenerIndex}`;
+
+  // Check which policy types already exist
+  const existingPolicyTypes = new Set(rn.policies.map(p => p.policyType));
+  const hasCors = existingPolicyTypes.has('cors');
+  const hasRequestHeaderModifier = existingPolicyTypes.has('requestHeaderModifier');
+  const hasResponseHeaderModifier = existingPolicyTypes.has('responseHeaderModifier');
 
   const menuItems: MenuProps["items"] = [
     {
@@ -425,6 +547,51 @@ function buildRouteTitle(
       onClick: ({ domEvent }) => {
         domEvent.stopPropagation();
         navigate(routePath + "?edit=true");
+      },
+    },
+    {
+      key: "addBackend",
+      label: "Add Backend",
+      icon: <PlusOutlined />,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        onAddRouteBackend(bindPort, listenerIndex, rn.categoryIndex, rn.isTcp);
+      },
+    },
+    {
+      key: "addCors",
+      label: hasCors ? "CORS policy already exists" : "Add CORS Policy",
+      icon: <PlusOutlined />,
+      disabled: hasCors,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        if (!hasCors) {
+          onAddRoutePolicy(bindPort, listenerIndex, rn.categoryIndex, rn.isTcp, 'cors');
+        }
+      },
+    },
+    {
+      key: "addRequestHeaderModifier",
+      label: hasRequestHeaderModifier ? "Request Header Modifier already exists" : "Add Request Header Modifier",
+      icon: <PlusOutlined />,
+      disabled: hasRequestHeaderModifier,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        if (!hasRequestHeaderModifier) {
+          onAddRoutePolicy(bindPort, listenerIndex, rn.categoryIndex, rn.isTcp, 'requestHeaderModifier');
+        }
+      },
+    },
+    {
+      key: "addResponseHeaderModifier",
+      label: hasResponseHeaderModifier ? "Response Header Modifier already exists" : "Add Response Header Modifier",
+      icon: <PlusOutlined />,
+      disabled: hasResponseHeaderModifier,
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        if (!hasResponseHeaderModifier) {
+          onAddRoutePolicy(bindPort, listenerIndex, rn.categoryIndex, rn.isTcp, 'responseHeaderModifier');
+        }
       },
     },
     { type: "divider" },
@@ -579,7 +746,19 @@ function buildTreeData(
     isTcp: boolean,
     parentPath: string,
   ) => void,
+  onDeleteRoutePolicy: (
+    port: number,
+    li: number,
+    ri: number,
+    isTcp: boolean,
+    policyType: string,
+    parentPath: string,
+  ) => void,
   confirmDelete: ConfirmDeleteFn,
+  onAddListener: (port: number) => void,
+  onAddRoute: (port: number, li: number, isTcp: boolean) => void,
+  onAddRouteBackend: (port: number, li: number, ri: number, isTcp: boolean) => void,
+  onAddRoutePolicy: (port: number, li: number, ri: number, isTcp: boolean, policyType: string) => void,
   onEditLLM: () => void,
   onDeleteLLM: () => void,
   onEditMCP: () => void,
@@ -638,7 +817,7 @@ function buildTreeData(
   // Add binds
   const bindNodes = hierarchy.binds.map((bind) => ({
     key: `bind-${bind.bind.port}`,
-    title: buildBindTitle(bind, navigate, onDeleteBind, confirmDelete),
+    title: buildBindTitle(bind, navigate, onDeleteBind, confirmDelete, onAddListener),
     selectable: true,
     children: bind.listeners.map((listener, li) => ({
       key: `listener-${bind.bind.port}-${li}`,
@@ -649,33 +828,62 @@ function buildTreeData(
         bind.bind.port,
         li,
         confirmDelete,
+        onAddRoute,
       ),
       selectable: true,
-      children: listener.routes.map((route) => ({
-        key: `route-${bind.bind.port}-${li}-${route.isTcp ? "tcp" : "http"}-${route.categoryIndex}`,
-        title: buildRouteTitle(
-          route,
-          navigate,
-          onDeleteRoute,
-          bind.bind.port,
-          li,
-          confirmDelete,
-        ),
-        selectable: true,
-        children: route.backends.map((backend) => ({
-          key: `backend-${bind.bind.port}-${li}-${route.categoryIndex}-${backend.backendIndex}`,
-          title: buildBackendTitle(
-            backend,
+      children: listener.routes.map((route) => {
+        const children: DataNode[] = [];
+
+        // Add backends
+        route.backends.forEach((backend) => {
+          children.push({
+            key: `backend-${bind.bind.port}-${li}-${route.categoryIndex}-${backend.backendIndex}`,
+            title: buildBackendTitle(
+              backend,
+              navigate,
+              onDeleteBackend,
+              bind.bind.port,
+              li,
+              route.categoryIndex,
+              confirmDelete,
+            ),
+            selectable: true,
+          });
+        });
+
+        // Add policies if they exist
+        route.policies.forEach((policy) => {
+          children.push({
+            key: `policy-${bind.bind.port}-${li}-${route.categoryIndex}-${policy.policyType}`,
+            title: buildPolicyTitle(
+              policy,
+              navigate,
+              onDeleteRoutePolicy,
+              bind.bind.port,
+              li,
+              route.categoryIndex,
+              confirmDelete,
+            ),
+            selectable: true,
+          });
+        });
+
+        return {
+          key: `route-${bind.bind.port}-${li}-${route.isTcp ? "tcp" : "http"}-${route.categoryIndex}`,
+          title: buildRouteTitle(
+            route,
             navigate,
-            onDeleteBackend,
+            onDeleteRoute,
             bind.bind.port,
             li,
-            route.categoryIndex,
             confirmDelete,
+            onAddRouteBackend,
+            onAddRoutePolicy,
           ),
           selectable: true,
-        })),
-      })),
+          children,
+        };
+      }),
     })),
   }));
 
@@ -792,6 +1000,283 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
     [mutate, navigate],
   );
 
+  // Handler for adding a new listener to a bind
+  const handleAddListener = useCallback(async (port: number) => {
+    try {
+      const newListener = {
+        name: "listener",
+        protocol: "HTTP" as const,
+        hostname: "*",
+        routes: [],
+      };
+      await api.createListener(port, newListener);
+      toast.success("Listener created successfully");
+
+      // Wait for config to refresh and get the updated data
+      const freshConfig = await mutate();
+
+      // Find the index of the newly created listener from fresh data
+      const bind = freshConfig?.binds?.find((b: any) => b.port === port);
+      const listenerIndex = bind ? bind.listeners.length - 1 : 0;
+      navigate(`/traffic3/bind/${port}/listener/${listenerIndex}?edit=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create listener");
+    }
+  }, [mutate, navigate]);
+
+  // Handler for adding a new route to a listener
+  const handleAddRoute = useCallback(async (port: number, li: number, isTcp: boolean) => {
+    try {
+      // Get the current listener to determine the route count
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) {
+        throw new Error(`Bind with port ${port} not found`);
+      }
+
+      const listener = bind.bind.listeners[li];
+      if (!listener) {
+        throw new Error(`Listener at index ${li} not found`);
+      }
+
+      const newRoute = {
+        name: "route",
+        hostnames: [],
+        matches: [{ path: { pathPrefix: "/" } }],
+        backends: [],
+      };
+
+      // Manually add the route to the correct array
+      const updatedListener = { ...listener };
+      if (isTcp) {
+        if (!updatedListener.tcpRoutes) {
+          updatedListener.tcpRoutes = [];
+        }
+        updatedListener.tcpRoutes.push(newRoute as any);
+      } else {
+        if (!updatedListener.routes) {
+          updatedListener.routes = [];
+        }
+        updatedListener.routes.push(newRoute as any);
+      }
+
+      // Update the listener
+      await api.updateListenerByIndex(port, li, updatedListener);
+
+      toast.success(isTcp ? "TCP route created successfully" : "Route created successfully");
+
+      // Wait for config to refresh and get the updated data
+      const freshConfig = await mutate();
+
+      // Find the index from fresh data
+      const freshBind = freshConfig?.binds?.find((b: any) => b.port === port);
+      const freshListener = freshBind?.listeners?.[li];
+      const routeIndex = isTcp
+        ? (freshListener?.tcpRoutes?.length ?? 1) - 1
+        : (freshListener?.routes?.length ?? 1) - 1;
+      const routeSeg = isTcp ? "tcproute" : "route";
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${routeIndex}?edit=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create route");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
+  // Handler for adding a new backend to a route
+  const handleAddRouteBackend = useCallback(async (port: number, li: number, ri: number, isTcp: boolean) => {
+    try {
+      // Get the current route
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) {
+        throw new Error(`Bind with port ${port} not found`);
+      }
+
+      const listener = bind.bind.listeners[li];
+      if (!listener) {
+        throw new Error(`Listener at index ${li} not found`);
+      }
+
+      const route = isTcp
+        ? listener.tcpRoutes?.[ri]
+        : listener.routes?.[ri];
+
+      if (!route) {
+        throw new Error(`Route at index ${ri} not found`);
+      }
+
+      // Create new backend WITHOUT backendType - that's a UI-only field
+      // The backend needs the actual backend type field (service, host, etc.)
+      const newBackend = {
+        service: {
+          name: {
+            namespace: "default",
+            hostname: "service",
+          },
+          port: 8080,
+        },
+        weight: 1,
+      };
+
+      // Add backend to route
+      const updatedRoute = { ...route };
+      if (!updatedRoute.backends) {
+        updatedRoute.backends = [];
+      }
+
+      // Clean all existing backends by applying backend transform
+      // This removes UI-only fields like backendType and invalid fields like tls on service backends
+      const cleanedBackends = (updatedRoute.backends || []).map((backend: any) => {
+        // Import the transform function from backendForm
+        const { transformBeforeSubmit } = forms.backend;
+        return transformBeforeSubmit ? transformBeforeSubmit(backend) : backend;
+      });
+
+      // Add the new backend to the cleaned list
+      cleanedBackends.push(newBackend);
+      updatedRoute.backends = cleanedBackends as any;
+
+      // Update the route
+      if (isTcp) {
+        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute as any);
+      } else {
+        await api.updateRouteByIndex(port, li, ri, updatedRoute as any);
+      }
+
+      toast.success("Backend created successfully");
+
+      // Wait for config to refresh and get the updated data
+      const freshConfig = await mutate();
+
+      // Find the index from fresh data
+      const freshBind = freshConfig?.binds?.find((b: any) => b.port === port);
+      const freshListener = freshBind?.listeners?.[li];
+      const freshRoute = isTcp
+        ? freshListener?.tcpRoutes?.[ri]
+        : freshListener?.routes?.[ri];
+      const backendIndex = (freshRoute?.backends?.length ?? 1) - 1;
+      const routeSeg = isTcp ? "tcproute" : "route";
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/backend/${backendIndex}?edit=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create backend");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
+  // Handler for adding a specific policy type to a route
+  const handleAddRoutePolicy = useCallback(async (port: number, li: number, ri: number, isTcp: boolean, policyType: string) => {
+    try {
+      // Get the current route
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) {
+        throw new Error(`Bind with port ${port} not found`);
+      }
+
+      const listener = bind.bind.listeners[li];
+      if (!listener) {
+        throw new Error(`Listener at index ${li} not found`);
+      }
+
+      const route = isTcp
+        ? listener.tcpRoutes?.[ri]
+        : listener.routes?.[ri];
+
+      if (!route) {
+        throw new Error(`Route at index ${ri} not found`);
+      }
+
+      // Get existing policies object or create new one
+      const currentPolicies = (route.policies && typeof route.policies === 'object') ? route.policies : {};
+
+      // Create a minimal policy config for the specific type
+      const newPolicyConfig = {};
+
+      // Update the route with the new policy type
+      const updatedRoute = {
+        ...route,
+        policies: {
+          ...currentPolicies,
+          [policyType]: newPolicyConfig,
+        }
+      };
+
+      // Update the route
+      if (isTcp) {
+        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute as any);
+      } else {
+        await api.updateRouteByIndex(port, li, ri, updatedRoute as any);
+      }
+
+      // Format policy type for display
+      const displayName = policyType
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+
+      toast.success(`${displayName} policy created successfully`);
+
+      // Wait for config to refresh
+      await mutate();
+
+      // Navigate to the policy edit page
+      const routeSeg = isTcp ? "tcproute" : "route";
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/policy/${policyType}?edit=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create policy");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
+  // Handler for deleting a specific policy type from a route
+  const handleDeleteRoutePolicy = useCallback(async (port: number, li: number, ri: number, isTcp: boolean, policyType: string, parentPath: string) => {
+    try {
+      // Get the current route
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) {
+        throw new Error(`Bind with port ${port} not found`);
+      }
+
+      const listener = bind.bind.listeners[li];
+      if (!listener) {
+        throw new Error(`Listener at index ${li} not found`);
+      }
+
+      const route = isTcp
+        ? listener.tcpRoutes?.[ri]
+        : listener.routes?.[ri];
+
+      if (!route) {
+        throw new Error(`Route at index ${ri} not found`);
+      }
+
+      // Get existing policies
+      const currentPolicies = (route.policies && typeof route.policies === 'object') ? route.policies : {};
+
+      // Remove the specific policy type
+      const { [policyType]: removed, ...remainingPolicies } = currentPolicies as Record<string, unknown>;
+
+      // Update the route with remaining policies (or null if none left)
+      const updatedRoute = {
+        ...route,
+        policies: Object.keys(remainingPolicies).length > 0 ? remainingPolicies : null,
+      };
+
+      // Update the route
+      if (isTcp) {
+        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute as any);
+      } else {
+        await api.updateRouteByIndex(port, li, ri, updatedRoute as any);
+      }
+
+      // Format policy type for display
+      const displayName = policyType
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+
+      toast.success(`${displayName} policy deleted`);
+      mutate();
+      navigate(parentPath);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete policy");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
   // Handlers for editing top-level items
   const handleEditLLM = useCallback(() => {
     setDrawerTarget({ type: "llm", initialData: hierarchy.llm as Record<string, unknown> });
@@ -859,7 +1344,12 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
         handleDeleteListener,
         handleDeleteRoute,
         handleDeleteBackend,
+        handleDeleteRoutePolicy,
         confirmDelete,
+        handleAddListener,
+        handleAddRoute,
+        handleAddRouteBackend,
+        handleAddRoutePolicy,
         handleEditLLM,
         handleDeleteLLM,
         handleEditMCP,
@@ -874,7 +1364,12 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
       handleDeleteListener,
       handleDeleteRoute,
       handleDeleteBackend,
+      handleDeleteRoutePolicy,
       confirmDelete,
+      handleAddListener,
+      handleAddRoute,
+      handleAddRouteBackend,
+      handleAddRoutePolicy,
       handleEditLLM,
       handleDeleteLLM,
       handleEditMCP,

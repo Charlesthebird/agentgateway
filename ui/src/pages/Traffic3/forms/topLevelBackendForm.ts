@@ -67,3 +67,10 @@ export function isFullLocalBackend(data: unknown): data is FullLocalBackend {
     "host" in data
   );
 }
+
+/**
+ * Transform function - no transformation needed
+ */
+export function transformBeforeSubmit(data: unknown): unknown {
+  return data;
+}

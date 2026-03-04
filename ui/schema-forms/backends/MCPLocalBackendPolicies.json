@@ -2,12 +2,95 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "http": {
-      "description": "Settings for handling incoming HTTP requests.",
+    "requestHeaderModifier": {
+      "description": "Headers to be modified in the request.",
       "anyOf": [
         {
-          "$ref": "#/$defs/HTTP2",
-          "title": "HTTP2"
+          "$ref": "#/$defs/HeaderModifier",
+          "title": "Header Modifier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Request Header Modifier"
+    },
+    "responseHeaderModifier": {
+      "description": "Headers to be modified in the response.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HeaderModifier",
+          "title": "Header Modifier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Response Header Modifier"
+    },
+    "requestRedirect": {
+      "description": "Directly respond to the request with a redirect.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RequestRedirect",
+          "title": "Request Redirect"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Request Redirect"
+    },
+    "transformations": {
+      "description": "Modify requests and responses sent to and from the backend.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalTransformationConfig",
+          "title": "Local Transformation Config"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transformations"
+    },
+    "backendTLS": {
+      "description": "Send TLS to the backend.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LocalBackendTLS",
+          "title": "Local Backend TLS"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Backend TLS"
+    },
+    "backendAuth": {
+      "description": "Authenticate to the backend.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BackendAuth",
+          "title": "Backend Auth"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Backend Auth"
+    },
+    "http": {
+      "description": "Specify HTTP settings for the backend",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HTTP",
+          "title": "HTTP"
         },
         {
           "type": "null"
@@ -16,26 +99,12 @@
       "default": null,
       "title": "Http"
     },
-    "tls": {
-      "description": "Settings for handling incoming TLS connections.",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TLS",
-          "title": "TLS"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Tls"
-    },
     "tcp": {
-      "description": "Settings for handling incoming TCP connections.",
+      "description": "Specify TCP settings for the backend",
       "anyOf": [
         {
-          "$ref": "#/$defs/TCP2",
-          "title": "TCP2"
+          "$ref": "#/$defs/TCP",
+          "title": "TCP"
         },
         {
           "type": "null"
@@ -44,528 +113,24 @@
       "default": null,
       "title": "Tcp"
     },
-    "accessLog": {
-      "description": "Settings for request access logs.",
+    "mcpAuthorization": {
+      "description": "Authorization policies for MCP access.",
       "anyOf": [
         {
-          "$ref": "#/$defs/LoggingPolicy",
-          "title": "Logging Policy"
+          "$ref": "#/$defs/McpAuthorization",
+          "title": "Mcp Authorization"
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "title": "Access Log"
-    },
-    "tracing": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TracingConfig",
-          "title": "Tracing Config"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Tracing"
+      "title": "Mcp Authorization"
     }
   },
   "additionalProperties": false,
-  "title": "Local Frontend Policies",
+  "title": "MCP Local Backend Policies",
   "$defs": {
-    "HTTP2": {
-      "type": "object",
-      "properties": {
-        "maxBufferSize": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 2097152,
-          "title": "Max Buffer Size"
-        },
-        "http1MaxHeaders": {
-          "description": "The maximum number of headers allowed in a request. Changing this value results in a performance\ndegradation, even if set to a lower value than the default (100)",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0,
-          "default": null,
-          "title": "Http1Max Headers"
-        },
-        "http1IdleTimeout": {
-          "type": "string",
-          "default": "10m0s",
-          "title": "Http1Idle Timeout"
-        },
-        "http2WindowSize": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0,
-          "default": null,
-          "title": "Http2Window Size"
-        },
-        "http2ConnectionWindowSize": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0,
-          "default": null,
-          "title": "Http2Connection Window Size"
-        },
-        "http2FrameSize": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0,
-          "default": null,
-          "title": "Http2Frame Size"
-        },
-        "http2KeepaliveInterval": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "title": "Http2Keepalive Interval"
-        },
-        "http2KeepaliveTimeout": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "title": "Http2Keepalive Timeout"
-        }
-      },
-      "additionalProperties": false,
-      "title": "HTTP2"
-    },
-    "TLS": {
-      "type": "object",
-      "properties": {
-        "handshakeTimeout": {
-          "type": "string",
-          "default": "15s",
-          "title": "Handshake Timeout"
-        },
-        "alpn": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 255
-            }
-          },
-          "default": null,
-          "title": "Alpn"
-        },
-        "minVersion": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TLSVersion",
-              "title": "TLS Version"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Min Version"
-        },
-        "maxVersion": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TLSVersion",
-              "title": "TLS Version"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Max Version"
-        },
-        "cipherSuites": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "title": "Cipher Suites"
-        }
-      },
-      "additionalProperties": false,
-      "title": "TLS"
-    },
-    "TLSVersion": {
-      "type": "string",
-      "title": "TLS Version",
-      "oneOf": [
-        {
-          "const": "TLS_V1_0",
-          "title": "TLS_V1_0"
-        },
-        {
-          "const": "TLS_V1_1",
-          "title": "TLS_V1_1"
-        },
-        {
-          "const": "TLS_V1_2",
-          "title": "TLS_V1_2"
-        },
-        {
-          "const": "TLS_V1_3",
-          "title": "TLS_V1_3"
-        }
-      ]
-    },
-    "TCP2": {
-      "type": "object",
-      "properties": {
-        "keepalives": {
-          "$ref": "#/$defs/KeepaliveConfig",
-          "title": "Keepalives"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "keepalives"
-      ],
-      "title": "TCP2"
-    },
-    "KeepaliveConfig": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": true,
-          "title": "Enabled"
-        },
-        "time": {
-          "type": "string",
-          "default": "3m0s",
-          "title": "Time"
-        },
-        "interval": {
-          "type": "string",
-          "default": "3m0s",
-          "title": "Interval"
-        },
-        "retries": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 9,
-          "title": "Retries"
-        }
-      },
-      "additionalProperties": false,
-      "title": "Keepalive Config"
-    },
-    "LoggingPolicy": {
-      "type": "object",
-      "properties": {
-        "filter": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Expression",
-              "title": "Expression"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Filter"
-        },
-        "add": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Add"
-        },
-        "remove": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          },
-          "title": "Remove"
-        }
-      },
-      "additionalProperties": false,
-      "title": "Logging Policy"
-    },
-    "Expression": {
-      "type": "string",
-      "title": "Expression"
-    },
-    "TracingConfig": {
-      "description": "Configuration for dynamic tracing policy",
-      "type": "object",
-      "properties": {
-        "policies": {
-          "description": "Policies to connect to the backend",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SimpleLocalBackendPolicies",
-              "title": "Simple Local Backend Policies"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Policies"
-        },
-        "attributes": {
-          "description": "Span attributes to add, keyed by attribute name.",
-          "$ref": "#/$defs/OrderedStringMap_Expression",
-          "default": {},
-          "title": "Attributes"
-        },
-        "resources": {
-          "description": "Resource attributes to add to the tracer provider (OTel `Resource`).\nThis can be used to set things like `service.name` dynamically.",
-          "$ref": "#/$defs/OrderedStringMap_Expression",
-          "default": {},
-          "title": "Resources"
-        },
-        "remove": {
-          "description": "Attribute keys to remove from the emitted span attributes.\n\nThis is applied before `attributes` are evaluated/added, so it can be used to drop\ndefault attributes or avoid duplication.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [],
-          "title": "Remove"
-        },
-        "randomSampling": {
-          "description": "Optional per-policy override for random sampling. If set, overrides global config for\nrequests that use this frontend policy.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Expression",
-              "title": "Expression"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Random Sampling"
-        },
-        "clientSampling": {
-          "description": "Optional per-policy override for client sampling. If set, overrides global config for\nrequests that use this frontend policy.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Expression",
-              "title": "Expression"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Client Sampling"
-        },
-        "path": {
-          "type": "string",
-          "default": "/v1/traces",
-          "title": "Path",
-          "description": "URL path match condition"
-        },
-        "protocol": {
-          "$ref": "#/$defs/TracingProtocol",
-          "default": "grpc",
-          "title": "Protocol",
-          "description": "Communication protocol"
-        }
-      },
-      "oneOf": [
-        {
-          "description": "Service reference. Service must be defined in the top level services list.",
-          "type": "object",
-          "properties": {
-            "service": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "$ref": "#/$defs/NamespacedHostname"
-                },
-                "port": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 65535
-                }
-              },
-              "additionalProperties": false,
-              "required": [
-                "name",
-                "port"
-              ]
-            }
-          },
-          "required": [
-            "service"
-          ],
-          "title": "Service"
-        },
-        {
-          "description": "Hostname or IP address",
-          "type": "object",
-          "properties": {
-            "host": {
-              "description": "Hostname or IP address",
-              "type": "string"
-            }
-          },
-          "required": [
-            "host"
-          ],
-          "title": "Host"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "backend": {
-              "description": "Explicit backend reference. Backend must be defined in the top level backends list",
-              "type": "string"
-            }
-          },
-          "required": [
-            "backend"
-          ],
-          "title": "Backend"
-        }
-      ],
-      "title": "Tracing Config"
-    },
-    "SimpleLocalBackendPolicies": {
-      "type": "object",
-      "properties": {
-        "requestHeaderModifier": {
-          "description": "Headers to be modified in the request.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/HeaderModifier",
-              "title": "Header Modifier"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Request Header Modifier"
-        },
-        "responseHeaderModifier": {
-          "description": "Headers to be modified in the response.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/HeaderModifier",
-              "title": "Header Modifier"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Response Header Modifier"
-        },
-        "requestRedirect": {
-          "description": "Directly respond to the request with a redirect.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/RequestRedirect",
-              "title": "Request Redirect"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Request Redirect"
-        },
-        "transformations": {
-          "description": "Modify requests and responses sent to and from the backend.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/LocalTransformationConfig",
-              "title": "Local Transformation Config"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Transformations"
-        },
-        "backendTLS": {
-          "description": "Send TLS to the backend.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/LocalBackendTLS",
-              "title": "Local Backend TLS"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Backend TLS"
-        },
-        "backendAuth": {
-          "description": "Authenticate to the backend.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/BackendAuth",
-              "title": "Backend Auth"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Backend Auth"
-        },
-        "http": {
-          "description": "Specify HTTP settings for the backend",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/HTTP",
-              "title": "HTTP"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Http"
-        },
-        "tcp": {
-          "description": "Specify TCP settings for the backend",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TCP",
-              "title": "TCP"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Tcp"
-        }
-      },
-      "additionalProperties": false,
-      "title": "Simple Local Backend Policies"
-    },
     "HeaderModifier": {
       "type": "object",
       "properties": {
@@ -1223,6 +788,34 @@
       ],
       "title": "TCP"
     },
+    "KeepaliveConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "title": "Enabled"
+        },
+        "time": {
+          "type": "string",
+          "default": "3m0s",
+          "title": "Time"
+        },
+        "interval": {
+          "type": "string",
+          "default": "3m0s",
+          "title": "Interval"
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 9,
+          "title": "Retries"
+        }
+      },
+      "additionalProperties": false,
+      "title": "Keepalive Config"
+    },
     "Duration": {
       "type": "object",
       "properties": {
@@ -1243,32 +836,27 @@
       ],
       "title": "Duration"
     },
-    "OrderedStringMap_Expression": {
+    "McpAuthorization": {
+      "$ref": "#/$defs/RuleSet",
+      "title": "Mcp Authorization"
+    },
+    "RuleSet": {
       "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/Expression"
-      },
-      "title": "Ordered String Map_Expression"
-    },
-    "TracingProtocol": {
-      "type": "string",
-      "title": "Tracing Protocol",
-      "oneOf": [
-        {
-          "const": "grpc",
-          "title": "Grpc"
-        },
-        {
-          "const": "http",
-          "title": "Http"
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Rules"
         }
-      ]
-    },
-    "NamespacedHostname": {
-      "type": "string",
-      "pattern": "^[^/]+/[^/]+$",
-      "description": "Service name in \"namespace/hostname\" format (e.g. \"default/my-service\")"
+      },
+      "additionalProperties": false,
+      "required": [
+        "rules"
+      ],
+      "title": "Rule Set"
     }
   },
-  "description": "Local Frontend Policies"
+  "description": "MCP Local Backend Policies connection"
 }

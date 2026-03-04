@@ -11,6 +11,10 @@ import * as listenerForm from "./listenerForm";
 import * as routeForm from "./routeForm";
 import * as backendForm from "./backendForm";
 import * as policyForm from "./policyForm";
+import * as routePolicyForm from "./routePolicyForm";
+import * as corsPolicyForm from "./corsPolicyForm";
+import * as requestHeaderModifierPolicyForm from "./requestHeaderModifierPolicyForm";
+import * as responseHeaderModifierPolicyForm from "./responseHeaderModifierPolicyForm";
 import * as topLevelBackendForm from "./topLevelBackendForm";
 import * as llmForm from "./llmForm";
 import * as mcpForm from "./mcpForm";
@@ -22,6 +26,10 @@ export const forms = {
   route: routeForm,
   backend: backendForm,
   policy: policyForm,
+  routePolicy: routePolicyForm,
+  corsPolicy: corsPolicyForm,
+  requestHeaderModifierPolicy: requestHeaderModifierPolicyForm,
+  responseHeaderModifierPolicy: responseHeaderModifierPolicyForm,
   topLevelBackend: topLevelBackendForm,
   llm: llmForm,
   mcp: mcpForm,
@@ -48,6 +56,10 @@ export const resourceLabels: Record<ResourceType, { singular: string; plural: st
   route: { singular: "Route", plural: "Routes" },
   backend: { singular: "Backend", plural: "Backends" },
   policy: { singular: "Policy", plural: "Policies" },
+  routePolicy: { singular: "Route Policy", plural: "Route Policies" },
+  corsPolicy: { singular: "CORS Policy", plural: "CORS Policies" },
+  requestHeaderModifierPolicy: { singular: "Request Header Modifier", plural: "Request Header Modifiers" },
+  responseHeaderModifierPolicy: { singular: "Response Header Modifier", plural: "Response Header Modifiers" },
   topLevelBackend: { singular: "Backend", plural: "Backends" },
   llm: { singular: "LLM Config", plural: "LLM Configs" },
   mcp: { singular: "MCP Config", plural: "MCP Configs" },

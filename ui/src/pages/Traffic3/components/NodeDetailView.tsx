@@ -16,6 +16,7 @@ import type {
   BindNode,
   ListenerNode,
   RouteNode,
+  PolicyNode,
 } from "../hooks/useTraffic3Hierarchy";
 import type { useTraffic3Hierarchy } from "../hooks/useTraffic3Hierarchy";
 import type { UrlParams } from "../Traffic3Page";
@@ -108,8 +109,15 @@ function findSelectedNode(
       listener: ListenerNode;
       bind: BindNode;
     }
+  | {
+      type: "policy";
+      node: PolicyNode;
+      route: RouteNode;
+      listener: ListenerNode;
+      bind: BindNode;
+    }
   | null {
-  const { port, li, ri, bi, isTcpRoute } = urlParams;
+  const { port, li, ri, bi, isTcpRoute, policyType } = urlParams;
   const bindNode = hierarchy.binds.find((b) => b.bind.port === port);
   if (!bindNode) return null;
 
@@ -129,7 +137,7 @@ function findSelectedNode(
   );
   if (!routeNode) return null;
 
-  if (bi === undefined) {
+  if (bi === undefined && !policyType) {
     return {
       type: "route",
       node: routeNode,
@@ -138,7 +146,19 @@ function findSelectedNode(
     };
   }
 
-  const backendNode = routeNode.backends[bi];
+  if (policyType) {
+    const policyNode = routeNode.policies.find(p => p.policyType === policyType);
+    if (!policyNode) return null;
+    return {
+      type: "policy",
+      node: policyNode,
+      route: routeNode,
+      listener: listenerNode,
+      bind: bindNode,
+    };
+  }
+
+  const backendNode = routeNode.backends[bi!];
   if (!backendNode) return null;
 
   return {
@@ -184,6 +204,8 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         setFormData(sel.node.route as unknown as Record<string, unknown>);
       } else if (sel.type === "backend") {
         setFormData(sel.node.backend as Record<string, unknown>);
+      } else if (sel.type === "policy") {
+        setFormData(sel.node.policy as Record<string, unknown>);
       }
     }
     return sel;
@@ -201,6 +223,8 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         setFormData(selected.node.route as unknown as Record<string, unknown>);
       } else if (selected.type === "backend") {
         setFormData(selected.node.backend as Record<string, unknown>);
+      } else if (selected.type === "policy") {
+        setFormData(selected.node.policy as Record<string, unknown>);
       }
     }
   }, [isEditing, selected]);
@@ -233,21 +257,46 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
     try {
       const { port, li, ri, bi, isTcpRoute } = urlParams;
 
+      // Apply form-specific transformation if available
+      const form = forms[selected.type] as any;
+      let dataToSave = fd;
+      if (form?.transformBeforeSubmit) {
+        dataToSave = form.transformBeforeSubmit(fd) as Record<string, unknown>;
+      }
+
       if (selected.type === "bind") {
-        await api.updateBind(port, fd);
+        await api.updateBind(port, dataToSave);
       } else if (selected.type === "listener") {
-        await api.updateListenerByIndex(port, li!, fd);
+        await api.updateListenerByIndex(port, li!, dataToSave);
       } else if (selected.type === "route") {
         if (isTcpRoute) {
-          await api.updateTCPRouteByIndex(port, li!, ri!, fd);
+          await api.updateTCPRouteByIndex(port, li!, ri!, dataToSave);
         } else {
-          await api.updateRouteByIndex(port, li!, ri!, fd);
+          await api.updateRouteByIndex(port, li!, ri!, dataToSave);
         }
       } else if (selected.type === "backend") {
         if (isTcpRoute) {
-          await api.updateTCPRouteBackendByIndex(port, li!, ri!, bi!, fd);
+          await api.updateTCPRouteBackendByIndex(port, li!, ri!, bi!, dataToSave);
         } else {
-          await api.updateRouteBackendByIndex(port, li!, ri!, bi!, fd);
+          await api.updateRouteBackendByIndex(port, li!, ri!, bi!, dataToSave);
+        }
+      } else if (selected.type === "policy") {
+        // For policy, update the specific policy type in the parent route's policies field
+        const currentPolicies = (selected.route.route.policies && typeof selected.route.route.policies === 'object')
+          ? selected.route.route.policies
+          : {};
+
+        const updatedRoute = {
+          ...selected.route.route,
+          policies: {
+            ...currentPolicies,
+            [selected.node.policyType]: dataToSave,
+          },
+        };
+        if (isTcpRoute) {
+          await api.updateTCPRouteByIndex(port, li!, ri!, updatedRoute as any);
+        } else {
+          await api.updateRouteByIndex(port, li!, ri!, updatedRoute as any);
         }
       }
 
@@ -257,9 +306,11 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       mutate();
       navigate(location.pathname); // Remove ?edit=true
     } catch (e: unknown) {
-      toast.error(
-        e instanceof Error ? e.message : "Failed to save changes",
-      );
+      const errorMessage =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "Failed to save changes";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -292,6 +343,26 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         navigate(
           `/traffic3/bind/${port}/listener/${li}/${isTcpRoute ? "tcproute" : "route"}/${ri}`,
         );
+      } else if (selected.type === "policy") {
+        // For policy, remove the specific policy type from the parent route
+        const currentPolicies = (selected.route.route.policies && typeof selected.route.route.policies === 'object')
+          ? selected.route.route.policies
+          : {};
+
+        const { [selected.node.policyType]: removed, ...remainingPolicies } = currentPolicies as Record<string, unknown>;
+
+        const updatedRoute = {
+          ...selected.route.route,
+          policies: Object.keys(remainingPolicies).length > 0 ? remainingPolicies : null,
+        };
+        if (isTcpRoute) {
+          await api.updateTCPRouteByIndex(port, li!, ri!, updatedRoute as any);
+        } else {
+          await api.updateRouteByIndex(port, li!, ri!, updatedRoute as any);
+        }
+        navigate(
+          `/traffic3/bind/${port}/listener/${li}/${isTcpRoute ? "tcproute" : "route"}/${ri}`,
+        );
       }
 
       toast.success(
@@ -299,9 +370,11 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       );
       mutate();
     } catch (e: unknown) {
-      toast.error(
-        e instanceof Error ? e.message : "Failed to delete",
-      );
+      const errorMessage =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "Failed to delete";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -310,6 +383,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   const handleSubmit = ({ formData: fd }: { formData?: Record<string, unknown> }) => {
     if (fd) {
       handleSave(fd);
+    }
+  };
+
+  const handleError = (errors: any) => {
+    // Show first validation error in toast
+    if (errors && errors.length > 0) {
+      const firstError = errors[0];
+      const errorMessage = firstError.stack || firstError.message || "Validation error";
+      toast.error(errorMessage);
     }
   };
 
@@ -349,6 +431,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
 
         <SectionTitle>Bind Details</SectionTitle>
         <Form
+          key={isEditing ? 'editing' : 'viewing'}
           schema={forms.bind.schema}
           uiSchema={forms.bind.uiSchema}
           formData={formData}
@@ -356,6 +439,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           disabled={!isEditing || saving}
           onChange={({ formData: fd }) => setFormData(fd)}
           onSubmit={handleSubmit}
+          onError={handleError}
         >
           {isEditing && (
             <FormActions>
@@ -436,6 +520,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
 
         <SectionTitle>Listener Details</SectionTitle>
         <Form
+          key={isEditing ? 'editing' : 'viewing'}
           schema={forms.listener.schema}
           uiSchema={forms.listener.uiSchema}
           formData={formData}
@@ -443,6 +528,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           disabled={!isEditing || saving}
           onChange={({ formData: fd }) => setFormData(fd)}
           onSubmit={handleSubmit}
+          onError={handleError}
         >
           {isEditing && (
             <FormActions>
@@ -523,6 +609,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
 
         <SectionTitle>Route Details</SectionTitle>
         <Form
+          key={isEditing ? 'editing' : 'viewing'}
           schema={forms.route.schema}
           uiSchema={forms.route.uiSchema}
           formData={formData}
@@ -530,6 +617,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           disabled={!isEditing || saving}
           onChange={({ formData: fd }) => setFormData(fd)}
           onSubmit={handleSubmit}
+          onError={handleError}
         >
           {isEditing && (
             <FormActions>
@@ -621,6 +709,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
 
         <SectionTitle>Backend Details</SectionTitle>
         <Form
+          key={isEditing ? 'editing' : 'viewing'}
           schema={forms.backend.schema}
           uiSchema={forms.backend.uiSchema}
           formData={formData}
@@ -628,11 +717,120 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           disabled={!isEditing || saving}
           onChange={({ formData: fd }) => setFormData(fd)}
           onSubmit={handleSubmit}
+          onError={handleError}
         >
           {isEditing && (
             <FormActions>
               <Popconfirm
                 title="Delete this backend?"
+                description="This cannot be undone."
+                onConfirm={handleDelete}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+              >
+                <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                  Delete
+                </Button>
+              </Popconfirm>
+              <Space>
+                <Button
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  Save Changes
+                </Button>
+              </Space>
+            </FormActions>
+          )}
+          {!isEditing && (
+            <FormActions>
+              <div />
+              <Button onClick={() => navigate("/traffic3")}>
+                Back to Overview
+              </Button>
+            </FormActions>
+          )}
+        </Form>
+      </Container>
+    );
+  }
+
+  if (selected.type === "policy") {
+    // Format policy type for display
+    const displayName = selected.node.policyType
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim();
+
+    return (
+      <Container>
+        <Header>
+          <TitleRow>
+            <TitleLeft>
+              <Title>
+                {isEditing ? "Edit: " : ""}{displayName}
+              </Title>
+              <TypeBadge>Policy</TypeBadge>
+            </TitleLeft>
+            {!isEditing && (
+              <Button
+                type="primary"
+                icon={<Edit2 size={14} />}
+                onClick={() => navigate(location.pathname + "?edit=true")}
+              >
+                Edit
+              </Button>
+            )}
+            {isEditing && (
+              <Button
+                icon={<X size={14} />}
+                onClick={() => navigate(location.pathname)}
+              >
+                Cancel
+              </Button>
+            )}
+          </TitleRow>
+          <Description>
+            Policy configuration for route "
+            {(selected.route.route.name as string | undefined) ?? "unnamed"}"
+          </Description>
+        </Header>
+
+        <SectionTitle>Policy Details</SectionTitle>
+        <Form
+          key={isEditing ? 'editing' : 'viewing'}
+          schema={
+            selected.node.policyType === 'cors'
+              ? forms.corsPolicy.schema
+              : selected.node.policyType === 'requestHeaderModifier'
+              ? forms.requestHeaderModifierPolicy.schema
+              : selected.node.policyType === 'responseHeaderModifier'
+              ? forms.responseHeaderModifierPolicy.schema
+              : forms.routePolicy.schema
+          }
+          uiSchema={
+            selected.node.policyType === 'cors'
+              ? forms.corsPolicy.uiSchema
+              : selected.node.policyType === 'requestHeaderModifier'
+              ? forms.requestHeaderModifierPolicy.uiSchema
+              : selected.node.policyType === 'responseHeaderModifier'
+              ? forms.responseHeaderModifierPolicy.uiSchema
+              : forms.routePolicy.uiSchema
+          }
+          formData={formData}
+          validator={validator}
+          disabled={!isEditing || saving}
+          onChange={({ formData: fd }) => setFormData(fd)}
+          onSubmit={handleSubmit}
+          onError={handleError}
+        >
+          {isEditing && (
+            <FormActions>
+              <Popconfirm
+                title="Delete this policy?"
                 description="This cannot be undone."
                 onConfirm={handleDelete}
                 okText="Delete"

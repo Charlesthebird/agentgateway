@@ -1,22 +1,55 @@
 binds:
-- port: 3001
+- port: 3002
+  tunnelProtocol: direct
   listeners:
   - routes:
-    - backends:
-      - mcp:
-          targets:
-          - name: everything
-            stdio:
-              cmd: npx
-              args:
-              - '@modelcontextprotocol/server-everything'
+    - hostnames: []
+      matches: []
+      backends:
+      - service:
+          name: asdf/asdfasdf
+          port: 22
+        weight: 1
+      - service:
+          name: default/service
+          port: 8080
+        weight: 1
+      name: yui
       policies:
         cors:
-          allowOrigins:
-          - '*'
           allowHeaders:
           - mcp-protocol-version
           - content-type
           - cache-control
+          allowMethods: []
+          allowOrigins:
+          - '*'
           exposeHeaders:
           - Mcp-Session-Id
+        responseHeaderModifier:
+          remove: []
+- port: 8080
+  tunnelProtocol: direct
+  listeners:
+  - protocol: HTTP
+    name: listener
+    hostname: '*'
+    routes:
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+      policies:
+        cors: {}
+        requestHeaderModifier: {}
+        responseHeaderModifier: {}
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+      policies:
+        cors: {}

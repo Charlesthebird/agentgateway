@@ -21,10 +21,10 @@
       "schemaFile": "SimpleLocalBackend.json"
     },
     {
-      "key": "LocalBackendPolicies",
-      "displayName": "Local Backend Policies",
-      "description": "Local Backend Policies connection",
-      "schemaFile": "LocalBackendPolicies.json"
+      "key": "SimpleLocalBackendPolicies",
+      "displayName": "Simple Local Backend Policies",
+      "description": "Simple Local Backend Policies connection",
+      "schemaFile": "SimpleLocalBackendPolicies.json"
     },
     {
       "key": "LocalBackendTLS",
@@ -51,10 +51,22 @@
       "schemaFile": "LocalMcpBackend.json"
     },
     {
+      "key": "MCPLocalBackendPolicies",
+      "displayName": "MCP Local Backend Policies",
+      "description": "MCP Local Backend Policies connection",
+      "schemaFile": "MCPLocalBackendPolicies.json"
+    },
+    {
       "key": "LocalAIBackend",
       "displayName": "Local AI Backend",
       "description": "Local AI Backend connection",
       "schemaFile": "LocalAIBackend.json"
+    },
+    {
+      "key": "LocalBackendPolicies",
+      "displayName": "Local Backend Policies",
+      "description": "Local Backend Policies connection",
+      "schemaFile": "LocalBackendPolicies.json"
     },
     {
       "key": "LocalTCPRouteBackend",

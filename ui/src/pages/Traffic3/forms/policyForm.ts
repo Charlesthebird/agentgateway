@@ -273,3 +273,10 @@ export function isLocalPolicy(data: unknown): data is LocalPolicy {
     "policy" in data
   );
 }
+
+/**
+ * Transform function - policies don't need transformation
+ */
+export function transformBeforeSubmit(data: unknown): unknown {
+  return data;
+}

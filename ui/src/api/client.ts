@@ -42,19 +42,33 @@ export async function apiFetch<T>(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorMessage = "";
+      const contentType = response.headers.get("content-type");
+
+      // Try to parse JSON error response first
+      if (contentType?.includes("application/json")) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || JSON.stringify(errorData);
+        } catch {
+          // Fall back to text if JSON parsing fails
+          errorMessage = await response.text();
+        }
+      } else {
+        errorMessage = await response.text();
+      }
 
       // Special handling for configuration errors
       if (response.status === 500) {
         throw createApiError(
-          `Server configuration error: ${errorText}`,
+          errorMessage || "Server configuration error",
           500,
           true,
         );
       }
 
       throw createApiError(
-        `API request failed: ${response.status} ${response.statusText} - ${errorText}`,
+        errorMessage || `API request failed: ${response.status} ${response.statusText}`,
         response.status,
       );
     }

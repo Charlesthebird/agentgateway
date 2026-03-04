@@ -129,6 +129,8 @@ function App() {
                 <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri" element={<Traffic3Page />} />
                 <Route path="/traffic3/bind/:port/listener/:li/route/:ri/backend/:bi" element={<Traffic3Page />} />
                 <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri/backend/:bi" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li/route/:ri/policy/:policyType" element={<Traffic3Page />} />
+                <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri/policy/:policyType" element={<Traffic3Page />} />
 
                 {/* CEL Playground */}
                 <Route path="/cel-playground" element={<CELPlaygroundPage />} />

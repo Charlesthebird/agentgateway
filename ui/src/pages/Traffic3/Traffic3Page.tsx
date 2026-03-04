@@ -127,19 +127,25 @@ export interface UrlParams {
   isTcpRoute: boolean;
   ri?: number;
   bi?: number;
+  policyType?: string;
 }
 
 function parseTraffic3Path(pathname: string): UrlParams | null {
   const m = pathname.match(
-    /\/traffic3\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+))?)?)?/,
+    /\/traffic3\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+)|\/policy\/([^/?]+))?)?)?/,
   );
   if (!m) return null;
+
+  const bi = m[5] !== undefined ? parseInt(m[5], 10) : undefined;
+  const policyType = m[6]; // Policy type like 'cors', 'requestHeaderModifier', etc.
+
   return {
     port: parseInt(m[1], 10),
     li: m[2] !== undefined ? parseInt(m[2], 10) : undefined,
     isTcpRoute: m[3] === "tcp",
     ri: m[4] !== undefined ? parseInt(m[4], 10) : undefined,
-    bi: m[5] !== undefined ? parseInt(m[5], 10) : undefined,
+    bi,
+    policyType,
   };
 }
 

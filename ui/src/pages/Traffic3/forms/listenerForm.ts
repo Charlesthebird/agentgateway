@@ -9,7 +9,7 @@ import type { LocalListener } from "../../../config";
 export const schema: RJSFSchema = {
   type: "object",
   required: [],
-  additionalProperties: true, // Allow fields not explicitly defined (like routes, tcpRoutes)
+  additionalProperties: false,
   properties: {
     name: {
       type: "string",
@@ -34,24 +34,46 @@ export const schema: RJSFSchema = {
       default: "HTTP",
       description: "Protocol for this listener",
     },
+    routes: {
+      type: "array",
+      title: "Routes",
+      items: {
+        type: "object",
+      },
+      default: [],
+    },
+    tcpRoutes: {
+      type: "array",
+      title: "TCP Routes",
+      items: {
+        type: "object",
+      },
+      default: [],
+    },
+    policies: {
+      type: "object",
+      title: "Gateway Policies",
+      description: "Policies applied at the gateway level for this listener",
+      additionalProperties: true,
+    },
   },
   dependencies: {
     protocol: {
       oneOf: [
         {
-          // HTTP, TCP, HBONE - no TLS required
+          // HTTP - no TLS, uses routes
           properties: {
-            protocol: { enum: ["HTTP", "TCP", "HBONE"] },
+            protocol: { const: "HTTP" },
           },
         },
         {
-          // HTTPS, TLS - TLS required
+          // HTTPS - requires TLS, uses routes
           properties: {
-            protocol: { enum: ["HTTPS", "TLS"] },
+            protocol: { const: "HTTPS" },
             tls: {
               type: "object",
               title: "TLS Configuration",
-              description: "Required for HTTPS/TLS protocols",
+              description: "Required for HTTPS protocol",
               properties: {
                 cert: {
                   type: "string",
@@ -96,6 +118,70 @@ export const schema: RJSFSchema = {
           },
           required: ["tls"],
         },
+        {
+          // TLS - requires TLS, uses tcpRoutes
+          properties: {
+            protocol: { const: "TLS" },
+            tls: {
+              type: "object",
+              title: "TLS Configuration",
+              description: "Required for TLS protocol",
+              properties: {
+                cert: {
+                  type: "string",
+                  title: "Certificate Path",
+                  description: "Path to TLS certificate file",
+                },
+                key: {
+                  type: "string",
+                  title: "Key Path",
+                  description: "Path to TLS private key file",
+                },
+                root: {
+                  type: "string",
+                  title: "Root CA Path",
+                  description: "Path to root CA certificate (for mutual TLS)",
+                },
+                cipherSuites: {
+                  type: "array",
+                  title: "Cipher Suites",
+                  description: "Allowed cipher suites (order preserved)",
+                  items: {
+                    type: "string",
+                  },
+                },
+                minTLSVersion: {
+                  type: "string",
+                  title: "Min TLS Version",
+                  enum: ["TLS_V1_0", "TLS_V1_1", "TLS_V1_2", "TLS_V1_3"],
+                  default: "TLS_V1_2",
+                  description: "Minimum TLS version",
+                },
+                maxTLSVersion: {
+                  type: "string",
+                  title: "Max TLS Version",
+                  enum: ["TLS_V1_0", "TLS_V1_1", "TLS_V1_2", "TLS_V1_3"],
+                  default: "TLS_V1_3",
+                  description: "Maximum TLS version",
+                },
+              },
+              required: ["cert", "key"],
+            },
+          },
+          required: ["tls"],
+        },
+        {
+          // TCP - no TLS, uses tcpRoutes
+          properties: {
+            protocol: { const: "TCP" },
+          },
+        },
+        {
+          // HBONE - no TLS, uses routes
+          properties: {
+            protocol: { const: "HBONE" },
+          },
+        },
       ],
     },
   },
@@ -107,8 +193,7 @@ export const schema: RJSFSchema = {
  */
 export const uiSchema: UiSchema = {
   "ui:title": "Listener Configuration",
-  "ui:description": "Configure listener settings for your gateway",
-  "ui:order": ["name", "namespace", "hostname", "protocol", "tls", "*"],
+  "ui:description": "Configure listener settings for your gateway. Routes are configured separately and will automatically attach to this listener.",
   name: {
     "ui:placeholder": "e.g., main-listener",
     "ui:help": "Optional unique identifier for this listener",
@@ -122,6 +207,7 @@ export const uiSchema: UiSchema = {
   },
   protocol: {
     "ui:widget": "select",
+    "ui:help": "HTTP/HTTPS for web traffic, TCP/TLS for raw TCP, HBONE for service mesh",
   },
   tls: {
     cert: {
@@ -147,6 +233,15 @@ export const uiSchema: UiSchema = {
       "ui:widget": "select",
     },
   },
+  routes: {
+    "ui:widget": "hidden",
+  },
+  tcpRoutes: {
+    "ui:widget": "hidden",
+  },
+  policies: {
+    "ui:help": "Advanced: Gateway-level policies (CORS, headers, etc.). See documentation for details.",
+  },
 };
 
 /**
@@ -162,4 +257,52 @@ export const defaultValues: Partial<LocalListener> = {
  */
 export function isLocalListener(data: unknown): data is LocalListener {
   return typeof data === "object" && data !== null;
+}
+
+/**
+ * Transform function to strip UI-only fields and protocol-specific fields before submission
+ * - HTTP/HTTPS/HBONE protocols use 'routes' and should not have 'tcpRoutes'
+ * - TCP/TLS protocols use 'tcpRoutes' and should not have 'routes'
+ * - Only HTTPS and TLS protocols should have 'tls' configuration
+ */
+export function transformBeforeSubmit(data: unknown): unknown {
+  if (typeof data !== "object" || data === null) {
+    return data;
+  }
+
+  const { protocol, routes, tcpRoutes, tls, ...rest } = data as Record<string, unknown> & {
+    protocol?: string;
+    routes?: unknown;
+    tcpRoutes?: unknown;
+    tls?: unknown;
+  };
+
+  const result: Record<string, unknown> = { ...rest };
+
+  // Add protocol
+  if (protocol !== undefined) {
+    result.protocol = protocol;
+  }
+
+  // Determine which route type to include based on protocol
+  if (protocol === "HTTP" || protocol === "HTTPS" || protocol === "HBONE") {
+    // HTTP-based protocols use routes
+    if (routes !== undefined && routes !== null) {
+      result.routes = routes;
+    }
+    // Don't include tcpRoutes
+  } else if (protocol === "TCP" || protocol === "TLS") {
+    // TCP-based protocols use tcpRoutes
+    if (tcpRoutes !== undefined && tcpRoutes !== null) {
+      result.tcpRoutes = tcpRoutes;
+    }
+    // Don't include routes
+  }
+
+  // Only include TLS for HTTPS and TLS protocols
+  if ((protocol === "HTTPS" || protocol === "TLS") && tls !== undefined && tls !== null) {
+    result.tls = tls;
+  }
+
+  return result;
 }

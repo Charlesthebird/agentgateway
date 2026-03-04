@@ -37,6 +37,7 @@ export function TopLevelDrawer({
     >
       {target && (
         <TopLevelEditForm
+          key={`${target.type}-${target.initialData ? 'edit' : 'new'}`}
           target={target}
           onSaved={() => {
             onSaved();

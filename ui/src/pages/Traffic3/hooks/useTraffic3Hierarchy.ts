@@ -27,6 +27,15 @@ export interface BackendNode {
   isTcpRoute: boolean;
 }
 
+export interface PolicyNode {
+  /** Policy type (e.g., 'cors', 'requestHeaderModifier', 'responseHeaderModifier') */
+  policyType: string;
+  /** Raw policy configuration for this type */
+  policy: unknown;
+  /** Whether this policy belongs to a TCP route */
+  isTcpRoute: boolean;
+}
+
 export interface RouteNode {
   /** Original route data */
   route: LocalRoute | LocalTCPRoute;
@@ -42,6 +51,8 @@ export interface RouteNode {
   validationErrors: ValidationError[];
   /** Inline backends attached to this route */
   backends: BackendNode[];
+  /** Policies attached to this route (array of policy types) */
+  policies: PolicyNode[];
 }
 
 export interface ListenerNode {
@@ -224,6 +235,15 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
               },
             );
 
+            // Create a PolicyNode for each policy type in route.policies
+            const policies: PolicyNode[] = route.policies && typeof route.policies === 'object' && !Array.isArray(route.policies)
+              ? Object.entries(route.policies).map(([policyType, policyConfig]) => ({
+                  policyType,
+                  policy: policyConfig,
+                  isTcpRoute: false,
+                }))
+              : [];
+
             return {
               route,
               isTcp: false,
@@ -233,6 +253,7 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
               listenerProtocol: listener.protocol,
               validationErrors: routeErrors,
               backends,
+              policies,
             };
           },
         );
@@ -254,6 +275,15 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
               },
             );
 
+            // Create a PolicyNode for each policy type in route.policies
+            const policies: PolicyNode[] = route.policies && typeof route.policies === 'object' && !Array.isArray(route.policies)
+              ? Object.entries(route.policies).map(([policyType, policyConfig]) => ({
+                  policyType,
+                  policy: policyConfig,
+                  isTcpRoute: true,
+                }))
+              : [];
+
             return {
               route,
               isTcp: true,
@@ -263,6 +293,7 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
               listenerProtocol: listener.protocol,
               validationErrors: routeErrors,
               backends,
+              policies,
             };
           },
         );

@@ -33,14 +33,29 @@ export function TopLevelEditForm({
     return <div>Form not found for type: {target.type}</div>;
   }
 
+  const handleError = (errors: any) => {
+    // Show first validation error in toast
+    if (errors && errors.length > 0) {
+      const firstError = errors[0];
+      const errorMessage = firstError.stack || firstError.message || "Validation error";
+      toast.error(errorMessage);
+    }
+  };
+
   const handleSubmit = async ({ formData: rawData }: any) => {
     setIsSaving(true);
     try {
+      // Apply form-specific transformation if available
+      let transformedData = rawData;
+      if (form.transformBeforeSubmit) {
+        transformedData = form.transformBeforeSubmit(rawData);
+      }
+
       // Determine which keys to preserve at top level for oneOf fields
-      const topLevelKeysToKeep = getTopLevelKeysToPreserve(target.type, rawData);
+      const topLevelKeysToKeep = getTopLevelKeysToPreserve(target.type, transformedData);
 
       // Strip form defaults (null values, empty arrays) except for specified keys
-      const cleanedData = (stripFormDefaults(rawData, topLevelKeysToKeep) || {}) as Record<string, unknown>;
+      const cleanedData = (stripFormDefaults(transformedData, topLevelKeysToKeep) || {}) as Record<string, unknown>;
 
       // Call appropriate API function based on type
       switch (target.type) {
@@ -69,9 +84,13 @@ export function TopLevelEditForm({
       }
 
       onSaved();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to save:", error);
-      toast.error(error.message || "Failed to save configuration");
+      const errorMessage =
+        error && typeof error === "object" && "message" in error && typeof error.message === "string"
+          ? error.message
+          : "Failed to save configuration";
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -85,6 +104,7 @@ export function TopLevelEditForm({
       validator={validator}
       onChange={(e) => setFormData(e.formData)}
       onSubmit={handleSubmit}
+      onError={handleError}
       disabled={isSaving}
     >
       <Space style={{ marginTop: 24 }}>

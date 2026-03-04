@@ -8,7 +8,7 @@ import type { LocalRoute } from "../../../config";
 export const schema: RJSFSchema = {
   type: "object",
   required: [],
-  additionalProperties: true, // Allow fields not explicitly defined
+  additionalProperties: false,
   properties: {
     name: {
       type: "string",
@@ -83,20 +83,14 @@ export const schema: RJSFSchema = {
         required: ["path"],
       },
     },
-    policies: {
-      type: "object",
-      title: "Policies",
-      description: "Route-level policies (advanced)",
-      additionalProperties: true,
-    },
     backends: {
       type: "array",
-      title: "Backends",
-      description: "Backend destinations for this route",
+      title: "Backend Destinations",
+      description: "List of backend services or hosts to route traffic to",
       items: {
         type: "object",
-        additionalProperties: true,
       },
+      default: [],
     },
   },
 };
@@ -142,6 +136,9 @@ export const uiSchema: UiSchema = {
       },
     },
   },
+  backends: {
+    "ui:widget": "hidden",
+  },
 };
 
 /**
@@ -162,4 +159,22 @@ export const defaultValues: Partial<LocalRoute> = {
  */
 export function isLocalRoute(data: unknown): data is LocalRoute {
   return typeof data === "object" && data !== null;
+}
+
+/**
+ * Transform function to strip UI-only fields before submission
+ * The backends and policies fields are managed separately and should not be included in route updates
+ */
+export function transformBeforeSubmit(data: unknown): unknown {
+  if (typeof data !== "object" || data === null) {
+    return data;
+  }
+
+  const { backends, policies, ...rest } = data as Record<string, unknown> & {
+    backends?: unknown;
+    policies?: unknown;
+  };
+
+  // Don't include backends or policies - they are managed separately
+  return rest;
 }

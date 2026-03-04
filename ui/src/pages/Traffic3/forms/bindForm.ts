@@ -8,7 +8,7 @@ import type { LocalBind } from "../../../config";
 export const schema: RJSFSchema = {
   type: "object",
   required: ["port"],
-  additionalProperties: true, // Allow fields not explicitly defined (like listeners)
+  additionalProperties: false,
   properties: {
     port: {
       type: "integer",
@@ -24,6 +24,14 @@ export const schema: RJSFSchema = {
       default: "direct",
       description: "Protocol for tunneling",
     },
+    listeners: {
+      type: "array",
+      title: "Listeners",
+      items: {
+        type: "object",
+      },
+      default: [],
+    },
   },
 };
 
@@ -32,7 +40,7 @@ export const schema: RJSFSchema = {
  */
 export const uiSchema: UiSchema = {
   "ui:title": "Bind Configuration",
-  "ui:description": "Configure port binding for the gateway",
+  "ui:description": "Configure port binding for the gateway. Listeners are configured separately and will automatically attach to this bind.",
   port: {
     "ui:widget": "updown",
     "ui:placeholder": "8080",
@@ -41,6 +49,9 @@ export const uiSchema: UiSchema = {
   tunnelProtocol: {
     "ui:widget": "select",
     "ui:help": "Choose the tunneling protocol (direct is most common)",
+  },
+  listeners: {
+    "ui:widget": "hidden",
   },
 };
 
@@ -58,4 +69,11 @@ export const defaultValues: Partial<LocalBind> = {
  */
 export function isLocalBind(data: unknown): data is LocalBind {
   return typeof data === "object" && data !== null;
+}
+
+/**
+ * Transform function - no transformation needed
+ */
+export function transformBeforeSubmit(data: unknown): unknown {
+  return data;
 }

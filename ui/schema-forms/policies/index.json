@@ -21,10 +21,10 @@
       "schemaFile": "Policy.json"
     },
     {
-      "key": "LocalBackendPolicies",
-      "displayName": "Local Backend Policies",
-      "description": "Local Backend Policies connection",
-      "schemaFile": "LocalBackendPolicies.json"
+      "key": "SimpleLocalBackendPolicies",
+      "displayName": "Simple Local Backend Policies",
+      "description": "Simple Local Backend Policies connection",
+      "schemaFile": "SimpleLocalBackendPolicies.json"
     },
     {
       "key": "Policy2",
@@ -37,6 +37,18 @@
       "displayName": "Policy3",
       "description": "Policy3 configuration",
       "schemaFile": "Policy3.json"
+    },
+    {
+      "key": "MCPLocalBackendPolicies",
+      "displayName": "MCP Local Backend Policies",
+      "description": "MCP Local Backend Policies connection",
+      "schemaFile": "MCPLocalBackendPolicies.json"
+    },
+    {
+      "key": "LocalBackendPolicies",
+      "displayName": "Local Backend Policies",
+      "description": "Local Backend Policies connection",
+      "schemaFile": "LocalBackendPolicies.json"
     },
     {
       "key": "TCPFilterOrPolicy",
