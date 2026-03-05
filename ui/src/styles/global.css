@@ -1453,3 +1453,198 @@ legend {
   ) !important;
   color: var(--color-text-base) !important;
 }
+
+/* ========================================
+   Tag Styling
+   ======================================== */
+
+/* Base tag */
+.ant-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  padding: 2px 8px !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* ── Default (no color) ── */
+.ant-tag-default,
+.ant-tag:not([class*="ant-tag-"]) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+[data-theme="light"] .ant-tag-default,
+[data-theme="light"] .ant-tag:not([class*="ant-tag-"]) {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* ── Blue ── */
+.ant-tag-blue {
+  background: rgba(22, 119, 255, 0.15) !important;
+  border-color: rgba(64, 150, 255, 0.45) !important;
+  color: #69b1ff !important;
+}
+[data-theme="light"] .ant-tag-blue {
+  background: rgba(22, 119, 255, 0.08) !important;
+  border-color: rgba(22, 119, 255, 0.3) !important;
+  color: #1677ff !important;
+}
+
+/* ── Green ── */
+.ant-tag-green,
+.ant-tag-success {
+  background: rgba(82, 196, 26, 0.15) !important;
+  border-color: rgba(115, 209, 61, 0.45) !important;
+  color: #95de64 !important;
+}
+[data-theme="light"] .ant-tag-green,
+[data-theme="light"] .ant-tag-success {
+  background: rgba(82, 196, 26, 0.08) !important;
+  border-color: rgba(82, 196, 26, 0.3) !important;
+  color: #389e0d !important;
+}
+
+/* ── Red / Error ── */
+.ant-tag-red,
+.ant-tag-error {
+  background: rgba(255, 77, 79, 0.15) !important;
+  border-color: rgba(255, 120, 117, 0.45) !important;
+  color: #ff9c9e !important;
+}
+[data-theme="light"] .ant-tag-red,
+[data-theme="light"] .ant-tag-error {
+  background: rgba(255, 77, 79, 0.08) !important;
+  border-color: rgba(255, 77, 79, 0.3) !important;
+  color: #cf1322 !important;
+}
+
+/* ── Orange ── */
+.ant-tag-orange {
+  background: rgba(250, 140, 22, 0.15) !important;
+  border-color: rgba(255, 169, 64, 0.45) !important;
+  color: #ffa940 !important;
+}
+[data-theme="light"] .ant-tag-orange {
+  background: rgba(250, 140, 22, 0.08) !important;
+  border-color: rgba(250, 140, 22, 0.3) !important;
+  color: #d46b08 !important;
+}
+
+/* ── Gold / Warning ── */
+.ant-tag-gold,
+.ant-tag-warning {
+  background: rgba(250, 173, 20, 0.15) !important;
+  border-color: rgba(255, 197, 61, 0.45) !important;
+  color: #ffc53d !important;
+}
+[data-theme="light"] .ant-tag-gold,
+[data-theme="light"] .ant-tag-warning {
+  background: rgba(250, 173, 20, 0.08) !important;
+  border-color: rgba(250, 173, 20, 0.3) !important;
+  color: #d48806 !important;
+}
+
+/* ── Cyan ── */
+.ant-tag-cyan {
+  background: rgba(19, 194, 194, 0.15) !important;
+  border-color: rgba(92, 219, 211, 0.45) !important;
+  color: #5cdbd3 !important;
+}
+[data-theme="light"] .ant-tag-cyan {
+  background: rgba(19, 194, 194, 0.08) !important;
+  border-color: rgba(19, 194, 194, 0.3) !important;
+  color: #08979c !important;
+}
+
+/* ── Purple ── */
+.ant-tag-purple {
+  background: rgba(114, 46, 209, 0.15) !important;
+  border-color: rgba(179, 127, 235, 0.45) !important;
+  color: #b37feb !important;
+}
+[data-theme="light"] .ant-tag-purple {
+  background: rgba(114, 46, 209, 0.08) !important;
+  border-color: rgba(114, 46, 209, 0.3) !important;
+  color: #531dab !important;
+}
+
+/* ── Geekblue ── */
+.ant-tag-geekblue {
+  background: rgba(47, 84, 235, 0.15) !important;
+  border-color: rgba(133, 165, 255, 0.45) !important;
+  color: #85a5ff !important;
+}
+[data-theme="light"] .ant-tag-geekblue {
+  background: rgba(47, 84, 235, 0.08) !important;
+  border-color: rgba(47, 84, 235, 0.3) !important;
+  color: #1d39c4 !important;
+}
+
+/* ── Magenta / Pink ── */
+.ant-tag-magenta,
+.ant-tag-pink {
+  background: rgba(235, 47, 150, 0.15) !important;
+  border-color: rgba(255, 133, 192, 0.45) !important;
+  color: #ff85c2 !important;
+}
+[data-theme="light"] .ant-tag-magenta,
+[data-theme="light"] .ant-tag-pink {
+  background: rgba(235, 47, 150, 0.08) !important;
+  border-color: rgba(235, 47, 150, 0.3) !important;
+  color: #c41d7f !important;
+}
+
+/* ── Volcano ── */
+.ant-tag-volcano {
+  background: rgba(250, 84, 28, 0.15) !important;
+  border-color: rgba(255, 122, 69, 0.45) !important;
+  color: #ff7a45 !important;
+}
+[data-theme="light"] .ant-tag-volcano {
+  background: rgba(250, 84, 28, 0.08) !important;
+  border-color: rgba(250, 84, 28, 0.3) !important;
+  color: #d4380d !important;
+}
+
+/* ── Lime ── */
+.ant-tag-lime {
+  background: rgba(160, 217, 17, 0.15) !important;
+  border-color: rgba(209, 247, 79, 0.45) !important;
+  color: #d3f261 !important;
+}
+[data-theme="light"] .ant-tag-lime {
+  background: rgba(160, 217, 17, 0.08) !important;
+  border-color: rgba(160, 217, 17, 0.3) !important;
+  color: #7cb305 !important;
+}
+
+/* ── Yellow ── */
+.ant-tag-yellow {
+  background: rgba(250, 219, 20, 0.15) !important;
+  border-color: rgba(255, 236, 61, 0.45) !important;
+  color: #fffb00 !important;
+}
+[data-theme="light"] .ant-tag-yellow {
+  background: rgba(250, 219, 20, 0.08) !important;
+  border-color: rgba(250, 219, 20, 0.3) !important;
+  color: #d4b106 !important;
+}
+
+/* ── Processing ── */
+.ant-tag-processing {
+  background: rgba(22, 119, 255, 0.15) !important;
+  border-color: rgba(64, 150, 255, 0.45) !important;
+  color: #69b1ff !important;
+}
+[data-theme="light"] .ant-tag-processing {
+  background: rgba(22, 119, 255, 0.08) !important;
+  border-color: rgba(22, 119, 255, 0.3) !important;
+  color: #1677ff !important;
+}
