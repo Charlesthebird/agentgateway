@@ -1,5 +1,6 @@
 import Ajv from "ajv";
 import type { LocalConfig } from "../../api/types";
+import { assetUrl } from "../../utils/assetUrl";
 
 type Category = "policies" | "listeners" | "routes" | "backends";
 
@@ -24,7 +25,7 @@ async function validateAgainstSchema(
   schemaType: string,
   data: any,
 ): Promise<void> {
-  const schemaUrl = `/schema-forms/${category}/${schemaType}.json`;
+  const schemaUrl = assetUrl(`/schema-forms/${category}/${schemaType}.json`);
   const response = await fetch(schemaUrl);
   if (!response.ok) {
     throw new Error(`Failed to load schema for ${category}/${schemaType}`);

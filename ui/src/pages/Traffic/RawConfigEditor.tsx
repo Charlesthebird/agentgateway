@@ -8,6 +8,7 @@ import type { LocalConfig } from "../../api/types";
 import { fetchConfig, updateConfig } from "../../api";
 import { useTheme } from "../../contexts/ThemeContext";
 import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
+import { assetUrl } from "../../utils/assetUrl";
 
 interface RawConfigEditorProps {
   onClose: () => void;
@@ -85,7 +86,7 @@ export function RawConfigEditor({ onClose }: RawConfigEditorProps) {
 
       // Load JSON schema for LocalConfig
       try {
-        const response = await fetch("/config-schema.json");
+        const response = await fetch(assetUrl("/config-schema.json"));
         if (!response.ok) {
           throw new Error(`Failed to fetch config-schema.json: ${response.statusText}`);
         }

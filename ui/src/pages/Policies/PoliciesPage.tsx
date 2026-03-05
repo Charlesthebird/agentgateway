@@ -10,6 +10,7 @@ import { StyledAlert } from "../../components/StyledAlert";
 import { StyledSelect } from "../../components/StyledSelect";
 import type { FilterOrPolicy } from "../../config";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { assetUrl } from "../../utils/assetUrl";
 
 const Container = styled.div`
   display: flex;
@@ -46,7 +47,7 @@ export const PoliciesPage = () => {
   const confirm = useConfirm();
 
   useEffect(() => {
-    fetch("/schema-forms/policies/index.json")
+    fetch(assetUrl("/schema-forms/policies/index.json"))
       .then((res) => res.json())
       .then((data) => {
         setCategoryIndex(data);

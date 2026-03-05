@@ -1,5 +1,5 @@
 import { ConfigProvider, theme } from "antd";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
@@ -55,7 +55,7 @@ function App() {
         },
       }}
     >
-      <BrowserRouter>
+      <HashRouter>
         <ErrorBoundary>
           <EditorSettingsProvider>
             <ConfirmProvider>
@@ -164,7 +164,7 @@ function App() {
             </ConfirmProvider>
           </EditorSettingsProvider>
         </ErrorBoundary>
-      </BrowserRouter>
+      </HashRouter>
     </ConfigProvider>
   );
 }

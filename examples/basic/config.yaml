@@ -65,3 +65,9 @@ binds:
           exposeHeaders:
           - abc
           maxAge: 48h
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route

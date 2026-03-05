@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteListener, useListeners } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
 import { StyledSelect } from "../../components/StyledSelect";
+import { assetUrl } from "../../utils/assetUrl";
 import type { LocalListener } from "../../config";
 import { useConfirm } from "../../contexts/ConfirmContext";
 
@@ -42,7 +43,7 @@ export const ListenersPage = () => {
   const confirm = useConfirm();
 
   useEffect(() => {
-    fetch("/schema-forms/listeners/index.json")
+    fetch(assetUrl("/schema-forms/listeners/index.json"))
       .then((res) => res.json())
       .then((data) => {
         setCategoryIndex(data);

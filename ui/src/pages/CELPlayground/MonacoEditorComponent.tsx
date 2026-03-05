@@ -2,6 +2,7 @@ import { type OnMount } from "@monaco-editor/react";
 import { useCallback } from "react";
 import { configureMonacoYaml } from "monaco-yaml";
 import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
+import { assetUrl } from "../../utils/assetUrl";
 
 interface MonacoEditorProps {
   value: string;
@@ -41,7 +42,7 @@ export const MonacoEditorComponent = ({
       if (language === "javascript") {
         try {
           // Fetch CEL type definitions
-          const response = await fetch("/cel.d.ts");
+          const response = await fetch(assetUrl("/cel.d.ts"));
           if (response.ok) {
             let celTypes = await response.text();
 
@@ -75,7 +76,7 @@ declare const extproc: ExecutorSerde['extproc'];`,
       // Add CEL schema for YAML language (used for input data)
       if (language === "yaml") {
         try {
-          const response = await fetch("/cel-schema.json");
+          const response = await fetch(assetUrl("/cel-schema.json"));
           if (response.ok) {
             const schema = await response.json();
 

@@ -3,6 +3,7 @@ import type { RJSFSchema } from "@rjsf/utils";
 import { Alert, Spin } from "antd";
 import { useEffect, useState } from "react";
 import { validator } from "../../utils/validator";
+import { assetUrl } from "../../utils/assetUrl";
 import {
   ArrayFieldTemplate,
   CollapsibleObjectFieldTemplate,
@@ -40,7 +41,7 @@ export function SchemaForm({
       setError(null);
 
       try {
-        const schemaPath = `/schema-forms/${category}/${schemaType}.json`;
+        const schemaPath = assetUrl(`/schema-forms/${category}/${schemaType}.json`);
         const response = await fetch(schemaPath);
 
         if (!response.ok) {

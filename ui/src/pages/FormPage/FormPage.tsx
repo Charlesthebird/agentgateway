@@ -8,6 +8,7 @@ import { fetchConfig, updateConfig } from "../../api/config";
 import { SchemaForm } from "../../components/SchemaForm";
 import { StyledSelect } from "../../components/StyledSelect";
 import { mergeFormDataIntoConfig } from "./configMerger";
+import { assetUrl } from "../../utils/assetUrl";
 
 const Container = styled.div`
   display: flex;
@@ -74,7 +75,7 @@ export const FormPage = () => {
   const categoryConfig = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.policies;
 
   useEffect(() => {
-    fetch(`/schema-forms/${category}/index.json`)
+    fetch(assetUrl(`/schema-forms/${category}/index.json`))
       .then((res) => res.json())
       .then((data) => {
         setCategoryIndex(data);

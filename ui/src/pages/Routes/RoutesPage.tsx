@@ -11,6 +11,7 @@ import { StyledAlert } from "../../components/StyledAlert";
 import { StyledSelect } from "../../components/StyledSelect";
 import type { LocalRoute } from "../../config";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { assetUrl } from "../../utils/assetUrl";
 
 const Container = styled.div`
   display: flex;
@@ -44,7 +45,7 @@ export const RoutesPage = () => {
   const confirm = useConfirm();
 
   useEffect(() => {
-    fetch("/schema-forms/routes/index.json")
+    fetch(assetUrl("/schema-forms/routes/index.json"))
       .then((res) => res.json())
       .then((data) => {
         setCategoryIndex(data);

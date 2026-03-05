@@ -9,7 +9,7 @@ COPY ui .
 
 RUN --mount=type=cache,target=/app/npm/cache npm install
 
-RUN --mount=type=cache,target=/app/npm/cache npm run build
+RUN --mount=type=cache,target=/app/npm/cache BASE_PATH=/ui/ npm run build
 
 FROM docker.io/library/rust:1.93.0-trixie AS musl-builder
 
