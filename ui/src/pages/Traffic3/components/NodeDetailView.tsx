@@ -957,7 +957,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             onSubmit={handleSubmit}
             onError={handleError}
             templates={formTemplates}
-          />
+          >
+            <></>
+          </Form>
         </FormWrapper>
       </Container>
     );
@@ -1052,7 +1054,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             onSubmit={handleSubmit}
             onError={handleError}
             templates={formTemplates}
-          />
+          >
+            <></>
+          </Form>
         </FormWrapper>
       </Container>
     );
@@ -1188,7 +1192,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           onSubmit={handleSubmit}
           onError={handleError}
           templates={formTemplates}
-        />
+        >
+          <></>
+        </Form>
         </FormWrapper>
       </Container>
     );
@@ -1285,7 +1291,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             onSubmit={handleSubmit}
             onError={handleError}
             templates={formTemplates}
-          />
+          >
+            <></>
+          </Form>
         </FormWrapper>
       </Container>
     );
@@ -1390,7 +1398,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             onSubmit={handleSubmit}
             onError={handleError}
             templates={formTemplates}
-          />
+          >
+            <></>
+          </Form>
         </FormWrapper>
       </Container>
     );
@@ -1476,7 +1486,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             onSubmit={handleSubmit}
             onError={handleError}
             templates={formTemplates}
-          />
+          >
+            <></>
+          </Form>
         </FormWrapper>
       </Container>
     );
@@ -1599,7 +1611,9 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             }}
             onError={handleError}
             templates={formTemplates}
-          />
+          >
+            <></>
+          </Form>
         </FormWrapper>
       </Container>
     );
