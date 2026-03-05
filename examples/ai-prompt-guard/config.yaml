@@ -23,6 +23,14 @@ binds:
       matches:
       - path:
           pathPrefix: /
+      backends:
+      - dynamic: {}
+        weight: 1
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
       backends: []
       name: route
     - hostnames: []

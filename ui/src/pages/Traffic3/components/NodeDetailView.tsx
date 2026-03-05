@@ -48,7 +48,6 @@ const formTemplates = {
 
 const Container = styled.div`
   padding: var(--spacing-xl);
-  background: var(--color-bg-container);
   min-height: 100%;
 `;
 
@@ -197,15 +196,6 @@ const FormWrapper = styled.div`
       color: rgba(0, 0, 0, 0.45);
     }
   }
-`;
-
-const FormActions = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--color-border-secondary);
 `;
 
 // ---------------------------------------------------------------------------
@@ -920,33 +910,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               </Space>
             )}
             {isEditing && (
-              <Button
-                icon={<X size={14} />}
-                onClick={() => navigate(location.pathname)}
-              >
-                Cancel
-              </Button>
-            )}
-          </TitleRow>
-          <Description>Port binding configuration</Description>
-        </Header>
-
-        <SectionTitle>Bind Details</SectionTitle>
-        <FormWrapper>
-          <Form
-            key={isEditing ? 'editing' : 'viewing'}
-            schema={forms.bind.schema}
-            uiSchema={forms.bind.uiSchema}
-            formData={formData}
-            validator={validator}
-            disabled={!isEditing || saving}
-            onChange={({ formData: fd }) => setFormData(fd)}
-            onSubmit={handleSubmit}
-            onError={handleError}
-            templates={formTemplates}
-          >
-            {isEditing && (
-              <FormActions>
+              <Space>
                 <Popconfirm
                   title="Delete this bind?"
                   description="This cannot be undone."
@@ -958,28 +922,42 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
                     Delete
                   </Button>
                 </Popconfirm>
-                <Space>
-                  <Button
-                    onClick={() => navigate(location.pathname)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={saving}>
-                    Save Changes
-                  </Button>
-                </Space>
-              </FormActions>
-            )}
-            {!isEditing && (
-              <FormActions>
-                <div />
-                <Button onClick={() => navigate("/traffic3")}>
-                  Back to Overview
+                <Button
+                  icon={<X size={14} />}
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
                 </Button>
-              </FormActions>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form="bind-form"
+                  loading={saving}
+                >
+                  Save
+                </Button>
+              </Space>
             )}
-          </Form>
+          </TitleRow>
+          <Description>Port binding configuration</Description>
+        </Header>
+
+        <SectionTitle>Bind Details</SectionTitle>
+        <FormWrapper>
+          <Form
+            id="bind-form"
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.bind.schema}
+            uiSchema={forms.bind.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          />
         </FormWrapper>
       </Container>
     );
@@ -1025,35 +1003,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               </Space>
             )}
             {isEditing && (
-              <Button
-                icon={<X size={14} />}
-                onClick={() => navigate(location.pathname)}
-              >
-                Cancel
-              </Button>
-            )}
-          </TitleRow>
-          <Description>
-            Listener configuration on port {selected.bind.bind.port}
-          </Description>
-        </Header>
-
-        <SectionTitle>Listener Details</SectionTitle>
-        <FormWrapper>
-          <Form
-            key={isEditing ? 'editing' : 'viewing'}
-            schema={forms.listener.schema}
-            uiSchema={forms.listener.uiSchema}
-            formData={formData}
-            validator={validator}
-            disabled={!isEditing || saving}
-            onChange={({ formData: fd }) => setFormData(fd)}
-            onSubmit={handleSubmit}
-            onError={handleError}
-            templates={formTemplates}
-          >
-            {isEditing && (
-              <FormActions>
+              <Space>
                 <Popconfirm
                   title="Delete this listener?"
                   description="This cannot be undone."
@@ -1065,28 +1015,44 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
                     Delete
                   </Button>
                 </Popconfirm>
-                <Space>
-                  <Button
-                    onClick={() => navigate(location.pathname)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={saving}>
-                    Save Changes
-                  </Button>
-                </Space>
-              </FormActions>
-            )}
-            {!isEditing && (
-              <FormActions>
-                <div />
-                <Button onClick={() => navigate("/traffic3")}>
-                  Back to Overview
+                <Button
+                  icon={<X size={14} />}
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
                 </Button>
-              </FormActions>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form="listener-form"
+                  loading={saving}
+                >
+                  Save
+                </Button>
+              </Space>
             )}
-          </Form>
+          </TitleRow>
+          <Description>
+            Listener configuration on port {selected.bind.bind.port}
+          </Description>
+        </Header>
+
+        <SectionTitle>Listener Details</SectionTitle>
+        <FormWrapper>
+          <Form
+            id="listener-form"
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.listener.schema}
+            uiSchema={forms.listener.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          />
         </FormWrapper>
       </Container>
     );
@@ -1172,12 +1138,34 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               </Space>
             )}
             {isEditing && (
-              <Button
-                icon={<X size={14} />}
-                onClick={() => navigate(location.pathname)}
-              >
-                Cancel
-              </Button>
+              <Space>
+                <Popconfirm
+                  title="Delete this route?"
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Button
+                  icon={<X size={14} />}
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form="route-form"
+                  loading={saving}
+                >
+                  Save
+                </Button>
+              </Space>
             )}
           </TitleRow>
           <Description>
@@ -1189,6 +1177,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         <SectionTitle>Route Details</SectionTitle>
         <FormWrapper>
           <Form
+          id="route-form"
           key={isEditing ? 'editing' : 'viewing'}
           schema={forms.route.schema}
           uiSchema={forms.route.uiSchema}
@@ -1199,42 +1188,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           onSubmit={handleSubmit}
           onError={handleError}
           templates={formTemplates}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title="Delete this route?"
-                description="This cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
-                >
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3")}>
-                Back to Overview
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+        />
         </FormWrapper>
       </Container>
     );
@@ -1281,36 +1235,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               </Button>
             )}
             {isEditing && (
-              <Button
-                icon={<X size={14} />}
-                onClick={() => navigate(location.pathname)}
-              >
-                Cancel
-              </Button>
-            )}
-          </TitleRow>
-          <Description>
-            Backend configuration for route "
-            {(selected.route.route.name as string | undefined) ?? "unnamed"}"
-          </Description>
-        </Header>
-
-        <SectionTitle>Backend Details</SectionTitle>
-        <FormWrapper>
-          <Form
-            key={isEditing ? 'editing' : 'viewing'}
-            schema={forms.backend.schema}
-            uiSchema={forms.backend.uiSchema}
-            formData={formData}
-            validator={validator}
-            disabled={!isEditing || saving}
-            onChange={({ formData: fd }) => setFormData(fd)}
-            onSubmit={handleSubmit}
-            onError={handleError}
-            templates={formTemplates}
-          >
-            {isEditing && (
-              <FormActions>
+              <Space>
                 <Popconfirm
                   title="Delete this backend?"
                   description="This cannot be undone."
@@ -1322,28 +1247,45 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
                     Delete
                   </Button>
                 </Popconfirm>
-                <Space>
-                  <Button
-                    onClick={() => navigate(location.pathname)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={saving}>
-                    Save Changes
-                  </Button>
-                </Space>
-              </FormActions>
-            )}
-            {!isEditing && (
-              <FormActions>
-                <div />
-                <Button onClick={() => navigate("/traffic3")}>
-                  Back to Overview
+                <Button
+                  icon={<X size={14} />}
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
                 </Button>
-              </FormActions>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form="backend-form"
+                  loading={saving}
+                >
+                  Save
+                </Button>
+              </Space>
             )}
-          </Form>
+          </TitleRow>
+          <Description>
+            Backend configuration for route "
+            {(selected.route.route.name as string | undefined) ?? "unnamed"}"
+          </Description>
+        </Header>
+
+        <SectionTitle>Backend Details</SectionTitle>
+        <FormWrapper>
+          <Form
+            id="backend-form"
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.backend.schema}
+            uiSchema={forms.backend.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          />
         </FormWrapper>
       </Container>
     );
@@ -1382,12 +1324,34 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               </Button>
             )}
             {isEditing && (
-              <Button
-                icon={<X size={14} />}
-                onClick={() => navigate(location.pathname)}
-              >
-                Cancel
-              </Button>
+              <Space>
+                <Popconfirm
+                  title="Delete this policy?"
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Button
+                  icon={<X size={14} />}
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form="policy-form"
+                  loading={saving}
+                >
+                  Save
+                </Button>
+              </Space>
             )}
           </TitleRow>
           <Description>
@@ -1399,6 +1363,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         <SectionTitle>Policy Details</SectionTitle>
         <FormWrapper>
           <Form
+            id="policy-form"
             key={isEditing ? 'editing' : 'viewing'}
             schema={
               selected.node.policyType === 'cors'
@@ -1425,42 +1390,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             onSubmit={handleSubmit}
             onError={handleError}
             templates={formTemplates}
-          >
-            {isEditing && (
-              <FormActions>
-                <Popconfirm
-                  title="Delete this policy?"
-                  description="This cannot be undone."
-                  onConfirm={handleDelete}
-                  okText="Delete"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                    Delete
-                  </Button>
-                </Popconfirm>
-                <Space>
-                  <Button
-                    onClick={() => navigate(location.pathname)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={saving}>
-                    Save Changes
-                  </Button>
-                </Space>
-              </FormActions>
-            )}
-            {!isEditing && (
-              <FormActions>
-                <div />
-                <Button onClick={() => navigate("/traffic3")}>
-                  Back to Overview
-                </Button>
-              </FormActions>
-            )}
-          </Form>
+          />
         </FormWrapper>
       </Container>
     );
@@ -1497,35 +1427,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               </Button>
             )}
             {isEditing && (
-              <Button
-                icon={<X size={14} />}
-                onClick={() => navigate(location.pathname)}
-              >
-                Cancel
-              </Button>
-            )}
-          </TitleRow>
-          <Description>
-            Model configuration for LLM provider
-          </Description>
-        </Header>
-
-        <SectionTitle>Model Details</SectionTitle>
-        <FormWrapper>
-          <Form
-            key={isEditing ? 'editing' : 'viewing'}
-            schema={forms.model.schema}
-            uiSchema={forms.model.uiSchema}
-            formData={formData}
-            validator={validator}
-            disabled={!isEditing || saving}
-            onChange={({ formData: fd }) => setFormData(fd)}
-            onSubmit={handleSubmit}
-            onError={handleError}
-            templates={formTemplates}
-          >
-            {isEditing && (
-              <FormActions>
+              <Space>
                 <Popconfirm
                   title={`Delete model "${modelName}"?`}
                   description="This cannot be undone."
@@ -1537,28 +1439,44 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
                     Delete
                   </Button>
                 </Popconfirm>
-                <Space>
-                  <Button
-                    onClick={() => navigate(location.pathname)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={saving}>
-                    Save Changes
-                  </Button>
-                </Space>
-              </FormActions>
-            )}
-            {!isEditing && (
-              <FormActions>
-                <div />
-                <Button onClick={() => navigate("/traffic3/llm")}>
-                  Back to LLM Config
+                <Button
+                  icon={<X size={14} />}
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
                 </Button>
-              </FormActions>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form="model-form"
+                  loading={saving}
+                >
+                  Save
+                </Button>
+              </Space>
             )}
-          </Form>
+          </TitleRow>
+          <Description>
+            Model configuration for LLM provider
+          </Description>
+        </Header>
+
+        <SectionTitle>Model Details</SectionTitle>
+        <FormWrapper>
+          <Form
+            id="model-form"
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.model.schema}
+            uiSchema={forms.model.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          />
         </FormWrapper>
       </Container>
     );
@@ -1590,30 +1508,6 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           e && typeof e === "object" && "message" in e && typeof e.message === "string"
             ? e.message
             : "Failed to save changes";
-        toast.error(errorMessage);
-      } finally {
-        setSaving(false);
-      }
-    };
-
-    const handleTopLevelDelete = async () => {
-      setSaving(true);
-      try {
-        if (selected.type === "llm") {
-          await api.deleteLLM();
-        } else if (selected.type === "mcp") {
-          await api.deleteMCP();
-        } else if (selected.type === "frontendPolicies") {
-          await api.deleteFrontendPolicies();
-        }
-        toast.success(`${typeLabels[selected.type]} deleted`);
-        mutate();
-        navigate("/traffic3");
-      } catch (e: unknown) {
-        const errorMessage =
-          e && typeof e === "object" && "message" in e && typeof e.message === "string"
-            ? e.message
-            : "Failed to delete";
         toast.error(errorMessage);
       } finally {
         setSaving(false);
@@ -1705,42 +1599,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             }}
             onError={handleError}
             templates={formTemplates}
-          >
-            {isEditing && (
-              <FormActions>
-                <Popconfirm
-                  title={`Delete ${typeLabels[selected.type]}?`}
-                  description="This cannot be undone."
-                  onConfirm={handleTopLevelDelete}
-                  okText="Delete"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                    Delete
-                  </Button>
-                </Popconfirm>
-                <Space>
-                  <Button
-                    onClick={() => navigate(location.pathname)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={saving}>
-                    Save Changes
-                  </Button>
-                </Space>
-              </FormActions>
-            )}
-            {!isEditing && (
-              <FormActions>
-                <div />
-                <Button onClick={() => navigate("/traffic3")}>
-                  Back to Overview
-                </Button>
-              </FormActions>
-            )}
-          </Form>
+          />
         </FormWrapper>
       </Container>
     );
