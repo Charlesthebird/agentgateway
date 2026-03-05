@@ -66,9 +66,14 @@ export function Breadcrumbs() {
       .split("/")
       .filter((segment) => segment !== "");
 
-    // Don't show breadcrumbs on home/dashboard
-    if (pathSegments.length === 0 || location.pathname === "/dashboard") {
+    // Don't show breadcrumbs on root
+    if (pathSegments.length === 0) {
       return null;
+    }
+
+    // Dashboard gets a single breadcrumb
+    if (location.pathname === "/dashboard") {
+      return [{ title: <span>Dashboard</span> }];
     }
 
     // Special handling for traffic2 routes

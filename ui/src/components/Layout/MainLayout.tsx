@@ -7,7 +7,6 @@ import {
   Brain,
   FileText,
   FlaskConical,
-  Headphones,
   Home,
   Moon,
   Network,
@@ -207,24 +206,41 @@ const StyledMenu = styled(Menu)`
   .ant-menu-submenu-title {
     transition: background-color 0.15s ease;
     border-radius: 6px;
+    user-select: none;
 
     &:hover {
-      background-color: var(--color-bg-hover) !important;
+      background-color: color-mix(
+        in srgb,
+        var(--color-sidebar) 10%,
+        var(--color-bg-container)
+      ) !important;
     }
 
     &:active {
-      background-color: var(--color-bg-selected) !important;
+      background-color: color-mix(
+        in srgb,
+        var(--color-sidebar) 18%,
+        var(--color-bg-container)
+      ) !important;
     }
   }
 
   /* Selected state */
   .ant-menu-item-selected {
-    background-color: var(--color-bg-selected) !important;
+    background-color: color-mix(
+      in srgb,
+      var(--color-sidebar) 14%,
+      var(--color-bg-container)
+    ) !important;
   }
 
   /* Submenu selected state */
   .ant-menu-submenu-selected > .ant-menu-submenu-title {
-    background-color: var(--color-bg-hover) !important;
+    background-color: color-mix(
+      in srgb,
+      var(--color-sidebar) 10%,
+      var(--color-bg-container)
+    ) !important;
   }
 `;
 
@@ -243,18 +259,6 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
     if (path.startsWith("/llm")) return "llm";
     if (path.startsWith("/mcp")) return "mcp";
     if (path.startsWith("/traffic")) return "traffic";
-    if (
-      [
-        "/dashboard",
-        "/listeners",
-        "/routes",
-        "/backends",
-        "/policies",
-        "/playground",
-      ].includes(path)
-    ) {
-      return "old";
-    }
     return null;
   };
 
@@ -273,42 +277,9 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
   const menuItems: MenuItem[] = [
     {
-      key: "old",
-      label: "OLD",
-      icon: <Boxes size={18} />,
-      onClick: () => navigate("/dashboard"),
-      children: [
-        {
-          key: "/dashboard",
-          icon: <Home size={18} />,
-          label: "Home",
-        },
-        {
-          key: "/listeners",
-          icon: <Headphones size={18} />,
-          label: "Listeners",
-        },
-        {
-          key: "/routes",
-          icon: <Route size={18} />,
-          label: "Routes",
-        },
-        {
-          key: "/backends",
-          icon: <Server size={18} />,
-          label: "Backends",
-        },
-        {
-          key: "/policies",
-          icon: <Shield size={18} />,
-          label: "Policies",
-        },
-        {
-          key: "/playground",
-          icon: <FlaskConical size={18} />,
-          label: "Playground",
-        },
-      ],
+      key: "/dashboard",
+      icon: <Home size={18} />,
+      label: "Dashboard",
     },
     {
       key: "llm",
@@ -420,7 +391,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     // Only navigate for leaf items (not parent items with onClick)
-    if (key && !["old", "llm", "mcp", "traffic"].includes(key)) {
+    if (key && !["llm", "mcp", "traffic"].includes(key)) {
       navigate(key);
     }
   };

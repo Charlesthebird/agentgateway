@@ -44,8 +44,10 @@ function App() {
             itemHoverColor: "var(--color-text-base)",
             itemSelectedColor: "var(--color-primary)",
             itemBg: "transparent",
-            itemHoverBg: "var(--color-bg-hover)",
-            itemSelectedBg: "var(--color-bg-selected)",
+            itemHoverBg:
+              "color-mix(in srgb, var(--color-sidebar) 10%, var(--color-bg-container))",
+            itemSelectedBg:
+              "color-mix(in srgb, var(--color-sidebar) 14%, var(--color-bg-container))",
           },
           Layout: {
             headerBg: "var(--color-bg-container)",

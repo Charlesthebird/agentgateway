@@ -40,10 +40,10 @@ binds:
         weight: 1
       - service:
           name:
-            namespace: default1
-            hostname: service123
-          port: 8081
-        weight: 12
+            namespace: default
+            hostname: service
+          port: 8080
+        weight: 1
       name: route123
       ruleName: myrule
       policies:
@@ -71,3 +71,5 @@ binds:
           pathPrefix: /
       backends: []
       name: route
+mcp:
+  targets: []
