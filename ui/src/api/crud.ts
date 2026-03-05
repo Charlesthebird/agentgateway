@@ -932,6 +932,60 @@ export async function deleteLLM(): Promise<void> {
 }
 
 /**
+ * Create a new model in the LLM configuration
+ */
+export async function createLLMModel(
+  modelData: Record<string, unknown>,
+): Promise<void> {
+  const config = await fetchConfig();
+  if (!config.llm) {
+    throw new Error("LLM configuration not found");
+  }
+  if (!Array.isArray((config.llm as any).models)) {
+    (config.llm as any).models = [];
+  }
+  (config.llm as any).models.push(modelData);
+  await updateConfig(config);
+}
+
+/**
+ * Update a model by index in the LLM configuration
+ */
+export async function updateLLMModelByIndex(
+  modelIndex: number,
+  modelData: Record<string, unknown>,
+): Promise<void> {
+  const config = await fetchConfig();
+  if (!config.llm) {
+    throw new Error("LLM configuration not found");
+  }
+  const models = (config.llm as any).models;
+  if (!Array.isArray(models) || modelIndex < 0 || modelIndex >= models.length) {
+    throw new Error(`Model at index ${modelIndex} not found`);
+  }
+  models[modelIndex] = modelData;
+  await updateConfig(config);
+}
+
+/**
+ * Remove a model by index from the LLM configuration
+ */
+export async function removeLLMModelByIndex(
+  modelIndex: number,
+): Promise<void> {
+  const config = await fetchConfig();
+  if (!config.llm) {
+    throw new Error("LLM configuration not found");
+  }
+  const models = (config.llm as any).models;
+  if (!Array.isArray(models) || modelIndex < 0 || modelIndex >= models.length) {
+    throw new Error(`Model at index ${modelIndex} not found`);
+  }
+  models.splice(modelIndex, 1);
+  await updateConfig(config);
+}
+
+/**
  * Create or update MCP configuration
  */
 export async function createOrUpdateMCP(

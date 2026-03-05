@@ -20,7 +20,8 @@ use crate::types::proto::workload::{
 use crate::types::proto::{ProtoError, workload};
 use crate::*;
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub struct NamespacedHostname {
 	pub namespace: Strng,
 	pub hostname: Strng,
@@ -40,61 +41,9 @@ impl FromStr for NamespacedHostname {
 	}
 }
 
-// we need custom serde serialization since NamespacedHostname is keying maps
-impl Serialize for NamespacedHostname {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		serializer.collect_str(&self)
-	}
-}
-
-// we need custom serde deserialization because we have custom serialization
-impl<'de> Deserialize<'de> for NamespacedHostname {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		struct NamespacedHostnameVisitor;
-
-		impl Visitor<'_> for NamespacedHostnameVisitor {
-			type Value = NamespacedHostname;
-
-			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-				formatter.write_str("string for NamespacedHostname with format namespace/hostname")
-			}
-
-			fn visit_str<E>(self, value: &str) -> Result<NamespacedHostname, E>
-			where
-				E: serde::de::Error,
-			{
-				NamespacedHostname::from_str(value)
-					.map_err(|_| serde::de::Error::invalid_value(serde::de::Unexpected::Str(value), &self))
-			}
-		}
-		deserializer.deserialize_str(NamespacedHostnameVisitor)
-	}
-}
-
 impl fmt::Display for NamespacedHostname {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		write!(f, "{}/{}", self.namespace, self.hostname)
-	}
-}
-
-#[cfg(feature = "schema")]
-impl schemars::JsonSchema for NamespacedHostname {
-	fn schema_name() -> std::borrow::Cow<'static, str> {
-		"NamespacedHostname".into()
-	}
-
-	fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
-		schemars::json_schema!({
-			"type": "string",
-			"format": "namespace/hostname",
-			"description": "Namespaced hostname in format 'namespace/hostname'"
-		})
 	}
 }
 

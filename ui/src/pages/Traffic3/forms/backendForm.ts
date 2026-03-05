@@ -319,8 +319,7 @@ export function isLocalRouteBackend(data: unknown): data is LocalRouteBackend {
 }
 
 /**
- * Transform function to convert API format to form format when loading data
- * Converts service.name from string "namespace/hostname" to object { namespace, hostname }
+ * Transform function to add UI-only backendType field when loading data
  */
 export function transformForForm(data: unknown): unknown {
   if (typeof data !== "object" || data === null) {
@@ -331,23 +330,8 @@ export function transformForForm(data: unknown): unknown {
   const result: Record<string, unknown> = { ...backendData };
 
   // Determine backendType based on which field is present
-  if ("service" in backendData && backendData.service !== null && backendData.service !== undefined) {
+  if ("service" in backendData) {
     result.backendType = "service";
-    const service = backendData.service as Record<string, unknown>;
-
-    // Convert service.name from string to object format if needed
-    if (typeof service.name === "string") {
-      const parts = service.name.split("/");
-      if (parts.length === 2) {
-        result.service = {
-          ...service,
-          name: {
-            namespace: parts[0],
-            hostname: parts[1],
-          },
-        };
-      }
-    }
   } else if ("host" in backendData) {
     result.backendType = "host";
   } else if ("dynamic" in backendData) {
@@ -386,22 +370,9 @@ export function transformBeforeSubmit(data: unknown): unknown {
   // Build the result with only the relevant backend type field
   const result: Record<string, unknown> = { ...otherFields };
 
-  // Add the selected backend type field
+  // Add the selected backend type field (no conversion needed - API now uses object format)
   if (backendType === "service" && service !== undefined && service !== null) {
-    // Convert service.name from object to string format "namespace/hostname"
-    const svc = service as Record<string, unknown>;
-    const serviceName = svc.name as Record<string, unknown> | undefined;
-
-    if (serviceName && typeof serviceName === "object" && "namespace" in serviceName && "hostname" in serviceName) {
-      // Convert object format to string format
-      result.service = {
-        ...svc,
-        name: `${serviceName.namespace}/${serviceName.hostname}`,
-      };
-    } else {
-      // Already in string format or invalid
-      result.service = service;
-    }
+    result.service = service;
   } else if (backendType === "host" && host !== undefined && host !== null) {
     result.host = host;
     if (tls !== undefined && tls !== null) {

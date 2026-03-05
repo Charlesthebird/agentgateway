@@ -48,6 +48,7 @@ const pathLabels: Record<string, string> = {
   servers: "Servers",
   routing: "Routing",
   "cel-playground": "CEL Playground",
+  "raw-config": "Config Editor",
   listener: "Listener",
   route: "Route",
   tcproute: "TCP Route",

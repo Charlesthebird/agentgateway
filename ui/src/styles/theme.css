@@ -41,6 +41,11 @@
   --color-link-hover: #4096ff;
   --color-link-active: #0958d9;
 
+  /* Sidebar Logo Color - Purple from logo */
+  --color-sidebar: #7734be;
+  --color-sidebar-hover: #9554d8;
+  --color-sidebar-active: #5f2a9d;
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -111,18 +116,23 @@
   --color-primary-hover: #4096ff;
   --color-primary-active: #0958d9;
 
+  /* Sidebar Logo Color - Lighter purple for dark mode */
+  --color-sidebar: #9554d8;
+  --color-sidebar-hover: #b37feb;
+  --color-sidebar-active: #7734be;
+
   /* Status Background Colors */
   --color-success-bg: #162312;
   --color-error-bg: #2a1215;
   --color-info-bg: #111a2c;
 
   /* Background Colors */
-  --color-bg-base: #000000;
-  --color-bg-container: #141414;
-  --color-bg-elevated: #1f1f1f;
-  --color-bg-layout: #000000;
-  --color-bg-spotlight: #1f1f1f;
-  --color-bg-hover: #1f1f1f;
+  --color-bg-base: #0a0a0a;
+  --color-bg-container: #181818;
+  --color-bg-elevated: #242424;
+  --color-bg-layout: #0f0f0f;
+  --color-bg-spotlight: #242424;
+  --color-bg-hover: #242424;
   --color-bg-selected: #1f2937;
 
   /* Text Colors */

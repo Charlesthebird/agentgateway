@@ -123,6 +123,10 @@ function App() {
                 {/* Traffic3 - Manual TypeScript Schemas */}
                 <Route path="/traffic3" element={<Traffic3Page />} />
                 <Route path="/traffic3/raw-config" element={<Traffic3RawConfigPage />} />
+                <Route path="/traffic3/llm" element={<Traffic3Page />} />
+                <Route path="/traffic3/llm/model/:modelIndex" element={<Traffic3Page />} />
+                <Route path="/traffic3/mcp" element={<Traffic3Page />} />
+                <Route path="/traffic3/frontendPolicies" element={<Traffic3Page />} />
                 <Route path="/traffic3/bind/:port" element={<Traffic3Page />} />
                 <Route path="/traffic3/bind/:port/listener/:li" element={<Traffic3Page />} />
                 <Route path="/traffic3/bind/:port/listener/:li/route/:ri" element={<Traffic3Page />} />

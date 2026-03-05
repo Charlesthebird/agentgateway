@@ -1,5 +1,6 @@
 binds:
-- port: 3001
+- port: 3003
+  tunnelProtocol: direct
   listeners:
   - protocol: HTTP
     name: listener1
@@ -12,7 +13,9 @@ binds:
           pathPrefix: /asdf
       backends:
       - service:
-          name: asdfsdaf/ddd
+          name:
+            namespace: default123 asdf
+            hostname: service223334444 123
           port: 8080
         weight: 1
       name: route
@@ -20,13 +23,96 @@ binds:
       matches:
       - path:
           pathPrefix: /
-      backends:
-      - service:
-          name: default/service
-          port: 8080
-        weight: 1
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
       name: route
   - protocol: HTTP
     name: listener
     hostname: '*'
     routes: []
+  - protocol: HTTP
+    name: listener
+    hostname: '*'
+    routes:
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: route
+- port: 8080
+  tunnelProtocol: direct
+  listeners: []
+- port: 8081
+  tunnelProtocol: direct
+  listeners: []
+- port: 8082
+  tunnelProtocol: direct
+  listeners: []
+- port: 8083
+  tunnelProtocol: direct
+  listeners: []
+llm:
+  models:
+  - name: model-1
+    provider: openAI
+  - name: model-2
+    provider: openAI
+  - name: model-3
+    provider: openAI
+  - name: model-4
+    provider: openAI
+frontendPolicies: {}
+mcp:
+  targets: []

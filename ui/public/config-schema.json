@@ -1500,9 +1500,19 @@
       ]
     },
     "NamespacedHostname": {
-      "description": "Namespaced hostname in format 'namespace/hostname'",
-      "type": "string",
-      "format": "namespace/hostname"
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "hostname": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "hostname"
+      ]
     },
     "DirectResponse": {
       "type": "object",

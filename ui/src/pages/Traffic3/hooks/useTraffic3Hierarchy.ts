@@ -7,6 +7,8 @@ import type {
   LocalRouteBackend,
   LocalTCPRoute,
   LocalListenerProtocol,
+  LocalLLMModels,
+  LocalLLMConfig,
 } from "../../../config";
 
 // ---------------------------------------------------------------------------
@@ -34,6 +36,13 @@ export interface PolicyNode {
   policy: unknown;
   /** Whether this policy belongs to a TCP route */
   isTcpRoute: boolean;
+}
+
+export interface ModelNode {
+  /** Raw model data */
+  model: LocalLLMModels;
+  /** Index within llm.models */
+  modelIndex: number;
 }
 
 export interface RouteNode {
@@ -72,11 +81,18 @@ export interface BindNode {
   validationErrors: ValidationError[];
 }
 
+export interface LLMNode {
+  /** Raw LLM config (without models - they're in children) */
+  config: Omit<LocalLLMConfig, 'models'>;
+  /** Models defined under this LLM config */
+  models: ModelNode[];
+}
+
 export interface Traffic3Hierarchy {
   binds: BindNode[];
   policies: unknown[];
   backends: unknown[];
-  llm: unknown | null;
+  llm: LLMNode | null;
   mcp: unknown | null;
   frontendPolicies: unknown | null;
   stats: {
@@ -84,6 +100,7 @@ export interface Traffic3Hierarchy {
     totalListeners: number;
     totalRoutes: number;
     totalBackends: number;
+    totalModels: number;
     totalValidationErrors: number;
   };
   isLoading: boolean;
@@ -205,6 +222,7 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
     let totalListeners = 0;
     let totalRoutes = 0;
     let totalBackends = 0;
+    let totalModels = 0;
     let totalValidationErrors = 0;
 
     const binds: BindNode[] = (config?.binds ?? []).map((bind) => {
@@ -325,11 +343,31 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
       };
     });
 
+    // Parse LLM config and models
+    let llmNode: LLMNode | null = null;
+    if (config?.llm) {
+      const llmConfig = config.llm as LocalLLMConfig;
+      const models: ModelNode[] = (llmConfig.models ?? []).map((model, idx) => {
+        totalModels++;
+        return {
+          model,
+          modelIndex: idx,
+        };
+      });
+
+      // Separate models from the config
+      const { models: _, ...configWithoutModels } = llmConfig;
+      llmNode = {
+        config: configWithoutModels,
+        models,
+      };
+    }
+
     return {
       binds,
       policies: config?.policies ?? [],
       backends: config?.backends ?? [],
-      llm: config?.llm ?? null,
+      llm: llmNode,
       mcp: config?.mcp ?? null,
       frontendPolicies: config?.frontendPolicies ?? null,
       stats: {
@@ -337,6 +375,7 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
         totalListeners,
         totalRoutes,
         totalBackends,
+        totalModels,
         totalValidationErrors,
       },
       isLoading: isLoading ?? false,

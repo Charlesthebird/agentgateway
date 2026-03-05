@@ -36,14 +36,56 @@ const StyledLayout = styled(AntLayout)`
 const StyledSider = styled(Sider)`
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-container);
+  background:
+    /* Left to right gradient - subtle edge glow */
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-sidebar) 1%, transparent) 0%,
+      transparent 25%
+    ),
+    /* Top to bottom gradient - main gradient */
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-sidebar) 1.5%, var(--color-bg-container)) 0%,
+      color-mix(in srgb, var(--color-sidebar) 0.75%, var(--color-bg-container)) 50%,
+      var(--color-bg-container) 100%
+    );
   border-right: 1px solid var(--color-border-secondary);
   overflow-y: auto;
+  position: relative;
+
+  /* Additional gradient overlays for depth */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+      /* Diagonal gradient for extra dimension */
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-sidebar) 0.75%, transparent) 0%,
+        transparent 50%
+      ),
+      /* Top gradient intensifier */
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-sidebar) 1.25%, transparent) 0%,
+        color-mix(in srgb, var(--color-sidebar) 0.5%, transparent) 40%,
+        transparent 100%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
 
   .ant-layout-sider-children {
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -68,9 +110,37 @@ const ContentWrapper = styled(AntLayout)`
 const StyledContent = styled(Content)`
   flex: 1;
   overflow-y: auto;
-  background: var(--color-bg-layout);
+  background: linear-gradient(
+    135deg,
+    var(--color-bg-layout) 0%,
+    color-mix(in srgb, var(--color-bg-layout) 98%, white) 100%
+  );
   padding: var(--spacing-xl);
   min-height: 0;
+  position: relative;
+
+  /* Subtle radial gradient overlay for depth */
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      ellipse at top right,
+      color-mix(in srgb, var(--color-primary) 1.5%, transparent) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ensure content is above gradient */
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 `;
 
 const Logo = styled.div`
@@ -78,7 +148,7 @@ const Logo = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: var(--spacing-md);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-xl) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border-secondary);
   cursor: pointer;
   transition: opacity var(--transition-base) var(--transition-timing);
@@ -104,14 +174,19 @@ const ThemeToggleButton = styled(Button)`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 40px !important;
+  height: 40px !important;
+  overflow: hidden;
   border-radius: var(--border-radius-lg);
   border: 1px solid var(--color-border-base);
   background: var(--color-bg-container);
   color: var(--color-text-base);
   cursor: pointer;
   transition: all var(--transition-base) var(--transition-timing);
+
+  span {
+    display: contents !important;
+  }
 
   &:hover {
     background: var(--color-bg-hover);

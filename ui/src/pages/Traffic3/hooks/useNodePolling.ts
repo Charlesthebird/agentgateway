@@ -18,9 +18,9 @@ export function useNodePolling(
   const [isPolling, setIsPolling] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
-  // Maximum number of polling attempts (10 attempts * 300ms = 3 seconds max)
-  const MAX_ATTEMPTS = 10;
-  const POLL_INTERVAL = 300; // milliseconds
+  // Maximum number of polling attempts (20 attempts * 500ms = 10 seconds max)
+  const MAX_ATTEMPTS = 20;
+  const POLL_INTERVAL = 500; // milliseconds
 
   useEffect(() => {
     // Only start polling if we're in a "creating" state and hierarchy is loaded
@@ -33,6 +33,7 @@ export function useNodePolling(
 
     if (nodeExists) {
       // Node found, stop polling
+      console.log("[NodePolling] Node found, stopping polling");
       setIsPolling(false);
       setAttempts(0);
       return;
@@ -41,16 +42,25 @@ export function useNodePolling(
     // Node doesn't exist yet - start/continue polling
     if (attempts >= MAX_ATTEMPTS) {
       // Timeout reached
+      console.log("[NodePolling] Max attempts reached, giving up");
       setIsPolling(false);
       return;
     }
 
+    console.log(`[NodePolling] Attempt ${attempts + 1}/${MAX_ATTEMPTS} - node not found yet`);
     setIsPolling(true);
 
-    const timeoutId = setTimeout(() => {
-      mutate().then(() => {
+    const timeoutId = setTimeout(async () => {
+      try {
+        // Wait for the config to actually refresh
+        await mutate();
+        // Give React a tick to update the hierarchy
+        await new Promise(resolve => setTimeout(resolve, 50));
         setAttempts((prev) => prev + 1);
-      });
+      } catch (error) {
+        console.error("Error during polling mutate:", error);
+        setAttempts((prev) => prev + 1);
+      }
     }, POLL_INTERVAL);
 
     return () => clearTimeout(timeoutId);
@@ -72,27 +82,80 @@ function checkNodeExists(
   hierarchy: ReturnType<typeof useTraffic3Hierarchy>,
   urlParams: UrlParams
 ): boolean {
-  const { port, li, ri, bi, isTcpRoute, policyType } = urlParams;
+  const { port, li, ri, bi, isTcpRoute, policyType, modelIndex, topLevelType } = urlParams;
+
+  // Handle model nodes
+  if (modelIndex !== undefined) {
+    if (!hierarchy.llm) {
+      console.log(`[checkNodeExists] LLM config not found`);
+      return false;
+    }
+    const modelNode = hierarchy.llm.models[modelIndex];
+    if (!modelNode) {
+      console.log(`[checkNodeExists] Model not found at index ${modelIndex}`);
+      return false;
+    }
+    console.log(`[checkNodeExists] Model found at index ${modelIndex}`);
+    return true;
+  }
+
+  // Handle top-level config nodes
+  if (topLevelType) {
+    switch (topLevelType) {
+      case "llm":
+        const llmExists = !!hierarchy.llm;
+        console.log(`[checkNodeExists] LLM config exists: ${llmExists}`);
+        return llmExists;
+      case "mcp":
+        const mcpExists = !!hierarchy.mcp;
+        console.log(`[checkNodeExists] MCP config exists: ${mcpExists}`);
+        return mcpExists;
+      case "frontendPolicies":
+        const fpExists = !!hierarchy.frontendPolicies;
+        console.log(`[checkNodeExists] Frontend policies exist: ${fpExists}`);
+        return fpExists;
+      default:
+        return false;
+    }
+  }
+
+  // Handle bind/listener/route/backend/policy nodes
+  // These require a port
+  if (port === undefined) {
+    console.log(`[checkNodeExists] No port, modelIndex, or topLevelType - cannot check node`);
+    return false;
+  }
 
   // Check bind exists
   const bindNode = hierarchy.binds.find((b) => b.bind.port === port);
-  if (!bindNode) return false;
+  if (!bindNode) {
+    console.log(`[checkNodeExists] Bind not found for port ${port}`);
+    return false;
+  }
 
   // If no listener index, we're looking at the bind itself
   if (li === undefined) return true;
 
   // Check listener exists
   const listenerNode = bindNode.listeners[li];
-  if (!listenerNode) return false;
+  if (!listenerNode) {
+    console.log(`[checkNodeExists] Listener not found at index ${li}`);
+    return false;
+  }
 
   // If no route index, we're looking at the listener itself
   if (ri === undefined) return true;
 
   // Check route exists
+  console.log(`[checkNodeExists] Looking for route: isTcp=${isTcpRoute}, categoryIndex=${ri}`);
+  console.log(`[checkNodeExists] Available routes:`, listenerNode.routes.map(r => ({ isTcp: r.isTcp, categoryIndex: r.categoryIndex })));
   const routeNode = listenerNode.routes.find(
     (rn) => rn.isTcp === isTcpRoute && rn.categoryIndex === ri
   );
-  if (!routeNode) return false;
+  if (!routeNode) {
+    console.log(`[checkNodeExists] Route not found`);
+    return false;
+  }
 
   // If no backend index and no policy type, we're looking at the route itself
   if (bi === undefined && !policyType) return true;

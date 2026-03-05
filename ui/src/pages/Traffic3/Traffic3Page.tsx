@@ -144,15 +144,35 @@ const MetricIcon = styled.div<{ color: string }>`
 // ---------------------------------------------------------------------------
 
 export interface UrlParams {
-  port: number;
+  port?: number;
   li?: number;
-  isTcpRoute: boolean;
+  isTcpRoute?: boolean;
   ri?: number;
   bi?: number;
   policyType?: string;
+  topLevelType?: "llm" | "mcp" | "frontendPolicies";
+  modelIndex?: number;
 }
 
 function parseTraffic3Path(pathname: string): UrlParams | null {
+  // Check for model routes first (must be before general LLM route)
+  const modelMatch = pathname.match(/\/traffic3\/llm\/model\/(\d+)/);
+  if (modelMatch) {
+    return {
+      topLevelType: "llm",
+      modelIndex: parseInt(modelMatch[1], 10),
+    };
+  }
+
+  // Check for top-level config routes
+  const topLevelMatch = pathname.match(/\/traffic3\/(llm|mcp|frontendPolicies)/);
+  if (topLevelMatch) {
+    return {
+      topLevelType: topLevelMatch[1] as "llm" | "mcp" | "frontendPolicies",
+    };
+  }
+
+  // Check for bind routes
   const m = pathname.match(
     /\/traffic3\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+)|\/policy\/([^/?]+))?)?)?/,
   );
@@ -230,12 +250,8 @@ export function Traffic3Page() {
   // ---------------------------------------------------------------------------
 
   // Determine if we should show a detail view or placeholder
-  const shouldShowDetail = urlParams && (
-    urlParams.li !== undefined ||
-    urlParams.ri !== undefined ||
-    urlParams.bi !== undefined ||
-    urlParams.policyType !== undefined
-  );
+  // Show detail if we have a bind (port) or any sub-resource selected
+  const shouldShowDetail = urlParams !== null;
 
   const alertContent = (
     <StyledAlert

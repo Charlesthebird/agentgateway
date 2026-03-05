@@ -1,9 +1,10 @@
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
 import Form from "@rjsf/antd";
-import { Button, Popconfirm, Space, Spin } from "antd";
+import { Button, Dropdown, Popconfirm, Space, Spin } from "antd";
+import type { MenuProps } from "antd";
 import { Edit2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useConfig } from "../../../api";
@@ -17,6 +18,7 @@ import type {
   ListenerNode,
   RouteNode,
   PolicyNode,
+  ModelNode,
 } from "../hooks/useTraffic3Hierarchy";
 import type { useTraffic3Hierarchy } from "../hooks/useTraffic3Hierarchy";
 import type { UrlParams } from "../Traffic3Page";
@@ -60,12 +62,26 @@ const Title = styled.h2`
 `;
 
 const TypeBadge = styled.span`
-  font-size: 12px;
-  color: var(--color-text-base);
-  background: var(--color-bg-layout);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  height: 22px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 22px;
+  white-space: nowrap;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+
+  [data-theme="light"] & {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.65);
+  }
 `;
 
 const Description = styled.p`
@@ -117,8 +133,34 @@ function findSelectedNode(
       listener: ListenerNode;
       bind: BindNode;
     }
+  | { type: "llm"; data: unknown }
+  | { type: "model"; node: ModelNode }
+  | { type: "mcp"; data: unknown }
+  | { type: "frontendPolicies"; data: unknown }
   | null {
+  // Handle model routes first
+  if (urlParams.modelIndex !== undefined) {
+    if (!hierarchy.llm) return null;
+    const modelNode = hierarchy.llm.models[urlParams.modelIndex];
+    if (!modelNode) return null;
+    return { type: "model", node: modelNode };
+  }
+
+  // Handle top-level types
+  if (urlParams.topLevelType) {
+    switch (urlParams.topLevelType) {
+      case "llm":
+        // Return just the config part (without models - they're managed separately)
+        return hierarchy.llm ? { type: "llm", data: hierarchy.llm.config } : null;
+      case "mcp":
+        return hierarchy.mcp ? { type: "mcp", data: hierarchy.mcp } : null;
+      case "frontendPolicies":
+        return hierarchy.frontendPolicies ? { type: "frontendPolicies", data: hierarchy.frontendPolicies } : null;
+    }
+  }
+
   const { port, li, ri, bi, isTcpRoute, policyType } = urlParams;
+  if (port === undefined) return null;
   const bindNode = hierarchy.binds.find((b) => b.bind.port === port);
   if (!bindNode) return null;
 
@@ -198,6 +240,160 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   // Poll for the node if we're in creating mode
   const { isPolling, hasTimedOut } = useNodePolling(hierarchy, urlParams, isCreating);
 
+  // Action handlers for creating sub-resources - defined early to satisfy hooks rules
+  const handleAddListener = useCallback(async (port: number) => {
+    try {
+      const newListener = {
+        name: "listener",
+        protocol: "HTTP" as const,
+        hostname: "*",
+        routes: [],
+      };
+      await api.createListener(port, newListener);
+      toast.success("Listener created successfully");
+      const freshConfig = await mutate();
+      const bind = freshConfig?.binds?.find((b: any) => b.port === port);
+      const listenerIndex = bind ? bind.listeners.length - 1 : 0;
+      navigate(`/traffic3/bind/${port}/listener/${listenerIndex}?edit=true&creating=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create listener");
+    }
+  }, [mutate, navigate]);
+
+  const handleAddRoute = useCallback(async (port: number, li: number, isTcp: boolean) => {
+    try {
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) throw new Error(`Bind with port ${port} not found`);
+      const listener = bind.bind.listeners[li];
+      if (!listener) throw new Error(`Listener at index ${li} not found`);
+
+      const newRoute = {
+        name: "route",
+        hostnames: [],
+        matches: [{ path: { pathPrefix: "/" } }],
+        backends: [],
+      };
+
+      const updatedListener = { ...listener };
+      if (isTcp) {
+        if (!updatedListener.tcpRoutes) updatedListener.tcpRoutes = [];
+        updatedListener.tcpRoutes.push(newRoute as any);
+      } else {
+        if (!updatedListener.routes) updatedListener.routes = [];
+        updatedListener.routes.push(newRoute as any);
+      }
+
+      await api.updateListenerByIndex(port, li, updatedListener);
+      toast.success(isTcp ? "TCP route created successfully" : "Route created successfully");
+
+      const freshConfig = await mutate();
+      const freshBind = freshConfig?.binds?.find((b: any) => b.port === port);
+      const freshListener = freshBind?.listeners?.[li];
+      const routeIndex = isTcp
+        ? (freshListener?.tcpRoutes?.length ?? 1) - 1
+        : (freshListener?.routes?.length ?? 1) - 1;
+      const routeSeg = isTcp ? "tcproute" : "route";
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${routeIndex}?edit=true&creating=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create route");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
+  const handleAddBackend = useCallback(async (port: number, li: number, ri: number, isTcp: boolean) => {
+    try {
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) throw new Error(`Bind with port ${port} not found`);
+      const listener = bind.bind.listeners[li];
+      if (!listener) throw new Error(`Listener at index ${li} not found`);
+      const route = isTcp ? listener.tcpRoutes?.[ri] : listener.routes?.[ri];
+      if (!route) throw new Error(`Route at index ${ri} not found`);
+
+      const newBackend = {
+        service: {
+          name: {
+            namespace: "default",
+            hostname: "service",
+          },
+          port: 8080,
+        },
+        weight: 1,
+      };
+
+      const existingBackends = route.backends || [];
+      const updatedBackends = [...existingBackends, newBackend];
+
+      const updatedRoute: Record<string, unknown> = {
+        hostnames: route.hostnames,
+        backends: updatedBackends,
+      };
+
+      if ('matches' in route) updatedRoute.matches = route.matches;
+      if ('name' in route) updatedRoute.name = route.name;
+      if ('namespace' in route) updatedRoute.namespace = route.namespace;
+      if ('ruleName' in route) updatedRoute.ruleName = route.ruleName;
+      if ('policies' in route) updatedRoute.policies = route.policies;
+
+      if (isTcp) {
+        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute);
+      } else {
+        await api.updateRouteByIndex(port, li, ri, updatedRoute);
+      }
+
+      toast.success("Backend created successfully");
+
+      const freshConfig = await mutate();
+      const freshBind = freshConfig?.binds?.find((b: any) => b.port === port);
+      const freshListener = freshBind?.listeners?.[li];
+      const freshRoute = isTcp ? freshListener?.tcpRoutes?.[ri] : freshListener?.routes?.[ri];
+      const backendIndex = (freshRoute?.backends?.length ?? 1) - 1;
+      const routeSeg = isTcp ? "tcproute" : "route";
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/backend/${backendIndex}?edit=true&creating=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create backend");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
+  const handleAddPolicy = useCallback(async (port: number, li: number, ri: number, isTcp: boolean, policyType: string) => {
+    try {
+      const bind = hierarchy.binds.find((b) => b.bind.port === port);
+      if (!bind) throw new Error(`Bind with port ${port} not found`);
+      const listener = bind.bind.listeners[li];
+      if (!listener) throw new Error(`Listener at index ${li} not found`);
+      const route = isTcp ? listener.tcpRoutes?.[ri] : listener.routes?.[ri];
+      if (!route) throw new Error(`Route at index ${ri} not found`);
+
+      const currentPolicies = (route.policies && typeof route.policies === 'object') ? route.policies : {};
+      const newPolicyConfig = {};
+
+      const updatedRoute = {
+        ...route,
+        policies: {
+          ...currentPolicies,
+          [policyType]: newPolicyConfig,
+        }
+      };
+
+      if (isTcp) {
+        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute as any);
+      } else {
+        await api.updateRouteByIndex(port, li, ri, updatedRoute as any);
+      }
+
+      const displayName = policyType
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+
+      toast.success(`${displayName} policy created successfully`);
+      await mutate();
+
+      const routeSeg = isTcp ? "tcproute" : "route";
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/policy/${policyType}?edit=true&creating=true`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create policy");
+    }
+  }, [hierarchy.binds, mutate, navigate]);
+
   const selected = useMemo(() => {
     const sel = findSelectedNode(hierarchy, urlParams);
     // Initialize formData when selection changes
@@ -222,6 +418,10 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         setFormData(transformedData as Record<string, unknown>);
       } else if (sel.type === "policy") {
         setFormData(sel.node.policy as Record<string, unknown>);
+      } else if (sel.type === "model") {
+        setFormData(sel.node.model as unknown as Record<string, unknown>);
+      } else if (sel.type === "llm" || sel.type === "mcp" || sel.type === "frontendPolicies") {
+        setFormData(sel.data as Record<string, unknown>);
       }
     }
     return sel;
@@ -251,6 +451,10 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         setFormData(transformedData as Record<string, unknown>);
       } else if (selected.type === "policy") {
         setFormData(selected.node.policy as Record<string, unknown>);
+      } else if (selected.type === "model") {
+        setFormData(selected.node.model as unknown as Record<string, unknown>);
+      } else if (selected.type === "llm" || selected.type === "mcp" || selected.type === "frontendPolicies") {
+        setFormData(selected.data as Record<string, unknown>);
       }
     }
   }, [isEditing, selected]);
@@ -290,7 +494,26 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   const handleSave = async (fd: Record<string, unknown>) => {
     setSaving(true);
     try {
+      // Top-level types are handled separately in their own render sections
+      if (selected.type === "llm" || selected.type === "mcp" || selected.type === "frontendPolicies") {
+        return;
+      }
+
+      // Handle model updates
+      if (selected.type === "model") {
+        await api.updateLLMModelByIndex(selected.node.modelIndex, fd);
+        toast.success("Model updated successfully");
+        await mutate();
+        navigate(`/traffic3/llm/model/${selected.node.modelIndex}`);
+        return;
+      }
+
       const { port, li, ri, bi, isTcpRoute } = urlParams;
+
+      // Guard: these types require a port
+      if (port === undefined) {
+        throw new Error("Port is required for this operation");
+      }
 
       // Apply form-specific transformation if available
       const form = forms[selected.type] as any;
@@ -365,7 +588,26 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   const handleDelete = async () => {
     setSaving(true);
     try {
+      // Top-level types are handled separately in their own render sections
+      if (selected.type === "llm" || selected.type === "mcp" || selected.type === "frontendPolicies") {
+        return;
+      }
+
+      // Handle model deletion
+      if (selected.type === "model") {
+        await api.removeLLMModelByIndex(selected.node.modelIndex);
+        toast.success("Model deleted successfully");
+        await mutate();
+        navigate("/traffic3/llm");
+        return;
+      }
+
       const { port, li, ri, bi, isTcpRoute } = urlParams;
+
+      // Guard: these types require a port
+      if (port === undefined) {
+        throw new Error("Port is required for this operation");
+      }
 
       if (selected.type === "bind") {
         await api.removeBind(port);
@@ -455,13 +697,21 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               <TypeBadge>Bind</TypeBadge>
             </TitleLeft>
             {!isEditing && (
-              <Button
-                type="primary"
-                icon={<Edit2 size={14} />}
-                onClick={() => navigate(location.pathname + "?edit=true")}
-              >
-                Edit
-              </Button>
+              <Space>
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => handleAddListener(node.bind.port)}
+                >
+                  Add Listener
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<Edit2 size={14} />}
+                  onClick={() => navigate(location.pathname + "?edit=true")}
+                >
+                  Edit
+                </Button>
+              </Space>
             )}
             {isEditing && (
               <Button
@@ -529,6 +779,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   if (selected.type === "listener") {
     const { node } = selected;
     const protocol = node.listener.protocol ?? "HTTP";
+    const isTcp = protocol === "TCP" || protocol === "TLS";
     return (
       <Container>
         <Header>
@@ -542,13 +793,21 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               <ProtocolTag protocol={protocol} />
             </TitleLeft>
             {!isEditing && (
-              <Button
-                type="primary"
-                icon={<Edit2 size={14} />}
-                onClick={() => navigate(location.pathname + "?edit=true")}
-              >
-                Edit
-              </Button>
+              <Space>
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => handleAddRoute(selected.bind.bind.port, node.listenerIndex, isTcp)}
+                >
+                  {isTcp ? "Add TCP Route" : "Add Route"}
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<Edit2 size={14} />}
+                  onClick={() => navigate(location.pathname + "?edit=true")}
+                >
+                  Edit
+                </Button>
+              </Space>
             )}
             {isEditing && (
               <Button
@@ -618,6 +877,43 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   if (selected.type === "route") {
     const { node } = selected;
     const isTcp = node.isTcp;
+    const { port, li, ri } = urlParams;
+
+    // Guard: route requires port, li, and ri
+    if (port === undefined || li === undefined || ri === undefined) {
+      return null;
+    }
+
+    // Check which policy types already exist
+    const existingPolicyTypes = new Set(node.policies.map(p => p.policyType));
+    const hasCors = existingPolicyTypes.has('cors');
+    const hasRequestHeaderModifier = existingPolicyTypes.has('requestHeaderModifier');
+    const hasResponseHeaderModifier = existingPolicyTypes.has('responseHeaderModifier');
+
+    const policyMenuItems: MenuProps["items"] = [
+      {
+        key: "addCors",
+        label: hasCors ? "CORS policy already exists" : "Add CORS Policy",
+        icon: <PlusOutlined />,
+        disabled: hasCors,
+        onClick: () => !hasCors && handleAddPolicy(port, li, ri, isTcp, 'cors'),
+      },
+      {
+        key: "addRequestHeaderModifier",
+        label: hasRequestHeaderModifier ? "Request Header Modifier already exists" : "Add Request Header Modifier",
+        icon: <PlusOutlined />,
+        disabled: hasRequestHeaderModifier,
+        onClick: () => !hasRequestHeaderModifier && handleAddPolicy(port, li, ri, isTcp, 'requestHeaderModifier'),
+      },
+      {
+        key: "addResponseHeaderModifier",
+        label: hasResponseHeaderModifier ? "Response Header Modifier already exists" : "Add Response Header Modifier",
+        icon: <PlusOutlined />,
+        disabled: hasResponseHeaderModifier,
+        onClick: () => !hasResponseHeaderModifier && handleAddPolicy(port, li, ri, isTcp, 'responseHeaderModifier'),
+      },
+    ];
+
     return (
       <Container>
         <Header>
@@ -630,13 +926,26 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
               <TypeBadge>{isTcp ? "TCP Route" : "HTTP Route"}</TypeBadge>
             </TitleLeft>
             {!isEditing && (
-              <Button
-                type="primary"
-                icon={<Edit2 size={14} />}
-                onClick={() => navigate(location.pathname + "?edit=true")}
-              >
-                Edit
-              </Button>
+              <Space>
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => handleAddBackend(port, li, ri, isTcp)}
+                >
+                  Add Backend
+                </Button>
+                <Dropdown menu={{ items: policyMenuItems }} trigger={["click"]}>
+                  <Button icon={<PlusOutlined />}>
+                    Add Policy
+                  </Button>
+                </Dropdown>
+                <Button
+                  type="primary"
+                  icon={<Edit2 size={14} />}
+                  onClick={() => navigate(location.pathname + "?edit=true")}
+                >
+                  Edit
+                </Button>
+              </Space>
             )}
             {isEditing && (
               <Button
@@ -879,6 +1188,268 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
                 title="Delete this policy?"
                 description="This cannot be undone."
                 onConfirm={handleDelete}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+              >
+                <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                  Delete
+                </Button>
+              </Popconfirm>
+              <Space>
+                <Button
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  Save Changes
+                </Button>
+              </Space>
+            </FormActions>
+          )}
+          {!isEditing && (
+            <FormActions>
+              <div />
+              <Button onClick={() => navigate("/traffic3")}>
+                Back to Overview
+              </Button>
+            </FormActions>
+          )}
+        </Form>
+      </Container>
+    );
+  }
+
+  // Handle model type
+  if (selected.type === "model") {
+    const { node } = selected;
+    const modelName = node.model.name || `Model ${node.modelIndex + 1}`;
+
+    return (
+      <Container>
+        <Header>
+          <TitleRow>
+            <TitleLeft>
+              <Title>
+                {isEditing ? "Edit: " : ""}{modelName}
+              </Title>
+              <TypeBadge>Model</TypeBadge>
+            </TitleLeft>
+            {!isEditing && (
+              <Button
+                type="primary"
+                icon={<Edit2 size={14} />}
+                onClick={() => navigate(location.pathname + "?edit=true")}
+              >
+                Edit
+              </Button>
+            )}
+            {isEditing && (
+              <Button
+                icon={<X size={14} />}
+                onClick={() => navigate(location.pathname)}
+              >
+                Cancel
+              </Button>
+            )}
+          </TitleRow>
+          <Description>
+            Model configuration for LLM provider
+          </Description>
+        </Header>
+
+        <SectionTitle>Model Details</SectionTitle>
+        <Form
+          key={isEditing ? 'editing' : 'viewing'}
+          schema={forms.model.schema}
+          uiSchema={forms.model.uiSchema}
+          formData={formData}
+          validator={validator}
+          disabled={!isEditing || saving}
+          onChange={({ formData: fd }) => setFormData(fd)}
+          onSubmit={handleSubmit}
+          onError={handleError}
+        >
+          {isEditing && (
+            <FormActions>
+              <Popconfirm
+                title={`Delete model "${modelName}"?`}
+                description="This cannot be undone."
+                onConfirm={handleDelete}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+              >
+                <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                  Delete
+                </Button>
+              </Popconfirm>
+              <Space>
+                <Button
+                  onClick={() => navigate(location.pathname)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  Save Changes
+                </Button>
+              </Space>
+            </FormActions>
+          )}
+          {!isEditing && (
+            <FormActions>
+              <div />
+              <Button onClick={() => navigate("/traffic3/llm")}>
+                Back to LLM Config
+              </Button>
+            </FormActions>
+          )}
+        </Form>
+      </Container>
+    );
+  }
+
+  // Handle top-level config types (llm, mcp, frontendPolicies)
+  if (selected.type === "llm" || selected.type === "mcp" || selected.type === "frontendPolicies") {
+    const typeLabels = {
+      llm: "LLM Configuration",
+      mcp: "MCP Configuration",
+      frontendPolicies: "Frontend Policies",
+    };
+
+    const handleTopLevelSave = async (fd: Record<string, unknown>) => {
+      setSaving(true);
+      try {
+        if (selected.type === "llm") {
+          await api.createOrUpdateLLM(fd);
+        } else if (selected.type === "mcp") {
+          await api.createOrUpdateMCP(fd);
+        } else if (selected.type === "frontendPolicies") {
+          await api.createOrUpdateFrontendPolicies(fd);
+        }
+        toast.success(`${typeLabels[selected.type]} updated successfully`);
+        mutate();
+        navigate(location.pathname); // Remove ?edit=true
+      } catch (e: unknown) {
+        const errorMessage =
+          e && typeof e === "object" && "message" in e && typeof e.message === "string"
+            ? e.message
+            : "Failed to save changes";
+        toast.error(errorMessage);
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handleTopLevelDelete = async () => {
+      setSaving(true);
+      try {
+        if (selected.type === "llm") {
+          await api.deleteLLM();
+        } else if (selected.type === "mcp") {
+          await api.deleteMCP();
+        } else if (selected.type === "frontendPolicies") {
+          await api.deleteFrontendPolicies();
+        }
+        toast.success(`${typeLabels[selected.type]} deleted`);
+        mutate();
+        navigate("/traffic3");
+      } catch (e: unknown) {
+        const errorMessage =
+          e && typeof e === "object" && "message" in e && typeof e.message === "string"
+            ? e.message
+            : "Failed to delete";
+        toast.error(errorMessage);
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    return (
+      <Container>
+        <Header>
+          <TitleRow>
+            <TitleLeft>
+              <Title>
+                {isEditing ? "Edit: " : ""}{typeLabels[selected.type]}
+              </Title>
+              <TypeBadge>{selected.type.toUpperCase()}</TypeBadge>
+            </TitleLeft>
+            {!isEditing && (
+              <Space>
+                {selected.type === "llm" && (
+                  <Button
+                    icon={<PlusOutlined />}
+                    onClick={async () => {
+                      try {
+                        const newModel = {
+                          name: `model-${(hierarchy.llm?.models.length ?? 0) + 1}`,
+                          provider: "openAI",
+                        };
+                        await api.createLLMModel(newModel);
+                        toast.success("Model created successfully");
+
+                        // Wait for config to refresh and get the updated data
+                        const freshConfig = await mutate();
+
+                        // Find the index of the newly created model from fresh data
+                        const llmConfig = freshConfig?.llm as any;
+                        const newIndex = llmConfig?.models ? llmConfig.models.length - 1 : 0;
+                        navigate(`/traffic3/llm/model/${newIndex}?edit=true&creating=true`);
+                      } catch (e: unknown) {
+                        toast.error(e instanceof Error ? e.message : "Failed to create model");
+                      }
+                    }}
+                  >
+                    Add Model
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  icon={<Edit2 size={14} />}
+                  onClick={() => navigate(location.pathname + "?edit=true")}
+                >
+                  Edit
+                </Button>
+              </Space>
+            )}
+            {isEditing && (
+              <Button
+                icon={<X size={14} />}
+                onClick={() => navigate(location.pathname)}
+              >
+                Cancel
+              </Button>
+            )}
+          </TitleRow>
+          <Description>
+            {selected.type === "llm" && "Configure LLM providers and models"}
+            {selected.type === "mcp" && "Configure Model Context Protocol settings"}
+            {selected.type === "frontendPolicies" && "Configure frontend-wide policies"}
+          </Description>
+        </Header>
+
+        <SectionTitle>{typeLabels[selected.type]} Details</SectionTitle>
+        <Form
+          key={isEditing ? 'editing' : 'viewing'}
+          schema={forms[selected.type].schema}
+          uiSchema={forms[selected.type].uiSchema}
+          formData={formData}
+          validator={validator}
+          disabled={!isEditing || saving}
+          onChange={({ formData: fd }) => setFormData(fd)}
+          onSubmit={({ formData: fd }) => {
+            if (fd) handleTopLevelSave(fd);
+          }}
+          onError={handleError}
+        >
+          {isEditing && (
+            <FormActions>
+              <Popconfirm
+                title={`Delete ${typeLabels[selected.type]}?`}
+                description="This cannot be undone."
+                onConfirm={handleTopLevelDelete}
                 okText="Delete"
                 okButtonProps={{ danger: true }}
               >

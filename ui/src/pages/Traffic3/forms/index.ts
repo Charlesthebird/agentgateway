@@ -17,6 +17,7 @@ import * as requestHeaderModifierPolicyForm from "./requestHeaderModifierPolicyF
 import * as responseHeaderModifierPolicyForm from "./responseHeaderModifierPolicyForm";
 import * as topLevelBackendForm from "./topLevelBackendForm";
 import * as llmForm from "./llmForm";
+import * as modelForm from "./modelForm";
 import * as mcpForm from "./mcpForm";
 import * as frontendPoliciesForm from "./frontendPoliciesForm";
 
@@ -32,6 +33,7 @@ export const forms = {
   responseHeaderModifierPolicy: responseHeaderModifierPolicyForm,
   topLevelBackend: topLevelBackendForm,
   llm: llmForm,
+  model: modelForm,
   mcp: mcpForm,
   frontendPolicies: frontendPoliciesForm,
 };
@@ -62,6 +64,7 @@ export const resourceLabels: Record<ResourceType, { singular: string; plural: st
   responseHeaderModifierPolicy: { singular: "Response Header Modifier", plural: "Response Header Modifiers" },
   topLevelBackend: { singular: "Backend", plural: "Backends" },
   llm: { singular: "LLM Config", plural: "LLM Configs" },
+  model: { singular: "Model", plural: "Models" },
   mcp: { singular: "MCP Config", plural: "MCP Configs" },
   frontendPolicies: { singular: "Frontend Policies", plural: "Frontend Policies" },
 };
