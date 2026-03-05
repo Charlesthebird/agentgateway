@@ -26,7 +26,6 @@ export const schema: RJSFSchema = {
     },
     policies: {
       type: "object",
-      title: "Backend Policies",
       description: "Optional backend-level policies",
       additionalProperties: true,
     },
@@ -243,8 +242,7 @@ export const schema: RJSFSchema = {
  * UI Schema for Backend
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Backend Configuration",
-  "ui:description": "Configure backend destination for routing traffic",
+  "ui:title": "",
   backendType: {
     "ui:widget": "select",
     "ui:help": "Service: Kubernetes service | Host: Direct hostname/IP | Dynamic: Runtime-determined | MCP: Model Context Protocol | AI: LLM provider",
@@ -254,6 +252,7 @@ export const uiSchema: UiSchema = {
     "ui:help": "Higher weights receive more traffic. Default is 1.",
   },
   policies: {
+    "ui:title": "",
     "ui:help": "Optional: Backend-level policies for this destination",
   },
   service: {

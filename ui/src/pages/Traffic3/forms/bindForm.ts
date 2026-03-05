@@ -24,14 +24,7 @@ export const schema: RJSFSchema = {
       default: "direct",
       description: "Protocol for tunneling",
     },
-    listeners: {
-      type: "array",
-      title: "Listeners",
-      items: {
-        type: "object",
-      },
-      default: [],
-    },
+    // listeners removed - managed via hierarchy tree
   },
 };
 
@@ -39,8 +32,7 @@ export const schema: RJSFSchema = {
  * UI Schema for Bind
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Bind Configuration",
-  "ui:description": "Configure port binding for the gateway. Listeners are configured separately and will automatically attach to this bind.",
+  "ui:title": "",
   port: {
     "ui:widget": "updown",
     "ui:placeholder": "8080",
@@ -49,9 +41,6 @@ export const uiSchema: UiSchema = {
   tunnelProtocol: {
     "ui:widget": "select",
     "ui:help": "Choose the tunneling protocol (direct is most common)",
-  },
-  listeners: {
-    "ui:widget": "hidden",
   },
 };
 

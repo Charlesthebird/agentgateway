@@ -3,61 +3,6 @@ binds:
   tunnelProtocol: direct
   listeners:
   - protocol: HTTP
-    name: listener1
-    namespace: default1
-    hostname: '*'
-    routes:
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /asdf
-      backends:
-      - service:
-          name:
-            namespace: default123 asdf
-            hostname: service223334444 123
-          port: 8080
-        weight: 1
-      name: route
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-  - protocol: HTTP
-    name: listener
-    hostname: '*'
-    routes: []
-  - protocol: HTTP
     name: listener
     hostname: '*'
     routes:
@@ -67,6 +12,13 @@ binds:
           pathPrefix: /
       backends: []
       name: route
+    - hostnames:
+      - asdf
+      matches:
+      - path:
+          pathPrefix: /
+      backends: []
+      name: my-route-123
     - hostnames: []
       matches:
       - path:
@@ -85,18 +37,6 @@ binds:
           pathPrefix: /
       backends: []
       name: route
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-- port: 8080
-  tunnelProtocol: direct
-  listeners: []
-- port: 8081
-  tunnelProtocol: direct
-  listeners: []
 - port: 8082
   tunnelProtocol: direct
   listeners: []
@@ -106,12 +46,6 @@ binds:
 llm:
   models:
   - name: model-1
-    provider: openAI
-  - name: model-2
-    provider: openAI
-  - name: model-3
-    provider: openAI
-  - name: model-4
     provider: openAI
 frontendPolicies: {}
 mcp:

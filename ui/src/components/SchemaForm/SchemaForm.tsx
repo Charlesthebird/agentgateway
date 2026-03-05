@@ -7,6 +7,7 @@ import {
   ArrayFieldTemplate,
   CollapsibleObjectFieldTemplate,
   FieldTemplate,
+  WrapIfAdditionalTemplate,
 } from "../FormTemplates";
 
 interface SchemaFormProps {
@@ -92,6 +93,7 @@ export function SchemaForm({
         ObjectFieldTemplate: CollapsibleObjectFieldTemplate,
         FieldTemplate: FieldTemplate,
         ArrayFieldTemplate: ArrayFieldTemplate,
+        WrapIfAdditionalTemplate,
       }}
       // Ant Design form configuration
       showErrorList={false}

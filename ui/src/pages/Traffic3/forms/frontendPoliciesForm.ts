@@ -11,7 +11,6 @@ export const schema: RJSFSchema = {
   properties: {
     http: {
       type: "object",
-      title: "HTTP Settings",
       description: "Settings for handling incoming HTTP requests",
       additionalProperties: true,
       properties: {
@@ -66,7 +65,6 @@ export const schema: RJSFSchema = {
     },
     tls: {
       type: "object",
-      title: "TLS Settings",
       description: "Settings for handling incoming TLS connections",
       additionalProperties: true,
       properties: {
@@ -109,13 +107,11 @@ export const schema: RJSFSchema = {
     },
     tcp: {
       type: "object",
-      title: "TCP Settings",
       description: "Settings for handling incoming TCP connections",
       additionalProperties: true,
     },
     accessLog: {
       type: "object",
-      title: "Access Log Settings",
       description: "Settings for request access logs",
       additionalProperties: true,
       properties: {
@@ -144,7 +140,6 @@ export const schema: RJSFSchema = {
     },
     tracing: {
       type: "object",
-      title: "Tracing Configuration",
       description: "OpenTelemetry distributed tracing settings",
       additionalProperties: true,
       properties: {
@@ -234,9 +229,9 @@ export const schema: RJSFSchema = {
  * UI Schema for Frontend Policies
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Frontend Policies Configuration",
-  "ui:description": "Configure frontend-level policies for HTTP, TLS, TCP, logging, and tracing",
+  "ui:title": "",
   http: {
+    "ui:title": "",
     maxBufferSize: {
       "ui:placeholder": "2097152",
       "ui:help": "Default: 2097152 bytes (2MB)",
@@ -268,6 +263,7 @@ export const uiSchema: UiSchema = {
     },
   },
   tls: {
+    "ui:title": "",
     handshakeTimeout: {
       "ui:placeholder": "15s",
       "ui:help": "Duration format: 10s, 5m, 1h",
@@ -293,12 +289,17 @@ export const uiSchema: UiSchema = {
     },
   },
   accessLog: {
+    "ui:title": "",
     filter: {
       "ui:placeholder": "request.path.startsWith('/api')",
       "ui:help": "CEL expression to filter which requests are logged",
     },
   },
+  tcp: {
+    "ui:title": "",
+  },
   tracing: {
+    "ui:title": "",
     service: {
       name: {
         "ui:placeholder": "jaeger or default/jaeger",

@@ -23,7 +23,6 @@ export const schema: RJSFSchema = {
     },
     params: {
       type: "object",
-      title: "Provider Parameters",
       description: "Model-specific parameters (API keys, regions, etc.)",
       additionalProperties: true,
       properties: {
@@ -66,19 +65,16 @@ export const schema: RJSFSchema = {
     },
     defaults: {
       type: "object",
-      title: "Default Values",
       description: "Default values applied when fields are missing from requests",
       additionalProperties: true,
     },
     overrides: {
       type: "object",
-      title: "Override Values",
       description: "Values that override user-provided fields in requests",
       additionalProperties: true,
     },
     transformation: {
       type: "object",
-      title: "Field Transformations",
       description: "CEL expressions to transform request fields",
       additionalProperties: {
         type: "string",
@@ -86,7 +82,6 @@ export const schema: RJSFSchema = {
     },
     requestHeaders: {
       type: "object",
-      title: "Request Headers",
       description: "Modify headers sent to the provider",
       additionalProperties: true,
       properties: {
@@ -118,7 +113,6 @@ export const schema: RJSFSchema = {
     },
     guardrails: {
       type: "object",
-      title: "Guardrails",
       description: "Content safety and validation rules",
       additionalProperties: true,
       properties: {
@@ -178,8 +172,7 @@ export const schema: RJSFSchema = {
  * UI Schema for LLM Model
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "LLM Model",
-  "ui:description": "Configure an LLM model and its provider settings",
+  "ui:title": "",
   name: {
     "ui:placeholder": "gpt-4",
     "ui:help": "Model name that users will request",
@@ -188,6 +181,7 @@ export const uiSchema: UiSchema = {
     "ui:widget": "select",
   },
   params: {
+    "ui:title": "",
     model: {
       "ui:placeholder": "gpt-4-turbo",
       "ui:help": "Override the model name sent to the provider",
@@ -219,18 +213,23 @@ export const uiSchema: UiSchema = {
     },
   },
   defaults: {
+    "ui:title": "",
     "ui:help": "Example: {\"temperature\": 0.7, \"max_tokens\": 1000}",
   },
   overrides: {
+    "ui:title": "",
     "ui:help": "Example: {\"top_p\": 1.0} - forces this value even if user provides different",
   },
   transformation: {
+    "ui:title": "",
     "ui:help": "Example: {\"model\": \"request.model + '-latest'\"}",
   },
   requestHeaders: {
+    "ui:title": "",
     "ui:help": "Modify headers sent to the LLM provider",
   },
   guardrails: {
+    "ui:title": "",
     "ui:help": "Advanced: Add content safety filters and validation rules",
   },
   matches: {

@@ -16,7 +16,6 @@ export const schema: RJSFSchema = {
   properties: {
     name: {
       type: "object",
-      title: "Resource Name",
       required: ["name", "namespace"],
       properties: {
         name: {
@@ -41,7 +40,6 @@ export const schema: RJSFSchema = {
     },
     target: {
       type: "object",
-      title: "Target",
       description: "What this policy applies to",
       oneOf: [
         {
@@ -132,7 +130,6 @@ export const schema: RJSFSchema = {
     },
     policy: {
       type: "object",
-      title: "Policy Configuration",
       description: "Policy settings (e.g., CORS, rate limiting, authentication, etc.)",
       additionalProperties: true,
       properties: {
@@ -221,9 +218,9 @@ export const schema: RJSFSchema = {
  * UI Schema for Policy
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Policy Configuration",
-  "ui:description": "Configure a named policy that can be attached to routes, gateways, or backends",
+  "ui:title": "",
   name: {
+    "ui:title": "",
     name: {
       "ui:placeholder": "e.g., my-policy",
     },
@@ -236,9 +233,11 @@ export const uiSchema: UiSchema = {
     "ui:help": "Route policies apply after routing decisions, gateway policies before",
   },
   target: {
+    "ui:title": "",
     "ui:help": "Select what this policy should apply to",
   },
   policy: {
+    "ui:title": "",
     "ui:help": "Configure the policy settings (CORS, headers, rate limiting, etc.)",
   },
 };

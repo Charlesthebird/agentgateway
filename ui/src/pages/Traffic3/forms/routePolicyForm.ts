@@ -7,13 +7,10 @@ import type { RJSFSchema, UiSchema } from "@rjsf/utils";
  */
 export const schema: RJSFSchema = {
   type: "object",
-  title: "Route Policy",
-  description: "Configure policies for this route (CORS, headers, etc.)",
   additionalProperties: true,
   properties: {
     cors: {
       type: "object",
-      title: "CORS Configuration",
       properties: {
         allowCredentials: {
           type: "boolean",
@@ -48,7 +45,6 @@ export const schema: RJSFSchema = {
     },
     requestHeaderModifier: {
       type: "object",
-      title: "Request Header Modifier",
       properties: {
         add: {
           type: "object",
@@ -69,7 +65,6 @@ export const schema: RJSFSchema = {
     },
     responseHeaderModifier: {
       type: "object",
-      title: "Response Header Modifier",
       properties: {
         add: {
           type: "object",
@@ -95,9 +90,9 @@ export const schema: RJSFSchema = {
  * UI Schema
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Route Policy Configuration",
-  "ui:description": "Configure inline policies for this route",
+  "ui:title": "",
   cors: {
+    "ui:title": "",
     allowOrigins: {
       "ui:help": "e.g., https://example.com or * for all origins",
     },

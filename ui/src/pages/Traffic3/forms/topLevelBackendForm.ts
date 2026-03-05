@@ -22,7 +22,6 @@ export const schema: RJSFSchema = {
     },
     policies: {
       type: "object",
-      title: "Policies",
       description: "Backend-level policies (advanced)",
       additionalProperties: true,
     },
@@ -33,8 +32,7 @@ export const schema: RJSFSchema = {
  * UI Schema for top-level Backend
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Backend Configuration",
-  "ui:description": "Configure a named backend destination",
+  "ui:title": "",
   name: {
     "ui:placeholder": "e.g., my-backend",
     "ui:help": "Unique identifier for this backend",
@@ -44,6 +42,7 @@ export const uiSchema: UiSchema = {
     "ui:help": "Target host and optional port for this backend",
   },
   policies: {
+    "ui:title": "",
     "ui:help": "Optional policies to apply to this backend",
   },
 };

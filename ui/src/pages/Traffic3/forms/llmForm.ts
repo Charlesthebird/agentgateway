@@ -17,7 +17,6 @@ export const schema: RJSFSchema = {
     },
     policies: {
       type: "object",
-      title: "Policies",
       description: "Policies for handling incoming requests before model selection",
       additionalProperties: true,
     },
@@ -28,8 +27,7 @@ export const schema: RJSFSchema = {
  * UI Schema for LLM Configuration
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "LLM Configuration",
-  "ui:description": "Configure LLM gateway settings. Models are managed separately as child resources.",
+  "ui:title": "",
   port: {
     "ui:placeholder": "8080",
     "ui:help": "Leave empty to use the main gateway port",

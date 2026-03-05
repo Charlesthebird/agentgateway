@@ -6,8 +6,6 @@ import type { RJSFSchema, UiSchema } from "@rjsf/utils";
  */
 export const schema: RJSFSchema = {
   type: "object",
-  title: "CORS Policy",
-  description: "Configure Cross-Origin Resource Sharing (CORS) for this route",
   properties: {
     allowCredentials: {
       type: "boolean",
@@ -50,8 +48,7 @@ export const schema: RJSFSchema = {
  * UI Schema
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "CORS Configuration",
-  "ui:description": "Configure Cross-Origin Resource Sharing for this route",
+  "ui:title": "",
   allowOrigins: {
     "ui:help": "e.g., https://example.com or * for all origins",
   },

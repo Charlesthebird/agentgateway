@@ -6,18 +6,14 @@ import type { RJSFSchema, UiSchema } from "@rjsf/utils";
  */
 export const schema: RJSFSchema = {
   type: "object",
-  title: "Response Header Modifier",
-  description: "Modify HTTP response headers before returning to the client",
   properties: {
     add: {
       type: "object",
-      title: "Add Headers",
       description: "Headers to add to the response (if not already present)",
       additionalProperties: { type: "string" },
     },
     set: {
       type: "object",
-      title: "Set Headers",
       description: "Headers to set on the response (overwriting if present)",
       additionalProperties: { type: "string" },
     },
@@ -34,12 +30,13 @@ export const schema: RJSFSchema = {
  * UI Schema
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Response Header Modifier",
-  "ui:description": "Modify response headers before returning to the client",
+  "ui:title": "",
   add: {
+    "ui:title": "",
     "ui:help": "Add headers only if they don't already exist",
   },
   set: {
+    "ui:title": "",
     "ui:help": "Set headers, overwriting any existing values",
   },
   remove: {

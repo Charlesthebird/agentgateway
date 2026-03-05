@@ -193,7 +193,6 @@ export const schema: RJSFSchema = {
     },
     policies: {
       type: "object",
-      title: "Policies",
       description: "Global MCP policies",
       additionalProperties: true,
     },
@@ -204,8 +203,7 @@ export const schema: RJSFSchema = {
  * UI Schema for MCP Configuration
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "MCP Configuration",
-  "ui:description": "Configure Model Context Protocol servers and routing",
+  "ui:title": "",
   port: {
     "ui:placeholder": "8081",
     "ui:help": "Leave empty to use the main gateway port",

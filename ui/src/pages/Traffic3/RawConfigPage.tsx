@@ -1,4 +1,5 @@
 import styled from "@emotion/styled";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RawConfigEditor } from "./RawConfigEditor";
 
@@ -32,11 +33,18 @@ const Description = styled.p`
 export function RawConfigPage() {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    document.title = "Config Editor - agentgateway";
+    return () => {
+      document.title = "agentgateway";
+    };
+  }, []);
+
   return (
     <Container>
       <PageHeader>
         <div>
-          <PageTitle>Raw Configuration Editor</PageTitle>
+          <PageTitle>Configuration Editor</PageTitle>
           <Description>
             Edit the complete configuration with JSON schema validation
           </Description>

@@ -391,7 +391,7 @@ export function Traffic2Page() {
           icon={<CodeOutlined />}
           onClick={() => navigate("/traffic2/raw-config")}
         >
-          Edit Raw Config
+          Config Editor
         </Button>
       </PageHeader>
 

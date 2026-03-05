@@ -1,13 +1,19 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
 import Form from "@rjsf/antd";
-import { Button, Dropdown, Popconfirm, Space, Spin } from "antd";
+import { Breadcrumb, Button, Dropdown, Popconfirm, Space, Spin } from "antd";
 import type { MenuProps } from "antd";
 import { Edit2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useConfig } from "../../../api";
+import {
+  ArrayFieldTemplate,
+  CollapsibleObjectFieldTemplate,
+  FieldTemplate,
+  WrapIfAdditionalTemplate,
+} from "../../../components/FormTemplates";
 import { ProtocolTag } from "../../../components/ProtocolTag";
 import { StyledAlert } from "../../../components/StyledAlert";
 import { validator } from "../../../utils/validator";
@@ -26,6 +32,17 @@ import * as api from "../../../api/crud";
 import { useNodePolling } from "../hooks/useNodePolling";
 
 // ---------------------------------------------------------------------------
+// Form templates configuration
+// ---------------------------------------------------------------------------
+
+const formTemplates = {
+  ObjectFieldTemplate: CollapsibleObjectFieldTemplate,
+  FieldTemplate,
+  ArrayFieldTemplate,
+  WrapIfAdditionalTemplate,
+};
+
+// ---------------------------------------------------------------------------
 // Styled components
 // ---------------------------------------------------------------------------
 
@@ -38,6 +55,27 @@ const Container = styled.div`
 const Header = styled.div`
   margin-bottom: var(--spacing-xl);
   padding-bottom: var(--spacing-lg);
+`;
+
+const BreadcrumbWrapper = styled.div`
+  margin-bottom: var(--spacing-md);
+
+  .ant-breadcrumb {
+    font-size: 13px;
+  }
+
+  .ant-breadcrumb-link {
+    color: var(--color-text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+
+  .ant-breadcrumb-separator {
+    color: var(--color-text-tertiary);
+  }
 `;
 
 const TitleRow = styled.div`
@@ -96,8 +134,69 @@ const SectionTitle = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-secondary);
-  margin-bottom: 16px;
-  padding-bottom: 8px;
+  margin-bottom: var(--spacing-lg);
+`;
+
+const FormWrapper = styled.div`
+  /* Style for individual form fields (not the top-level container) */
+  .field-object .ant-form-item,
+  fieldset .ant-form-item,
+  .field-array > div {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+
+    [data-theme="light"] & {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  /* Nested fields with slightly darker background for better contrast */
+  .ant-form-item .ant-form-item .ant-form-item,
+  .field-object .field-object .ant-form-item {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.12);
+
+    [data-theme="light"] & {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  /* Field labels */
+  legend,
+  .ant-form-item-label label {
+    font-weight: 600;
+    color: var(--color-text-base);
+  }
+
+  /* Placeholder text with better contrast */
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+    opacity: 1;
+
+    [data-theme="light"] & {
+      color: rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  /* Ant Design specific placeholder styling */
+  .ant-input::placeholder,
+  .ant-input-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+
+    [data-theme="light"] & {
+      color: rgba(0, 0, 0, 0.45);
+    }
+  }
 `;
 
 const FormActions = styled.div`
@@ -106,6 +205,7 @@ const FormActions = styled.div`
   gap: var(--spacing-sm);
   margin-top: var(--spacing-lg);
   padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border-secondary);
 `;
 
 // ---------------------------------------------------------------------------
@@ -211,6 +311,106 @@ function findSelectedNode(
     listener: listenerNode,
     bind: bindNode,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Breadcrumb generation helper
+// ---------------------------------------------------------------------------
+
+function generateBreadcrumbItems(
+  selected: ReturnType<typeof findSelectedNode>,
+  navigate: (path: string) => void,
+) {
+  if (!selected) return [];
+
+  const items: { title: React.ReactNode; onClick?: () => void }[] = [
+    {
+      title: "Traffic",
+      onClick: () => navigate("/traffic3"),
+    },
+  ];
+
+  if (selected.type === "bind") {
+    items.push({ title: `Port ${selected.node.bind.port}` });
+  } else if (selected.type === "listener") {
+    items.push({
+      title: `Port ${selected.bind.bind.port}`,
+      onClick: () => navigate(`/traffic3/bind/${selected.bind.bind.port}`),
+    });
+    items.push({
+      title: selected.node.listener.name ?? "(unnamed listener)",
+    });
+  } else if (selected.type === "route") {
+    const port = selected.bind.bind.port;
+    const li = selected.listener.listenerIndex;
+    items.push({
+      title: `Port ${port}`,
+      onClick: () => navigate(`/traffic3/bind/${port}`),
+    });
+    items.push({
+      title: selected.listener.listener.name ?? "(unnamed listener)",
+      onClick: () => navigate(`/traffic3/bind/${port}/listener/${li}`),
+    });
+    items.push({
+      title: (selected.node.route.name as string | undefined) ?? "(unnamed route)",
+    });
+  } else if (selected.type === "backend") {
+    const port = selected.bind.bind.port;
+    const li = selected.listener.listenerIndex;
+    const ri = selected.route.categoryIndex;
+    const routeType = selected.route.isTcp ? "tcp" : "";
+    items.push({
+      title: `Port ${port}`,
+      onClick: () => navigate(`/traffic3/bind/${port}`),
+    });
+    items.push({
+      title: selected.listener.listener.name ?? "(unnamed listener)",
+      onClick: () => navigate(`/traffic3/bind/${port}/listener/${li}`),
+    });
+    items.push({
+      title: (selected.route.route.name as string | undefined) ?? "(unnamed route)",
+      onClick: () => navigate(`/traffic3/bind/${port}/listener/${li}/${routeType}route/${ri}`),
+    });
+    items.push({
+      title: (selected.node.backend as any)?.name ?? "(unnamed backend)",
+    });
+  } else if (selected.type === "policy") {
+    const port = selected.bind.bind.port;
+    const li = selected.listener.listenerIndex;
+    const ri = selected.route.categoryIndex;
+    const routeType = selected.route.isTcp ? "tcp" : "";
+    items.push({
+      title: `Port ${port}`,
+      onClick: () => navigate(`/traffic3/bind/${port}`),
+    });
+    items.push({
+      title: selected.listener.listener.name ?? "(unnamed listener)",
+      onClick: () => navigate(`/traffic3/bind/${port}/listener/${li}`),
+    });
+    items.push({
+      title: (selected.route.route.name as string | undefined) ?? "(unnamed route)",
+      onClick: () => navigate(`/traffic3/bind/${port}/listener/${li}/${routeType}route/${ri}`),
+    });
+    items.push({
+      title: `${selected.node.policyType} Policy`,
+    });
+  } else if (selected.type === "llm") {
+    items.push({ title: "LLM Configuration" });
+  } else if (selected.type === "model") {
+    items.push({
+      title: "LLM Configuration",
+      onClick: () => navigate("/traffic3/llm"),
+    });
+    items.push({
+      title: selected.node.model.name ?? `Model ${selected.node.modelIndex}`,
+    });
+  } else if (selected.type === "mcp") {
+    items.push({ title: "MCP Configuration" });
+  } else if (selected.type === "frontendPolicies") {
+    items.push({ title: "Frontend Policies" });
+  }
+
+  return items;
 }
 
 // ---------------------------------------------------------------------------
@@ -686,9 +886,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   // Render based on node type
   if (selected.type === "bind") {
     const { node } = selected;
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -726,52 +932,55 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>Bind Details</SectionTitle>
-        <Form
-          key={isEditing ? 'editing' : 'viewing'}
-          schema={forms.bind.schema}
-          uiSchema={forms.bind.uiSchema}
-          formData={formData}
-          validator={validator}
-          disabled={!isEditing || saving}
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={handleSubmit}
-          onError={handleError}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title="Delete this bind?"
-                description="This cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
+        <FormWrapper>
+          <Form
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.bind.schema}
+            uiSchema={forms.bind.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          >
+            {isEditing && (
+              <FormActions>
+                <Popconfirm
+                  title="Delete this bind?"
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
                 >
-                  Cancel
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Space>
+                  <Button
+                    onClick={() => navigate(location.pathname)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={saving}>
+                    Save Changes
+                  </Button>
+                </Space>
+              </FormActions>
+            )}
+            {!isEditing && (
+              <FormActions>
+                <div />
+                <Button onClick={() => navigate("/traffic3")}>
+                  Back to Overview
                 </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3")}>
-                Back to Overview
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+              </FormActions>
+            )}
+          </Form>
+        </FormWrapper>
       </Container>
     );
   }
@@ -780,9 +989,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
     const { node } = selected;
     const protocol = node.listener.protocol ?? "HTTP";
     const isTcp = protocol === "TCP" || protocol === "TLS";
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -824,52 +1039,55 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>Listener Details</SectionTitle>
-        <Form
-          key={isEditing ? 'editing' : 'viewing'}
-          schema={forms.listener.schema}
-          uiSchema={forms.listener.uiSchema}
-          formData={formData}
-          validator={validator}
-          disabled={!isEditing || saving}
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={handleSubmit}
-          onError={handleError}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title="Delete this listener?"
-                description="This cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
+        <FormWrapper>
+          <Form
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.listener.schema}
+            uiSchema={forms.listener.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          >
+            {isEditing && (
+              <FormActions>
+                <Popconfirm
+                  title="Delete this listener?"
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
                 >
-                  Cancel
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Space>
+                  <Button
+                    onClick={() => navigate(location.pathname)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={saving}>
+                    Save Changes
+                  </Button>
+                </Space>
+              </FormActions>
+            )}
+            {!isEditing && (
+              <FormActions>
+                <div />
+                <Button onClick={() => navigate("/traffic3")}>
+                  Back to Overview
                 </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3")}>
-                Back to Overview
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+              </FormActions>
+            )}
+          </Form>
+        </FormWrapper>
       </Container>
     );
   }
@@ -914,9 +1132,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       },
     ];
 
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -963,7 +1187,8 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>Route Details</SectionTitle>
-        <Form
+        <FormWrapper>
+          <Form
           key={isEditing ? 'editing' : 'viewing'}
           schema={forms.route.schema}
           uiSchema={forms.route.uiSchema}
@@ -973,6 +1198,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
           onChange={({ formData: fd }) => setFormData(fd)}
           onSubmit={handleSubmit}
           onError={handleError}
+          templates={formTemplates}
         >
           {isEditing && (
             <FormActions>
@@ -1009,6 +1235,7 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
             </FormActions>
           )}
         </Form>
+        </FormWrapper>
       </Container>
     );
   }
@@ -1027,9 +1254,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       else if ("ai" in b) backendType = "AI Backend";
     }
 
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -1063,52 +1296,55 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>Backend Details</SectionTitle>
-        <Form
-          key={isEditing ? 'editing' : 'viewing'}
-          schema={forms.backend.schema}
-          uiSchema={forms.backend.uiSchema}
-          formData={formData}
-          validator={validator}
-          disabled={!isEditing || saving}
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={handleSubmit}
-          onError={handleError}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title="Delete this backend?"
-                description="This cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
+        <FormWrapper>
+          <Form
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.backend.schema}
+            uiSchema={forms.backend.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          >
+            {isEditing && (
+              <FormActions>
+                <Popconfirm
+                  title="Delete this backend?"
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
                 >
-                  Cancel
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Space>
+                  <Button
+                    onClick={() => navigate(location.pathname)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={saving}>
+                    Save Changes
+                  </Button>
+                </Space>
+              </FormActions>
+            )}
+            {!isEditing && (
+              <FormActions>
+                <div />
+                <Button onClick={() => navigate("/traffic3")}>
+                  Back to Overview
                 </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3")}>
-                Back to Overview
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+              </FormActions>
+            )}
+          </Form>
+        </FormWrapper>
       </Container>
     );
   }
@@ -1120,9 +1356,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       .replace(/^./, (str) => str.toUpperCase())
       .trim();
 
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -1155,68 +1397,71 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>Policy Details</SectionTitle>
-        <Form
-          key={isEditing ? 'editing' : 'viewing'}
-          schema={
-            selected.node.policyType === 'cors'
-              ? forms.corsPolicy.schema
-              : selected.node.policyType === 'requestHeaderModifier'
-              ? forms.requestHeaderModifierPolicy.schema
-              : selected.node.policyType === 'responseHeaderModifier'
-              ? forms.responseHeaderModifierPolicy.schema
-              : forms.routePolicy.schema
-          }
-          uiSchema={
-            selected.node.policyType === 'cors'
-              ? forms.corsPolicy.uiSchema
-              : selected.node.policyType === 'requestHeaderModifier'
-              ? forms.requestHeaderModifierPolicy.uiSchema
-              : selected.node.policyType === 'responseHeaderModifier'
-              ? forms.responseHeaderModifierPolicy.uiSchema
-              : forms.routePolicy.uiSchema
-          }
-          formData={formData}
-          validator={validator}
-          disabled={!isEditing || saving}
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={handleSubmit}
-          onError={handleError}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title="Delete this policy?"
-                description="This cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
+        <FormWrapper>
+          <Form
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={
+              selected.node.policyType === 'cors'
+                ? forms.corsPolicy.schema
+                : selected.node.policyType === 'requestHeaderModifier'
+                ? forms.requestHeaderModifierPolicy.schema
+                : selected.node.policyType === 'responseHeaderModifier'
+                ? forms.responseHeaderModifierPolicy.schema
+                : forms.routePolicy.schema
+            }
+            uiSchema={
+              selected.node.policyType === 'cors'
+                ? forms.corsPolicy.uiSchema
+                : selected.node.policyType === 'requestHeaderModifier'
+                ? forms.requestHeaderModifierPolicy.uiSchema
+                : selected.node.policyType === 'responseHeaderModifier'
+                ? forms.responseHeaderModifierPolicy.uiSchema
+                : forms.routePolicy.uiSchema
+            }
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          >
+            {isEditing && (
+              <FormActions>
+                <Popconfirm
+                  title="Delete this policy?"
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
                 >
-                  Cancel
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Space>
+                  <Button
+                    onClick={() => navigate(location.pathname)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={saving}>
+                    Save Changes
+                  </Button>
+                </Space>
+              </FormActions>
+            )}
+            {!isEditing && (
+              <FormActions>
+                <div />
+                <Button onClick={() => navigate("/traffic3")}>
+                  Back to Overview
                 </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3")}>
-                Back to Overview
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+              </FormActions>
+            )}
+          </Form>
+        </FormWrapper>
       </Container>
     );
   }
@@ -1225,10 +1470,16 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   if (selected.type === "model") {
     const { node } = selected;
     const modelName = node.model.name || `Model ${node.modelIndex + 1}`;
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
 
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -1260,52 +1511,55 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>Model Details</SectionTitle>
-        <Form
-          key={isEditing ? 'editing' : 'viewing'}
-          schema={forms.model.schema}
-          uiSchema={forms.model.uiSchema}
-          formData={formData}
-          validator={validator}
-          disabled={!isEditing || saving}
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={handleSubmit}
-          onError={handleError}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title={`Delete model "${modelName}"?`}
-                description="This cannot be undone."
-                onConfirm={handleDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
+        <FormWrapper>
+          <Form
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms.model.schema}
+            uiSchema={forms.model.uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={handleSubmit}
+            onError={handleError}
+            templates={formTemplates}
+          >
+            {isEditing && (
+              <FormActions>
+                <Popconfirm
+                  title={`Delete model "${modelName}"?`}
+                  description="This cannot be undone."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
                 >
-                  Cancel
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Space>
+                  <Button
+                    onClick={() => navigate(location.pathname)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={saving}>
+                    Save Changes
+                  </Button>
+                </Space>
+              </FormActions>
+            )}
+            {!isEditing && (
+              <FormActions>
+                <div />
+                <Button onClick={() => navigate("/traffic3/llm")}>
+                  Back to LLM Config
                 </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3/llm")}>
-                Back to LLM Config
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+              </FormActions>
+            )}
+          </Form>
+        </FormWrapper>
       </Container>
     );
   }
@@ -1366,9 +1620,15 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       }
     };
 
+    const breadcrumbItems = generateBreadcrumbItems(selected, navigate);
     return (
       <Container>
         <Header>
+          <BreadcrumbWrapper>
+            <Breadcrumb
+              items={breadcrumbItems}
+            />
+          </BreadcrumbWrapper>
           <TitleRow>
             <TitleLeft>
               <Title>
@@ -1431,54 +1691,57 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         </Header>
 
         <SectionTitle>{typeLabels[selected.type]} Details</SectionTitle>
-        <Form
-          key={isEditing ? 'editing' : 'viewing'}
-          schema={forms[selected.type].schema}
-          uiSchema={forms[selected.type].uiSchema}
-          formData={formData}
-          validator={validator}
-          disabled={!isEditing || saving}
-          onChange={({ formData: fd }) => setFormData(fd)}
-          onSubmit={({ formData: fd }) => {
-            if (fd) handleTopLevelSave(fd);
-          }}
-          onError={handleError}
-        >
-          {isEditing && (
-            <FormActions>
-              <Popconfirm
-                title={`Delete ${typeLabels[selected.type]}?`}
-                description="This cannot be undone."
-                onConfirm={handleTopLevelDelete}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} disabled={saving}>
-                  Delete
-                </Button>
-              </Popconfirm>
-              <Space>
-                <Button
-                  onClick={() => navigate(location.pathname)}
-                  disabled={saving}
+        <FormWrapper>
+          <Form
+            key={isEditing ? 'editing' : 'viewing'}
+            schema={forms[selected.type].schema}
+            uiSchema={forms[selected.type].uiSchema}
+            formData={formData}
+            validator={validator}
+            disabled={!isEditing || saving}
+            onChange={({ formData: fd }) => setFormData(fd)}
+            onSubmit={({ formData: fd }) => {
+              if (fd) handleTopLevelSave(fd);
+            }}
+            onError={handleError}
+            templates={formTemplates}
+          >
+            {isEditing && (
+              <FormActions>
+                <Popconfirm
+                  title={`Delete ${typeLabels[selected.type]}?`}
+                  description="This cannot be undone."
+                  onConfirm={handleTopLevelDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
                 >
-                  Cancel
+                  <Button danger icon={<DeleteOutlined />} disabled={saving}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Space>
+                  <Button
+                    onClick={() => navigate(location.pathname)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={saving}>
+                    Save Changes
+                  </Button>
+                </Space>
+              </FormActions>
+            )}
+            {!isEditing && (
+              <FormActions>
+                <div />
+                <Button onClick={() => navigate("/traffic3")}>
+                  Back to Overview
                 </Button>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  Save Changes
-                </Button>
-              </Space>
-            </FormActions>
-          )}
-          {!isEditing && (
-            <FormActions>
-              <div />
-              <Button onClick={() => navigate("/traffic3")}>
-                Back to Overview
-              </Button>
-            </FormActions>
-          )}
-        </Form>
+              </FormActions>
+            )}
+          </Form>
+        </FormWrapper>
       </Container>
     );
   }

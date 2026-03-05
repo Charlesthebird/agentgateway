@@ -34,25 +34,9 @@ export const schema: RJSFSchema = {
       default: "HTTP",
       description: "Protocol for this listener",
     },
-    routes: {
-      type: "array",
-      title: "Routes",
-      items: {
-        type: "object",
-      },
-      default: [],
-    },
-    tcpRoutes: {
-      type: "array",
-      title: "TCP Routes",
-      items: {
-        type: "object",
-      },
-      default: [],
-    },
+    // routes and tcpRoutes removed - managed via hierarchy tree
     policies: {
       type: "object",
-      title: "Gateway Policies",
       description: "Policies applied at the gateway level for this listener",
       additionalProperties: true,
     },
@@ -192,8 +176,7 @@ export const schema: RJSFSchema = {
  * Customizes the form rendering
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Listener Configuration",
-  "ui:description": "Configure listener settings for your gateway. Routes are configured separately and will automatically attach to this listener.",
+  "ui:title": "",
   name: {
     "ui:placeholder": "e.g., main-listener",
     "ui:help": "Optional unique identifier for this listener",
@@ -233,13 +216,8 @@ export const uiSchema: UiSchema = {
       "ui:widget": "select",
     },
   },
-  routes: {
-    "ui:widget": "hidden",
-  },
-  tcpRoutes: {
-    "ui:widget": "hidden",
-  },
   policies: {
+    "ui:title": "",
     "ui:help": "Advanced: Gateway-level policies (CORS, headers, etc.). See documentation for details.",
   },
 };

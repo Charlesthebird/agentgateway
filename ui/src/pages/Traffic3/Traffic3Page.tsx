@@ -360,7 +360,7 @@ export function Traffic3Page() {
           icon={<CodeOutlined />}
           onClick={() => navigate("/traffic3/raw-config")}
         >
-          Edit Raw Config
+          Config Editor
         </Button>
       </PageHeader>
 

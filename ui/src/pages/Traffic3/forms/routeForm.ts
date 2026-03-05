@@ -83,15 +83,7 @@ export const schema: RJSFSchema = {
         required: ["path"],
       },
     },
-    backends: {
-      type: "array",
-      title: "Backend Destinations",
-      description: "List of backend services or hosts to route traffic to",
-      items: {
-        type: "object",
-      },
-      default: [],
-    },
+    // backends removed - managed via hierarchy tree
   },
 };
 
@@ -99,8 +91,7 @@ export const schema: RJSFSchema = {
  * UI Schema for Route
  */
 export const uiSchema: UiSchema = {
-  "ui:title": "Route Configuration",
-  "ui:description": "Configure route matching and behavior",
+  "ui:title": "",
   name: {
     "ui:placeholder": "e.g., api-route",
     "ui:help": "Optional unique identifier for this route",
@@ -135,9 +126,6 @@ export const uiSchema: UiSchema = {
         "ui:help": "Leave empty to match all HTTP methods",
       },
     },
-  },
-  backends: {
-    "ui:widget": "hidden",
   },
 };
 

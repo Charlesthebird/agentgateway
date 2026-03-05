@@ -14,6 +14,8 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
     items,
     canAdd,
     onAddClick,
+    disabled,
+    readonly,
   } = props;
 
   return (
@@ -37,6 +39,7 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
                   size="small"
                   icon={<DeleteOutlined />}
                   onClick={element.onDropIndexClick(element.index)}
+                  disabled={disabled || readonly || element.disabled}
                 >
                   Remove
                 </Button>
@@ -54,6 +57,7 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
             onClick={onAddClick}
             icon={<PlusOutlined />}
             style={{ width: '100%' }}
+            disabled={disabled || readonly}
           >
             Add {title ? title.replace(/s$/, '') : 'Item'}
           </Button>

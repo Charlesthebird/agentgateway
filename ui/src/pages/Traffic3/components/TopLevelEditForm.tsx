@@ -6,6 +6,12 @@ import validator from "@rjsf/validator-ajv8";
 import { forms } from "../forms";
 import * as api from "../../../api/crud";
 import { stripFormDefaults } from "../../../api/helpers";
+import {
+  ArrayFieldTemplate,
+  CollapsibleObjectFieldTemplate,
+  FieldTemplate,
+  WrapIfAdditionalTemplate,
+} from "../../../components/FormTemplates";
 
 export interface TopLevelEditTarget {
   type: "llm" | "mcp" | "frontendPolicies" | "backend" | "policy";
@@ -106,6 +112,12 @@ export function TopLevelEditForm({
       onSubmit={handleSubmit}
       onError={handleError}
       disabled={isSaving}
+      templates={{
+        ObjectFieldTemplate: CollapsibleObjectFieldTemplate,
+        FieldTemplate,
+        ArrayFieldTemplate,
+        WrapIfAdditionalTemplate,
+      }}
     >
       <Space style={{ marginTop: 24 }}>
         <Button type="primary" htmlType="submit" loading={isSaving}>

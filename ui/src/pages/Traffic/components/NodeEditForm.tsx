@@ -14,6 +14,7 @@ import {
   NullTitleFieldTemplate,
   OneOfField,
   SelectWidget,
+  WrapIfAdditionalTemplate,
 } from "../../../components/FormTemplates";
 import { StyledAlert } from "../../../components/StyledAlert";
 import { validator } from "../../../utils/validator";
@@ -263,6 +264,7 @@ export function NodeEditForm({
         FieldTemplate,
         ArrayFieldTemplate,
         TitleFieldTemplate: NullTitleFieldTemplate,
+        WrapIfAdditionalTemplate,
       }}
       showErrorList="top"
       disabled={saving}
