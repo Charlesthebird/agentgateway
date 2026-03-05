@@ -4,6 +4,9 @@ set -euo pipefail
 # Prompt for sudo password immediately
 sudo -v
 
+# Build the UI.
+yarn --cwd=ui build
+
 # Make sure that the schemas are up to date.
 make generate-schema
 
