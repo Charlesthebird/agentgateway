@@ -1,73 +1,67 @@
 binds:
-- port: 8082
-  listeners:
-  - protocol: TCP
-    name: testdsfsdfaaaaabc
-    hostname: abcb.com
-    tls:
-      cert: /asdf
-      key: /asdffasdfsdfa
-      cipherSuites: []
-    tcpRoutes:
-    - name: adsfaaaaaaaasdfasdfasdf
-      namespace: sadf
-      ruleName: d
-    - name: test
-      namespace: a
-      ruleName: asdfasdf
-      hostnames:
-      - b.com
-      backends:
-      - weight: 1
-        service:
-          name: test/abc
-          port: 123
-    - name: myrouteasdf
-      hostnames:
-      - b.com
-  - protocol: HTTP
-    name: lkjlkjl
-    hostname: '*'
-    routes:
-    - matches:
-      - path:
-          pathPrefix: /
-        method: GET
-      backends:
-      - weight: 1
-        dynamic: {}
-      name: myrouteabc
-      ruleName: test1233
-    - matches:
-      - path:
-          pathPrefix: /
-      name: test
-      ruleName: asdf
-  tunnelProtocol: direct
-- port: 8081
-  listeners:
-  - protocol: HBONE
-    name: asdf
-    routes:
-    - matches:
-      - path:
-          pathPrefix: /
-      name: testasdf
-  tunnelProtocol: direct
-- listeners: []
-  port: 2222
-  tunnelProtocol: direct
-- listeners: []
-  port: 65535
-  tunnelProtocol: direct
-- listeners: []
-  port: 333
-  tunnelProtocol: hboneWaypoint
-- listeners: []
-  port: 121
-  tunnelProtocol: direct
-- port: 8080
+- port: 3001
   listeners:
   - protocol: HTTP
+    name: tests
+    namespace: abc
     hostname: '*'
-    routes: []
+    routes:
+    - backends:
+      - mcp:
+          targets:
+          - name: everything
+            stdio:
+              cmd: npx
+              args:
+              - '@modelcontextprotocol/server-everything'
+          statefulMode: stateless
+        weight: 1
+      policies:
+        cors:
+          allowOrigins:
+          - '*'
+          allowHeaders:
+          - mcp-protocol-version
+          - content-type
+          - cache-control
+          exposeHeaders:
+          - Mcp-Session-Id
+    - hostnames:
+      - b.com
+      matches:
+      - path:
+          pathPrefix: /
+      backends:
+      - dynamic: {}
+        weight: 1
+      - mcp:
+          targets: []
+          statefulMode: stateless
+        weight: 1
+      - service:
+          name:
+            namespace: default1
+            hostname: service123
+          port: 8081
+        weight: 12
+      name: route123
+      ruleName: myrule
+      policies:
+        requestHeaderModifier:
+          remove:
+          - asdf
+        responseHeaderModifier:
+          remove:
+          - asdfsdfaasdf
+          - abc
+        cors:
+          allowCredentials: true
+          allowHeaders:
+          - abc
+          allowMethods:
+          - GET
+          allowOrigins:
+          - '*'
+          exposeHeaders:
+          - abc
+          maxAge: 48h
