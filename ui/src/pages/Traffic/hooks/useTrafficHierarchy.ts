@@ -3,12 +3,12 @@ import { useConfig } from "../../../api";
 import type {
   LocalBind,
   LocalListener,
+  LocalListenerProtocol,
+  LocalLLMConfig,
+  LocalLLMModels,
   LocalRoute,
   LocalRouteBackend,
   LocalTCPRoute,
-  LocalListenerProtocol,
-  LocalLLMModels,
-  LocalLLMConfig,
 } from "../../../config";
 
 // ---------------------------------------------------------------------------
@@ -83,12 +83,12 @@ export interface BindNode {
 
 export interface LLMNode {
   /** Raw LLM config (without models - they're in children) */
-  config: Omit<LocalLLMConfig, 'models'>;
+  config: Omit<LocalLLMConfig, "models">;
   /** Models defined under this LLM config */
   models: ModelNode[];
 }
 
-export interface Traffic3Hierarchy {
+export interface TrafficHierarchy {
   binds: BindNode[];
   policies: unknown[];
   backends: unknown[];
@@ -178,7 +178,8 @@ function validateListener(
   }
 
   // Check if listener has no routes
-  const hasRoutes = (listener.routes?.length ?? 0) > 0 || (listener.tcpRoutes?.length ?? 0) > 0;
+  const hasRoutes =
+    (listener.routes?.length ?? 0) > 0 || (listener.tcpRoutes?.length ?? 0) > 0;
   if (!hasRoutes) {
     errors.push({
       level: "warning",
@@ -207,16 +208,19 @@ function validateBind(bind: LocalBind): ValidationError[] {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useTraffic3Hierarchy(): Traffic3Hierarchy {
+export function useTrafficHierarchy(): TrafficHierarchy {
   const { data: config, error, isLoading } = useConfig();
 
-  return useMemo<Traffic3Hierarchy>(() => {
+  return useMemo<TrafficHierarchy>(() => {
     // Flat list of all listener hostname+port pairs for duplicate detection
     const allListenerHostnames: Array<{
       hostname?: string | null;
       port: number;
     }> = (config?.binds ?? []).flatMap((bind) =>
-      (bind.listeners ?? []).map((l) => ({ hostname: l.hostname, port: bind.port })),
+      (bind.listeners ?? []).map((l) => ({
+        hostname: l.hostname,
+        port: bind.port,
+      })),
     );
 
     let totalListeners = 0;
@@ -228,104 +232,116 @@ export function useTraffic3Hierarchy(): Traffic3Hierarchy {
     const binds: BindNode[] = (config?.binds ?? []).map((bind) => {
       const bindErrors = validateBind(bind);
 
-      const listenerNodes: ListenerNode[] = (bind.listeners ?? []).map((listener, listenerIndex) => {
-        totalListeners++;
-        const listenerErrors = validateListener(
-          listener,
-          bind.port,
-          allListenerHostnames,
-        );
+      const listenerNodes: ListenerNode[] = (bind.listeners ?? []).map(
+        (listener, listenerIndex) => {
+          totalListeners++;
+          const listenerErrors = validateListener(
+            listener,
+            bind.port,
+            allListenerHostnames,
+          );
 
-        // HTTP routes
-        const httpRouteNodes: RouteNode[] = (listener.routes ?? []).map(
-          (route, idx) => {
-            totalRoutes++;
-            const routeErrors = validateRoute(route, listener);
+          // HTTP routes
+          const httpRouteNodes: RouteNode[] = (listener.routes ?? []).map(
+            (route, idx) => {
+              totalRoutes++;
+              const routeErrors = validateRoute(route, listener);
 
-            const backends: BackendNode[] = (route.backends ?? []).map(
-              (b, bi) => {
-                totalBackends++;
-                return {
-                  backend: b,
-                  backendIndex: bi,
-                  isTcpRoute: false,
-                };
-              },
-            );
+              const backends: BackendNode[] = (route.backends ?? []).map(
+                (b, bi) => {
+                  totalBackends++;
+                  return {
+                    backend: b,
+                    backendIndex: bi,
+                    isTcpRoute: false,
+                  };
+                },
+              );
 
-            // Create a PolicyNode for each policy type in route.policies
-            const policies: PolicyNode[] = route.policies && typeof route.policies === 'object' && !Array.isArray(route.policies)
-              ? Object.entries(route.policies).map(([policyType, policyConfig]) => ({
-                  policyType,
-                  policy: policyConfig,
-                  isTcpRoute: false,
-                }))
-              : [];
+              // Create a PolicyNode for each policy type in route.policies
+              const policies: PolicyNode[] =
+                route.policies &&
+                typeof route.policies === "object" &&
+                !Array.isArray(route.policies)
+                  ? Object.entries(route.policies).map(
+                      ([policyType, policyConfig]) => ({
+                        policyType,
+                        policy: policyConfig,
+                        isTcpRoute: false,
+                      }),
+                    )
+                  : [];
 
-            return {
-              route,
-              isTcp: false,
-              categoryIndex: idx,
-              port: bind.port,
-              listenerName: listener.name ?? null,
-              listenerProtocol: listener.protocol,
-              validationErrors: routeErrors,
-              backends,
-              policies,
-            };
-          },
-        );
+              return {
+                route,
+                isTcp: false,
+                categoryIndex: idx,
+                port: bind.port,
+                listenerName: listener.name ?? null,
+                listenerProtocol: listener.protocol,
+                validationErrors: routeErrors,
+                backends,
+                policies,
+              };
+            },
+          );
 
-        // TCP routes
-        const tcpRouteNodes: RouteNode[] = (listener.tcpRoutes ?? []).map(
-          (route, idx) => {
-            totalRoutes++;
-            const routeErrors = validateRoute(route, listener);
+          // TCP routes
+          const tcpRouteNodes: RouteNode[] = (listener.tcpRoutes ?? []).map(
+            (route, idx) => {
+              totalRoutes++;
+              const routeErrors = validateRoute(route, listener);
 
-            const backends: BackendNode[] = (route.backends ?? []).map(
-              (b, bi) => {
-                totalBackends++;
-                return {
-                  backend: b,
-                  backendIndex: bi,
-                  isTcpRoute: true,
-                };
-              },
-            );
+              const backends: BackendNode[] = (route.backends ?? []).map(
+                (b, bi) => {
+                  totalBackends++;
+                  return {
+                    backend: b,
+                    backendIndex: bi,
+                    isTcpRoute: true,
+                  };
+                },
+              );
 
-            // Create a PolicyNode for each policy type in route.policies
-            const policies: PolicyNode[] = route.policies && typeof route.policies === 'object' && !Array.isArray(route.policies)
-              ? Object.entries(route.policies).map(([policyType, policyConfig]) => ({
-                  policyType,
-                  policy: policyConfig,
-                  isTcpRoute: true,
-                }))
-              : [];
+              // Create a PolicyNode for each policy type in route.policies
+              const policies: PolicyNode[] =
+                route.policies &&
+                typeof route.policies === "object" &&
+                !Array.isArray(route.policies)
+                  ? Object.entries(route.policies).map(
+                      ([policyType, policyConfig]) => ({
+                        policyType,
+                        policy: policyConfig,
+                        isTcpRoute: true,
+                      }),
+                    )
+                  : [];
 
-            return {
-              route,
-              isTcp: true,
-              categoryIndex: idx,
-              port: bind.port,
-              listenerName: listener.name ?? null,
-              listenerProtocol: listener.protocol,
-              validationErrors: routeErrors,
-              backends,
-              policies,
-            };
-          },
-        );
+              return {
+                route,
+                isTcp: true,
+                categoryIndex: idx,
+                port: bind.port,
+                listenerName: listener.name ?? null,
+                listenerProtocol: listener.protocol,
+                validationErrors: routeErrors,
+                backends,
+                policies,
+              };
+            },
+          );
 
-        const allRouteNodes = [...httpRouteNodes, ...tcpRouteNodes];
+          const allRouteNodes = [...httpRouteNodes, ...tcpRouteNodes];
 
-        return {
-          listener,
-          port: bind.port,
-          listenerIndex,
-          routes: allRouteNodes,
-          validationErrors: listenerErrors,
-        };
-      });
+          return {
+            listener,
+            port: bind.port,
+            listenerIndex,
+            routes: allRouteNodes,
+            validationErrors: listenerErrors,
+          };
+        },
+      );
 
       // Count errors
       totalValidationErrors += bindErrors.length;

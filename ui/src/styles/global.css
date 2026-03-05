@@ -362,23 +362,33 @@ pre code {
 }
 
 /* Hover effect - enhanced visibility */
-.ant-select-item-option-active:not(.ant-select-item-option-disabled):not(.ant-select-item-option-selected) {
+.ant-select-item-option-active:not(.ant-select-item-option-disabled):not(
+    .ant-select-item-option-selected
+  ) {
   background-color: rgba(0, 0, 0, 0.06) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme="dark"] .ant-select-item-option-active:not(.ant-select-item-option-disabled):not(.ant-select-item-option-selected) {
+[data-theme="dark"]
+  .ant-select-item-option-active:not(.ant-select-item-option-disabled):not(
+    .ant-select-item-option-selected
+  ) {
   background-color: rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Hover effect on selected item - more pronounced */
-.ant-select-item-option-active.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+.ant-select-item-option-active.ant-select-item-option-selected:not(
+    .ant-select-item-option-disabled
+  ) {
   background-color: rgba(22, 119, 255, 0.2) !important;
   box-shadow: 0 1px 3px rgba(22, 119, 255, 0.15) !important;
 }
 
-[data-theme="dark"] .ant-select-item-option-active.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+[data-theme="dark"]
+  .ant-select-item-option-active.ant-select-item-option-selected:not(
+    .ant-select-item-option-disabled
+  ) {
   background-color: rgba(22, 119, 255, 0.28) !important;
   box-shadow: 0 1px 3px rgba(22, 119, 255, 0.25) !important;
 }
@@ -390,7 +400,8 @@ pre code {
   font-weight: 500;
 }
 
-[data-theme="dark"] .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+[data-theme="dark"]
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
   background-color: rgba(22, 119, 255, 0.18) !important;
 }
 
@@ -400,7 +411,8 @@ pre code {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
-[data-theme="dark"] .ant-select-item-option:active:not(.ant-select-item-option-disabled) {
+[data-theme="dark"]
+  .ant-select-item-option:active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.2) !important;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
@@ -716,7 +728,7 @@ pre code {
   color: var(--color-text-base) !important;
 }
 
-/* Traffic3 Form Styling - Clean borderless design */
+/* Traffic Form Styling - Clean borderless design */
 /* Remove borders from form items */
 .ant-form-item {
   border: none !important;
@@ -1259,7 +1271,8 @@ legend {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme="dark"] .ant-dropdown-menu-item:hover:not(.ant-dropdown-menu-item-disabled) {
+[data-theme="dark"]
+  .ant-dropdown-menu-item:hover:not(.ant-dropdown-menu-item-disabled) {
   background-color: rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
@@ -1270,7 +1283,8 @@ legend {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
-[data-theme="dark"] .ant-dropdown-menu-item:active:not(.ant-dropdown-menu-item-disabled) {
+[data-theme="dark"]
+  .ant-dropdown-menu-item:active:not(.ant-dropdown-menu-item-disabled) {
   background-color: rgba(255, 255, 255, 0.2) !important;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
@@ -1336,7 +1350,11 @@ legend {
 /* Hover state - enhanced with purple hint */
 .ant-menu-item:hover:not(.ant-menu-item-selected),
 .ant-menu-submenu-title:hover:not(.ant-menu-submenu-selected) {
-  background: color-mix(in srgb, var(--color-sidebar) 8%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-sidebar) 8%,
+    transparent
+  ) !important;
   color: var(--color-text-base) !important;
 }
 
@@ -1350,13 +1368,21 @@ legend {
 /* Active (clicked) state */
 .ant-menu-item:active,
 .ant-menu-submenu-title:active {
-  background: color-mix(in srgb, var(--color-sidebar) 12%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-sidebar) 12%,
+    transparent
+  ) !important;
 }
 
 /* Selected state - strong purple accent */
 .ant-menu-item-selected,
 .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  background: color-mix(in srgb, var(--color-sidebar) 18%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-sidebar) 18%,
+    transparent
+  ) !important;
   color: var(--color-sidebar-hover) !important;
   font-weight: 500 !important;
   box-shadow: inset 3px 0 0 var(--color-sidebar) !important;
@@ -1381,7 +1407,9 @@ legend {
 /* Submenu arrow */
 .ant-menu-submenu-arrow {
   color: var(--color-text-tertiary) !important;
-  transition: color 0.12s ease, transform 0.12s ease !important;
+  transition:
+    color 0.12s ease,
+    transform 0.12s ease !important;
 }
 
 .ant-menu-submenu:hover > .ant-menu-submenu-title .ant-menu-submenu-arrow,
@@ -1418,6 +1446,10 @@ legend {
 
 /* Open submenu state */
 .ant-menu-submenu-open > .ant-menu-submenu-title {
-  background: color-mix(in srgb, var(--color-sidebar) 8%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-sidebar) 8%,
+    transparent
+  ) !important;
   color: var(--color-text-base) !important;
 }

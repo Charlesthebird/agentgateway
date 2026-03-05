@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useConfig, useLLMConfig, useMCPConfig } from "../../api";
 import { StyledAlert } from "../../components/StyledAlert";
-import { useRoutingHierarchy } from "../Traffic/hooks/useRoutingHierarchy";
+import { useTrafficHierarchy } from "../Traffic/hooks/useTrafficHierarchy";
 
 const Container = styled.div`
   display: flex;
@@ -78,7 +78,7 @@ const IconLabel = styled.div`
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { error: configError, isLoading: configLoading } = useConfig();
-  const hierarchy = useRoutingHierarchy();
+  const hierarchy = useTrafficHierarchy();
   const { data: llm } = useLLMConfig();
   const { data: mcp } = useMCPConfig();
 
@@ -126,7 +126,10 @@ export const DashboardPage = () => {
       ],
       status:
         stats.totalValidationErrors > 0
-          ? { color: "warning" as const, text: `${stats.totalValidationErrors} issue${stats.totalValidationErrors !== 1 ? "s" : ""}` }
+          ? {
+              color: "warning" as const,
+              text: `${stats.totalValidationErrors} issue${stats.totalValidationErrors !== 1 ? "s" : ""}`,
+            }
           : stats.totalListeners > 0
             ? { color: "success" as const, text: "Healthy" }
             : null,
@@ -140,7 +143,10 @@ export const DashboardPage = () => {
         { label: "Models", value: llmModelCount },
         { label: "Policies", value: llm?.policies ? 1 : 0 },
       ],
-      status: llmModelCount > 0 ? { color: "success" as const, text: "Configured" } : null,
+      status:
+        llmModelCount > 0
+          ? { color: "success" as const, text: "Configured" }
+          : null,
     },
     {
       icon: <Network size={22} />,
@@ -151,7 +157,10 @@ export const DashboardPage = () => {
         { label: "Targets", value: mcpTargetCount },
         ...(mcp?.port ? [{ label: "Port", value: mcp.port }] : []),
       ],
-      status: mcpTargetCount > 0 ? { color: "success" as const, text: "Configured" } : null,
+      status:
+        mcpTargetCount > 0
+          ? { color: "success" as const, text: "Configured" }
+          : null,
     },
   ];
 
@@ -160,25 +169,25 @@ export const DashboardPage = () => {
       icon: <Network size={16} />,
       label: "Port Binds",
       value: stats.totalBinds,
-      path: "/traffic/routing",
+      path: "/traffic",
     },
     {
       icon: <Headphones size={16} />,
       label: "Listeners",
       value: stats.totalListeners,
-      path: "/traffic/routing",
+      path: "/traffic",
     },
     {
       icon: <Route size={16} />,
       label: "Routes",
       value: stats.totalRoutes,
-      path: "/traffic/routing",
+      path: "/traffic",
     },
     {
       icon: <Server size={16} />,
       label: "Named Backends",
-      value: stats.totalTopLevelBackends,
-      path: "/traffic/routing",
+      value: stats.totalBackends,
+      path: "/traffic",
     },
     {
       icon: <Brain size={16} />,
@@ -196,7 +205,7 @@ export const DashboardPage = () => {
       icon: <Shield size={16} />,
       label: "Issues",
       value: stats.totalValidationErrors,
-      path: "/traffic/routing",
+      path: "/traffic",
       warn: stats.totalValidationErrors > 0,
     },
   ];
@@ -242,9 +251,13 @@ export const DashboardPage = () => {
         {sections.map((section) => (
           <Col xs={24} md={8} key={section.title}>
             <SectionCard onClick={() => navigate(section.path)}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              >
                 {/* Header */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
+                >
                   <IconBox>{section.icon}</IconBox>
                   <div style={{ flex: 1 }}>
                     <div

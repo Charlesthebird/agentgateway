@@ -1,6 +1,6 @@
-# Traffic3 Manual Form Schemas
+# Traffic Manual Form Schemas
 
-This folder contains **manually configured TypeScript form schemas** for the Traffic3 page. Unlike auto-generated schemas, these are handcrafted JSON Schema definitions that use TypeScript types from [config.d.ts](../../../config.d.ts) for type safety.
+This folder contains **manually configured TypeScript form schemas** for the Traffic page. Unlike auto-generated schemas, these are handcrafted JSON Schema definitions that use TypeScript types from [config.d.ts](../../../config.d.ts) for type safety.
 
 ## Files
 
@@ -197,7 +197,9 @@ oneOf: [
   {
     title: "Service Backend",
     properties: {
-      service: { /* service config */ },
+      service: {
+        /* service config */
+      },
     },
   },
   {
@@ -206,7 +208,7 @@ oneOf: [
       host: { type: "string" },
     },
   },
-]
+];
 ```
 
 ### Arrays
@@ -267,14 +269,14 @@ tls: {
 
 ## Comparison with Generated Schemas
 
-| Aspect | Manual (Traffic3) | Generated (Traffic) |
-|--------|-------------------|---------------------|
-| Source | Handcrafted | Auto-generated from config.json |
-| Location | `src/pages/Traffic3/forms/` | `public/schema-forms/` |
-| Type Safety | Compile-time | Runtime only |
-| Maintenance | Manual updates | Automatic sync |
-| Flexibility | High | Limited |
-| Customization | Full control | Generator constraints |
+| Aspect        | Manual (Traffic)           | Generated (Traffic)             |
+| ------------- | -------------------------- | ------------------------------- |
+| Source        | Handcrafted                | Auto-generated from config.json |
+| Location      | `src/pages/Traffic/forms/` | `public/schema-forms/`          |
+| Type Safety   | Compile-time               | Runtime only                    |
+| Maintenance   | Manual updates             | Automatic sync                  |
+| Flexibility   | High                       | Limited                         |
+| Customization | Full control               | Generator constraints           |
 
 ## Resources
 
@@ -286,5 +288,5 @@ tls: {
 ---
 
 **Last Updated**: 2026-03-03
-**Purpose**: Manual TypeScript form schemas for Traffic3 page
-**Related**: [Traffic3 README](../README.md)
+**Purpose**: Manual TypeScript form schemas for Traffic page
+**Related**: [Traffic README](../README.md)

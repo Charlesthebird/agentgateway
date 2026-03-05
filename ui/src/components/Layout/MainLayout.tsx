@@ -45,18 +45,24 @@ const StyledSider = styled(Sider)`
     ),
     /* Top to bottom gradient - main gradient */
     linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-sidebar) 1.5%, var(--color-bg-container)) 0%,
-      color-mix(in srgb, var(--color-sidebar) 0.75%, var(--color-bg-container)) 50%,
-      var(--color-bg-container) 100%
-    );
+        180deg,
+        color-mix(in srgb, var(--color-sidebar) 1.5%, var(--color-bg-container))
+          0%,
+        color-mix(
+            in srgb,
+            var(--color-sidebar) 0.75%,
+            var(--color-bg-container)
+          )
+          50%,
+        var(--color-bg-container) 100%
+      );
   border-right: 1px solid var(--color-border-secondary);
   overflow-y: auto;
   position: relative;
 
   /* Additional gradient overlays for depth */
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -71,11 +77,11 @@ const StyledSider = styled(Sider)`
       ),
       /* Top gradient intensifier */
       linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--color-sidebar) 1.25%, transparent) 0%,
-        color-mix(in srgb, var(--color-sidebar) 0.5%, transparent) 40%,
-        transparent 100%
-      );
+          180deg,
+          color-mix(in srgb, var(--color-sidebar) 1.25%, transparent) 0%,
+          color-mix(in srgb, var(--color-sidebar) 0.5%, transparent) 40%,
+          transparent 100%
+        );
     pointer-events: none;
     z-index: 0;
   }
@@ -121,7 +127,7 @@ const StyledContent = styled(Content)`
 
   /* Subtle radial gradient overlay for depth */
   &::before {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: var(--sidebar-width);
@@ -397,16 +403,6 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           label: "Routing",
         },
         {
-          key: "/traffic2",
-          icon: <Route size={18} />,
-          label: "Routing (TS Forms)",
-        },
-        {
-          key: "/traffic3",
-          icon: <Route size={18} />,
-          label: "Routing (Manual Schemas)",
-        },
-        {
           key: "/traffic/logs",
           icon: <FileText size={18} />,
           label: "Logs",
@@ -441,8 +437,6 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   const selectedKeys = useMemo(() => {
     const knownPaths = [
       "/traffic/routing",
-      "/traffic2",
-      "/traffic3",
       "/traffic/logs",
       "/traffic/metrics",
       "/llm/models",

@@ -50,7 +50,7 @@ export function RawConfigPage() {
           </Description>
         </div>
       </PageHeader>
-      <RawConfigEditor onClose={() => navigate("/traffic2")} />
+      <RawConfigEditor onClose={() => navigate("/traffic")} />
     </Container>
   );
 }

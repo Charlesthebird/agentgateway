@@ -2,6 +2,7 @@
  * CRUD operations for Traffic configuration
  */
 
+import type { FilterOrPolicy } from "../config";
 import { fetchConfig, updateConfig } from "./config";
 import { findBindByPort, findListenerByName } from "./helpers";
 import type {
@@ -12,7 +13,6 @@ import type {
   LocalTCPRoute,
   LocalTCPRouteBackend,
 } from "./types";
-import type { FilterOrPolicy } from "../config";
 
 /**
  * Find a listener in a bind (wrapper that handles null/undefined names)
@@ -218,7 +218,8 @@ export async function updateRoute(
     throw new Error(`Listener "${listenerName}" not found`);
   }
 
-  const index = listener.routes?.findIndex((r) => r.name === oldRouteName) ?? -1;
+  const index =
+    listener.routes?.findIndex((r) => r.name === oldRouteName) ?? -1;
   if (index === -1) {
     throw new Error(`Route "${oldRouteName}" not found`);
   }
@@ -509,8 +510,8 @@ export async function deleteRoutePolicy(
 }
 
 // ============================================================================
-// INDEX-BASED CRUD (for Traffic3)
-// Traffic3 uses indices instead of names for better direct access
+// INDEX-BASED CRUD (for Traffic)
+// Traffic uses indices instead of names for better direct access
 // ============================================================================
 
 /**
@@ -970,9 +971,7 @@ export async function updateLLMModelByIndex(
 /**
  * Remove a model by index from the LLM configuration
  */
-export async function removeLLMModelByIndex(
-  modelIndex: number,
-): Promise<void> {
+export async function removeLLMModelByIndex(modelIndex: number): Promise<void> {
   const config = await fetchConfig();
   if (!config.llm) {
     throw new Error("LLM configuration not found");

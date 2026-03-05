@@ -4,7 +4,7 @@ This document describes the workflow for updating forms when the schema changes.
 
 ## Workflow
 
-1. **Test the UI** - Use the Traffic3 page to create or edit configuration items (binds, listeners, routes, backends, etc.)
+1. **Test the UI** - Use the Traffic page to create or edit configuration items (binds, listeners, routes, backends, etc.)
 
 2. **Look for errors** - When you save, check the toast notifications for validation errors
 
@@ -21,11 +21,13 @@ This document describes the workflow for updating forms when the schema changes.
 ## Example
 
 If you see this error in a toast:
+
 ```
 "binds[0].listeners[0].routes[0].backends[0]: invalid value: string "asdf", expected string for NamespacedHostname with format namespace/hostname"
 ```
 
 Then tell Claude:
+
 ```
 I'm getting this error when editing backends:
 
@@ -35,8 +37,9 @@ Update the backend form to fix this please.
 ```
 
 Make sure to include:
-- `ui/src/pages/Traffic3/forms/` folder as context
-- `ui/src/pages/Traffic3/forms/form_gen_context.md` as context
+
+- `ui/src/pages/Traffic/forms/` folder as context
+- `ui/src/pages/Traffic/forms/form_gen_context.md` as context
 
 ## Notes
 

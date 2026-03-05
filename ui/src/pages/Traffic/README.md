@@ -1,22 +1,25 @@
-# Traffic3 Page - Manual TypeScript Schemas
+# Traffic Page - Manual TypeScript Schemas
 
-Traffic3 is a variation of the Traffic routing page that uses **manually configured TypeScript schemas** instead of auto-generated JSON schemas. This approach provides more control and demonstrates how to build forms using handcrafted schema definitions.
+Traffic is a variation of the Traffic routing page that uses **manually configured TypeScript schemas** instead of auto-generated JSON schemas. This approach provides more control and demonstrates how to build forms using handcrafted schema definitions.
 
 ## Key Differences from Traffic and Traffic2
 
 ### Traffic (Original)
+
 - **Schema Source**: Auto-generated JSON schemas loaded from `public/schema-forms/`
 - **Forms**: Uses generated schemas with SchemaForm component
 - **Hierarchy**: Full hierarchy tree with edit/delete operations
 - **Routing**: Nested routes with full detail views
 
 ### Traffic2
+
 - **Schema Source**: Manually typed TypeScript schemas in `forms/` folder
 - **Forms**: Uses RJSF with TypeScript types from config.d.ts
 - **UI**: Tab-based interface with tables
 - **Routing**: Separate pages for create/edit
 
-### Traffic3 (This Page)
+### Traffic (This Page)
+
 - **Schema Source**: Manually configured TypeScript schemas (NOT generated)
 - **Forms**: Handcrafted schemas using config.d.ts types
 - **Hierarchy**: Tree view showing config structure
@@ -25,8 +28,8 @@ Traffic3 is a variation of the Traffic routing page that uses **manually configu
 ## Structure
 
 ```
-ui/src/pages/Traffic3/
-├── Traffic3Page.tsx                # Main page component
+ui/src/pages/Traffic/
+├── TrafficPage.tsx                # Main page component
 ├── index.ts                        # Exports
 ├── README.md                       # This file
 ├── forms/                          # Manual TypeScript schemas
@@ -38,7 +41,7 @@ ui/src/pages/Traffic3/
 ├── components/                     # UI components
 │   └── HierarchyTree.tsx           # Tree view component
 └── hooks/                          # React hooks
-    └── useTraffic3Hierarchy.ts     # Hierarchy data hook
+    └── useTrafficHierarchy.ts     # Hierarchy data hook
 ```
 
 ## Manual Schema Configuration
@@ -46,22 +49,25 @@ ui/src/pages/Traffic3/
 Each form in `forms/` is a manually written JSON Schema that:
 
 1. **Imports types from config.d.ts**:
+
    ```typescript
    import type { LocalListener } from "../../../config";
    ```
 
 2. **Defines a JSON Schema manually**:
+
    ```typescript
    export const schema: RJSFSchema = {
      type: "object",
      properties: {
        name: { type: "string", title: "Name" },
        // ... handcrafted properties
-     }
+     },
    };
    ```
 
 3. **Provides UI customization**:
+
    ```typescript
    export const uiSchema: UiSchema = {
      name: { "ui:placeholder": "Enter name..." },
@@ -87,12 +93,14 @@ Each form in `forms/` is a manually written JSON Schema that:
 ## Trade-offs
 
 ### Advantages
+
 - More flexible and customizable
 - Easier to understand for developers
 - No build-time generation required
 - Can add custom logic and validation
 
 ### Disadvantages
+
 - Requires manual maintenance when types change
 - More code to write initially
 - Schema and type can drift if not careful
@@ -101,13 +109,16 @@ Each form in `forms/` is a manually written JSON Schema that:
 ## Usage
 
 ### Viewing the Hierarchy
-Navigate to `/traffic3` to see:
+
+Navigate to `/traffic` to see:
+
 - Metrics overview (binds, listeners, routes, validation issues)
 - Collapsible hierarchy tree
 - Validation warnings and errors
 
 ### Adding Resources
-Currently, Traffic3 is read-only and focused on visualization. To add CRUD operations:
+
+Currently, Traffic is read-only and focused on visualization. To add CRUD operations:
 
 1. Create form components using the schemas in `forms/`
 2. Add modal/drawer components for editing
@@ -116,18 +127,19 @@ Currently, Traffic3 is read-only and focused on visualization. To add CRUD opera
 
 ## Comparison: Generated vs Manual Schemas
 
-| Aspect | Generated (Traffic) | Manual (Traffic3) |
-|--------|---------------------|-------------------|
-| Schema Source | auto-generated JSON files | handcrafted TypeScript |
-| Maintenance | automatic sync with config.json | manual updates needed |
-| Flexibility | limited to generator output | full customization |
-| Type Safety | runtime only | compile-time + runtime |
-| Build Step | requires `yarn generate:schemas` | none |
-| Learning Curve | harder to modify | easier to understand |
+| Aspect         | Generated (Traffic)              | Manual (Traffic)       |
+| -------------- | -------------------------------- | ---------------------- |
+| Schema Source  | auto-generated JSON files        | handcrafted TypeScript |
+| Maintenance    | automatic sync with config.json  | manual updates needed  |
+| Flexibility    | limited to generator output      | full customization     |
+| Type Safety    | runtime only                     | compile-time + runtime |
+| Build Step     | requires `yarn generate:schemas` | none                   |
+| Learning Curve | harder to modify                 | easier to understand   |
 
 ## When to Use Manual Schemas
 
 Use manually configured schemas when:
+
 - You need custom validation logic
 - The auto-generated schemas don't match your needs
 - You want more control over form behavior
@@ -135,6 +147,7 @@ Use manually configured schemas when:
 - The schema is simple and unlikely to change
 
 Use auto-generated schemas (like Traffic) when:
+
 - You have complex, frequently changing schemas
 - You want to ensure schema/type consistency
 - You need to support many different resource types
@@ -142,7 +155,8 @@ Use auto-generated schemas (like Traffic) when:
 
 ## Future Enhancements
 
-Potential additions to Traffic3:
+Potential additions to Traffic:
+
 - [ ] Full CRUD operations (create, edit, delete)
 - [ ] Detail view pages for each node type
 - [ ] Form validation and error handling

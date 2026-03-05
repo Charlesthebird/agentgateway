@@ -27,15 +27,10 @@ import { PlaygroundPage } from "./pages/Playground/PlaygroundPage";
 import { PoliciesPage } from "./pages/Policies/PoliciesPage";
 import { RoutesPage } from "./pages/Routes/RoutesPage";
 import { SetupWizardPage } from "./pages/SetupWizard/SetupWizardPage";
-import { NodeDetailPage } from "./pages/Traffic/NodeDetailPage";
 import {
-  TrafficLogsPage,
-  TrafficMetricsPage,
-  TrafficOverviewPage,
-  TrafficRoutingPage,
-} from "./pages/Traffic/TrafficPages";
-import { Traffic2Page, ResourceFormPage, RawConfigPage } from "./pages/Traffic2";
-import { Traffic3Page, RawConfigPage as Traffic3RawConfigPage } from "./pages/Traffic3";
+  TrafficPage,
+  RawConfigPage as TrafficRawConfigPage,
+} from "./pages/Traffic";
 
 function App() {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
@@ -65,89 +60,106 @@ function App() {
           <EditorSettingsProvider>
             <ConfirmProvider>
               <MainLayout>
-              <Routes>
-                <Route
-                  path="/"
-                  element={<Navigate to="/dashboard" replace />}
-                />
+                <Routes>
+                  <Route
+                    path="/"
+                    element={<Navigate to="/dashboard" replace />}
+                  />
 
-                {/* OLD Section */}
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/listeners" element={<ListenersPage />} />
-                <Route path="/routes" element={<RoutesPage />} />
-                <Route path="/backends" element={<BackendsPage />} />
-                <Route path="/policies" element={<PoliciesPage />} />
-                <Route path="/playground" element={<PlaygroundPage />} />
+                  {/* OLD Section */}
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/listeners" element={<ListenersPage />} />
+                  <Route path="/routes" element={<RoutesPage />} />
+                  <Route path="/backends" element={<BackendsPage />} />
+                  <Route path="/policies" element={<PoliciesPage />} />
+                  <Route path="/playground" element={<PlaygroundPage />} />
 
-                {/* Generic Form Page */}
-                <Route path="/form" element={<FormPage />} />
+                  {/* Generic Form Page */}
+                  <Route path="/form" element={<FormPage />} />
 
-                {/* LLM Section */}
-                <Route path="/llm" element={<LLMOverviewPage />} />
-                <Route path="/llm/models" element={<LLMModelsPage />} />
-                <Route path="/llm/policies" element={<LLMPoliciesPage />} />
-                <Route path="/llm/logs" element={<LLMLogsPage />} />
-                <Route path="/llm/metrics" element={<LLMMetricsPage />} />
-                <Route path="/llm/playground" element={<LLMPlaygroundPage />} />
+                  {/* LLM Section */}
+                  <Route path="/llm" element={<LLMOverviewPage />} />
+                  <Route path="/llm/models" element={<LLMModelsPage />} />
+                  <Route path="/llm/policies" element={<LLMPoliciesPage />} />
+                  <Route path="/llm/logs" element={<LLMLogsPage />} />
+                  <Route path="/llm/metrics" element={<LLMMetricsPage />} />
+                  <Route
+                    path="/llm/playground"
+                    element={<LLMPlaygroundPage />}
+                  />
 
-                {/* MCP Section */}
-                <Route path="/mcp" element={<MCPOverviewPage />} />
-                <Route path="/mcp/servers" element={<MCPServersPage />} />
-                <Route path="/mcp/policies" element={<MCPPoliciesPage />} />
-                <Route path="/mcp/logs" element={<MCPLogsPage />} />
-                <Route path="/mcp/metrics" element={<MCPMetricsPage />} />
-                <Route path="/mcp/playground" element={<MCPPlaygroundPage />} />
+                  {/* MCP Section */}
+                  <Route path="/mcp" element={<MCPOverviewPage />} />
+                  <Route path="/mcp/servers" element={<MCPServersPage />} />
+                  <Route path="/mcp/policies" element={<MCPPoliciesPage />} />
+                  <Route path="/mcp/logs" element={<MCPLogsPage />} />
+                  <Route path="/mcp/metrics" element={<MCPMetricsPage />} />
+                  <Route
+                    path="/mcp/playground"
+                    element={<MCPPlaygroundPage />}
+                  />
 
-                {/* Traffic Section */}
-                <Route path="/traffic" element={<TrafficOverviewPage />} />
-                <Route path="/traffic/routing" element={<TrafficRoutingPage />}>
-                  {/* Nested routes for detail panel */}
-                  <Route path="bind/:port" element={<NodeDetailPage />} />
-                  <Route path="bind/:port/listener/:li" element={<NodeDetailPage />} />
-                  <Route path="bind/:port/listener/:li/route/:ri" element={<NodeDetailPage />} />
-                  <Route path="bind/:port/listener/:li/tcproute/:ri" element={<NodeDetailPage />} />
-                  <Route path="bind/:port/listener/:li/route/:ri/backend/:bi" element={<NodeDetailPage />} />
-                  <Route path="bind/:port/listener/:li/tcproute/:ri/backend/:bi" element={<NodeDetailPage />} />
-                </Route>
-                <Route path="/traffic/logs" element={<TrafficLogsPage />} />
-                <Route
-                  path="/traffic/metrics"
-                  element={<TrafficMetricsPage />}
-                />
+                  {/* Traffic Section */}
+                  <Route path="/traffic" element={<TrafficPage />} />
+                  <Route
+                    path="/traffic/raw-config"
+                    element={<TrafficRawConfigPage />}
+                  />
+                  <Route path="/traffic/llm" element={<TrafficPage />} />
+                  <Route
+                    path="/traffic/llm/model/:modelIndex"
+                    element={<TrafficPage />}
+                  />
+                  <Route path="/traffic/mcp" element={<TrafficPage />} />
+                  <Route
+                    path="/traffic/frontendPolicies"
+                    element={<TrafficPage />}
+                  />
+                  <Route path="/traffic/bind/:port" element={<TrafficPage />} />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li"
+                    element={<TrafficPage />}
+                  />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li/route/:ri"
+                    element={<TrafficPage />}
+                  />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li/tcproute/:ri"
+                    element={<TrafficPage />}
+                  />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li/route/:ri/backend/:bi"
+                    element={<TrafficPage />}
+                  />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li/tcproute/:ri/backend/:bi"
+                    element={<TrafficPage />}
+                  />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li/route/:ri/policy/:policyType"
+                    element={<TrafficPage />}
+                  />
+                  <Route
+                    path="/traffic/bind/:port/listener/:li/tcproute/:ri/policy/:policyType"
+                    element={<TrafficPage />}
+                  />
 
-                {/* Traffic2 - TypeScript Forms */}
-                <Route path="/traffic2" element={<Traffic2Page />} />
-                <Route path="/traffic2/raw-config" element={<RawConfigPage />} />
-                <Route path="/traffic2/:resourceType/:action" element={<ResourceFormPage />} />
+                  {/* CEL Playground */}
+                  <Route
+                    path="/cel-playground"
+                    element={<CELPlaygroundPage />}
+                  />
 
-                {/* Traffic3 - Manual TypeScript Schemas */}
-                <Route path="/traffic3" element={<Traffic3Page />} />
-                <Route path="/traffic3/raw-config" element={<Traffic3RawConfigPage />} />
-                <Route path="/traffic3/llm" element={<Traffic3Page />} />
-                <Route path="/traffic3/llm/model/:modelIndex" element={<Traffic3Page />} />
-                <Route path="/traffic3/mcp" element={<Traffic3Page />} />
-                <Route path="/traffic3/frontendPolicies" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li/route/:ri" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li/route/:ri/backend/:bi" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri/backend/:bi" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li/route/:ri/policy/:policyType" element={<Traffic3Page />} />
-                <Route path="/traffic3/bind/:port/listener/:li/tcproute/:ri/policy/:policyType" element={<Traffic3Page />} />
+                  {/* Setup Wizard */}
+                  <Route path="/setup" element={<SetupWizardPage />} />
 
-                {/* CEL Playground */}
-                <Route path="/cel-playground" element={<CELPlaygroundPage />} />
-
-                {/* Setup Wizard */}
-                <Route path="/setup" element={<SetupWizardPage />} />
-
-                {/* Catch all */}
-                <Route
-                  path="*"
-                  element={<Navigate to="/dashboard" replace />}
-                />
-              </Routes>
+                  {/* Catch all */}
+                  <Route
+                    path="*"
+                    element={<Navigate to="/dashboard" replace />}
+                  />
+                </Routes>
               </MainLayout>
             </ConfirmProvider>
           </EditorSettingsProvider>

@@ -1,13 +1,19 @@
+import { CodeOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
 import { Button, Card, Spin, Statistic } from "antd";
-import { CodeOutlined } from "@ant-design/icons";
-import { AlertTriangle, CheckCircle, Headphones, Network, Route } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Headphones,
+  Network,
+  Route,
+} from "lucide-react";
 import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { StyledAlert } from "../../components/StyledAlert";
 import { HierarchyTree } from "./components/HierarchyTree";
 import { NodeDetailView } from "./components/NodeDetailView";
-import { useTraffic3Hierarchy } from "./hooks/useTraffic3Hierarchy";
+import { useTrafficHierarchy } from "./hooks/useTrafficHierarchy";
 
 // ---------------------------------------------------------------------------
 // Styled components
@@ -154,9 +160,9 @@ export interface UrlParams {
   modelIndex?: number;
 }
 
-function parseTraffic3Path(pathname: string): UrlParams | null {
+function parseTrafficPath(pathname: string): UrlParams | null {
   // Check for model routes first (must be before general LLM route)
-  const modelMatch = pathname.match(/\/traffic3\/llm\/model\/(\d+)/);
+  const modelMatch = pathname.match(/\/traffic\/llm\/model\/(\d+)/);
   if (modelMatch) {
     return {
       topLevelType: "llm",
@@ -165,7 +171,7 @@ function parseTraffic3Path(pathname: string): UrlParams | null {
   }
 
   // Check for top-level config routes
-  const topLevelMatch = pathname.match(/\/traffic3\/(llm|mcp|frontendPolicies)/);
+  const topLevelMatch = pathname.match(/\/traffic\/(llm|mcp|frontendPolicies)/);
   if (topLevelMatch) {
     return {
       topLevelType: topLevelMatch[1] as "llm" | "mcp" | "frontendPolicies",
@@ -174,7 +180,7 @@ function parseTraffic3Path(pathname: string): UrlParams | null {
 
   // Check for bind routes
   const m = pathname.match(
-    /\/traffic3\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+)|\/policy\/([^/?]+))?)?)?/,
+    /\/traffic\/bind\/(\d+)(?:\/listener\/(\d+)(?:\/(tcp)?route\/(\d+)(?:\/backend\/(\d+)|\/policy\/([^/?]+))?)?)?/,
   );
   if (!m) return null;
 
@@ -191,19 +197,18 @@ function parseTraffic3Path(pathname: string): UrlParams | null {
   };
 }
 
-
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
-export function Traffic3Page() {
-  const hierarchy = useTraffic3Hierarchy();
+export function TrafficPage() {
+  const hierarchy = useTrafficHierarchy();
   const location = useLocation();
   const navigate = useNavigate();
 
   // Parse URL to determine if we're viewing a specific node
   const urlParams = useMemo(
-    () => parseTraffic3Path(location.pathname),
+    () => parseTrafficPath(location.pathname),
     [location.pathname],
   );
 
@@ -256,7 +261,7 @@ export function Traffic3Page() {
   const alertContent = (
     <StyledAlert
       message="Manual TypeScript Schemas"
-      description="This page uses manually configured TypeScript form schemas (not auto-generated JSON). Forms are defined in traffic3/forms/ and use config.d.ts types directly for compile-time safety."
+      description="This page uses manually configured TypeScript form schemas (not auto-generated JSON). Forms are defined in traffic/forms/ and use config.d.ts types directly for compile-time safety."
       type="info"
       showIcon
       closable
@@ -269,7 +274,11 @@ export function Traffic3Page() {
         <MetricIcon color="var(--color-primary)">
           <Network size={20} />
         </MetricIcon>
-        <Statistic title="Binds" value={hierarchy.stats.totalBinds} suffix="ports" />
+        <Statistic
+          title="Binds"
+          value={hierarchy.stats.totalBinds}
+          suffix="ports"
+        />
       </MetricCard>
 
       <MetricCard>
@@ -287,7 +296,11 @@ export function Traffic3Page() {
         <MetricIcon color="var(--color-info)">
           <Route size={20} />
         </MetricIcon>
-        <Statistic title="Routes" value={hierarchy.stats.totalRoutes} suffix="active" />
+        <Statistic
+          title="Routes"
+          value={hierarchy.stats.totalRoutes}
+          suffix="active"
+        />
       </MetricCard>
 
       <MetricCard>
@@ -307,7 +320,9 @@ export function Traffic3Page() {
         <Statistic
           title="Validation Issues"
           value={hierarchy.stats.totalValidationErrors}
-          suffix={hierarchy.stats.totalValidationErrors === 1 ? "issue" : "issues"}
+          suffix={
+            hierarchy.stats.totalValidationErrors === 1 ? "issue" : "issues"
+          }
           valueStyle={{
             color:
               hierarchy.stats.totalValidationErrors > 0
@@ -322,9 +337,7 @@ export function Traffic3Page() {
   return urlParams ? (
     /* Split layout: tree on left, detail/placeholder on right */
     <SplitRoot>
-      <MetricsHeader>
-        {alertContent}
-      </MetricsHeader>
+      <MetricsHeader>{alertContent}</MetricsHeader>
       <SplitBody>
         <Sidebar>
           <HierarchyTree hierarchy={hierarchy} />
@@ -337,7 +350,8 @@ export function Traffic3Page() {
               <PlaceholderContent>
                 <h3>Select an Item</h3>
                 <p>
-                  Choose a listener, route, backend, or policy from the hierarchy tree on the left to view and edit its configuration.
+                  Choose a listener, route, backend, or policy from the
+                  hierarchy tree on the left to view and edit its configuration.
                 </p>
               </PlaceholderContent>
             </PlaceholderContainer>
@@ -358,7 +372,7 @@ export function Traffic3Page() {
         </div>
         <Button
           icon={<CodeOutlined />}
-          onClick={() => navigate("/traffic3/raw-config")}
+          onClick={() => navigate("/traffic/raw-config")}
         >
           Config Editor
         </Button>
@@ -373,7 +387,8 @@ export function Traffic3Page() {
           <PlaceholderContent>
             <h3>Select an Item</h3>
             <p>
-              Choose a bind, listener, route, backend, or policy from the hierarchy tree on the left to view and edit its configuration.
+              Choose a bind, listener, route, backend, or policy from the
+              hierarchy tree on the left to view and edit its configuration.
             </p>
           </PlaceholderContent>
         </PlaceholderContainer>

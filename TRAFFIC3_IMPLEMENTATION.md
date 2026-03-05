@@ -1,10 +1,10 @@
-# Traffic3 Implementation - Manual TypeScript Schemas
+# Traffic Implementation - Manual TypeScript Schemas
 
-Traffic3 is a new traffic routing page that demonstrates how to build a hierarchy tree using manually configured TypeScript schemas instead of auto-generated JSON schemas.
+Traffic is a new traffic routing page that demonstrates how to build a hierarchy tree using manually configured TypeScript schemas instead of auto-generated JSON schemas.
 
 ## Overview
 
-**Route**: `/traffic3`
+**Route**: `/traffic`
 
 **Purpose**: Showcase an alternative approach to form schema configuration where schemas are handcrafted in TypeScript rather than generated from JSON files.
 
@@ -20,6 +20,7 @@ Traffic3 is a new traffic routing page that demonstrates how to build a hierarch
 ## Architecture Comparison
 
 ### Traffic (Original)
+
 - **Schemas**: Auto-generated JSON from `schema/config.json`
 - **Location**: `ui/public/schema-forms/`
 - **Forms**: SchemaForm component loads JSON at runtime
@@ -27,15 +28,17 @@ Traffic3 is a new traffic routing page that demonstrates how to build a hierarch
 - **Trade-off**: Less flexibility, harder to customize
 
 ### Traffic2
+
 - **Schemas**: Manually typed TypeScript schemas
 - **Location**: `ui/src/pages/Traffic2/forms/`
 - **Forms**: RJSF with table-based UI
 - **Advantage**: Full TypeScript integration
 - **Trade-off**: Tab-based interface, not hierarchical
 
-### Traffic3 (New)
+### Traffic (New)
+
 - **Schemas**: Manually configured TypeScript schemas (NOT generated)
-- **Location**: `ui/src/pages/Traffic3/forms/`
+- **Location**: `ui/src/pages/Traffic/forms/`
 - **Forms**: Handcrafted JSON Schema definitions
 - **Advantage**: Full control, easy to customize, educational
 - **Trade-off**: Manual maintenance required
@@ -43,8 +46,8 @@ Traffic3 is a new traffic routing page that demonstrates how to build a hierarch
 ## Structure
 
 ```
-ui/src/pages/Traffic3/
-├── Traffic3Page.tsx              # Main page with metrics and tree
+ui/src/pages/Traffic/
+├── TrafficPage.tsx              # Main page with metrics and tree
 ├── index.ts                      # Module exports
 ├── README.md                     # Detailed documentation
 ├── forms/                        # Manual schema definitions
@@ -56,7 +59,7 @@ ui/src/pages/Traffic3/
 ├── components/                   # UI components
 │   └── HierarchyTree.tsx        # Tree visualization
 └── hooks/                        # React hooks
-    └── useTraffic3Hierarchy.ts  # Data transformation and validation
+    └── useTrafficHierarchy.ts  # Data transformation and validation
 ```
 
 ## Manual Schema Example
@@ -110,11 +113,11 @@ export function isLocalListener(data: unknown): data is LocalListener {
 
 ## Hierarchy Hook
 
-`useTraffic3Hierarchy` transforms the config into a tree structure:
+`useTrafficHierarchy` transforms the config into a tree structure:
 
 ```typescript
-interface Traffic3Hierarchy {
-  binds: BindNode[];           // Top-level binds
+interface TrafficHierarchy {
+  binds: BindNode[]; // Top-level binds
   stats: {
     totalBinds: number;
     totalListeners: number;
@@ -128,6 +131,7 @@ interface Traffic3Hierarchy {
 ```
 
 Each node includes:
+
 - Original data (LocalBind, LocalListener, etc.)
 - Validation errors and warnings
 - Child nodes (listeners → routes → backends)
@@ -138,26 +142,31 @@ Each node includes:
 Built-in validation checks:
 
 ### Bind Level
+
 - Warns if bind has no listeners
 
 ### Listener Level
+
 - Warns about duplicate hostname+port combinations
 - Warns if HTTP protocol has TCP routes
 - Warns if listener has no routes
 
 ### Route Level
+
 - Warns if TCP listener has HTTP match conditions
 - Warns if route has no backends
 
 ## Metrics Dashboard
 
 The overview page shows:
+
 - **Binds**: Total number of port bindings
 - **Listeners**: Total number of configured listeners
 - **Routes**: Total HTTP + TCP routes
 - **Validation Issues**: Sum of errors and warnings
 
 Each metric has an icon and color coding:
+
 - Primary (blue) - Binds
 - Success (green) - Listeners
 - Info (cyan) - Routes
@@ -166,12 +175,14 @@ Each metric has an icon and color coding:
 ## Hierarchy Tree
 
 The tree component displays:
+
 - **Binds** (Network icon) - Port number + tunnel protocol
 - **Listeners** (Headphones icon) - Name + protocol badge
 - **Routes** (Route icon) - Name + TCP badge (if TCP route)
 - **Backends** (Server icon) - Type (Service/Host/MCP/AI/etc.)
 
 Features:
+
 - Click to navigate (placeholder, can be extended)
 - Expand/collapse all button
 - Validation badges (error/warning counts)
@@ -181,7 +192,7 @@ Features:
 
 ### Viewing the Page
 
-1. Navigate to `/traffic3` in the browser
+1. Navigate to `/traffic` in the browser
 2. Or add a menu item in the sidebar (see below)
 
 ### Extending with CRUD Operations
@@ -189,6 +200,7 @@ Features:
 To add create/edit/delete functionality:
 
 1. **Create Modal/Drawer Component**:
+
    ```typescript
    import Form from "@rjsf/antd";
    import { forms } from "./forms";
@@ -211,6 +223,7 @@ To add create/edit/delete functionality:
    Update `HierarchyTree.tsx` to add edit/delete buttons (like Traffic page)
 
 3. **Use API CRUD Functions**:
+
    ```typescript
    import * as api from "../../api/crud";
 
@@ -221,13 +234,13 @@ To add create/edit/delete functionality:
 
 ### Adding to Sidebar
 
-To add Traffic3 to the navigation menu, edit `MainLayout.tsx`:
+To add Traffic to the navigation menu, edit `MainLayout.tsx`:
 
 ```typescript
 {
-  key: "traffic3",
+  key: "traffic",
   icon: <Activity />,
-  label: <Link to="/traffic3">Traffic (Manual Schemas)</Link>,
+  label: <Link to="/traffic">Traffic (Manual Schemas)</Link>,
 }
 ```
 
@@ -242,6 +255,7 @@ To add Traffic3 to the navigation menu, edit `MainLayout.tsx`:
 ## Trade-offs
 
 ### Advantages
+
 ✅ More flexible and customizable
 ✅ Easier to understand for developers
 ✅ No build-time generation required
@@ -249,6 +263,7 @@ To add Traffic3 to the navigation menu, edit `MainLayout.tsx`:
 ✅ Great learning tool
 
 ### Disadvantages
+
 ❌ Requires manual maintenance when types change
 ❌ More code to write initially
 ❌ Schema and type can drift if not careful
@@ -256,7 +271,8 @@ To add Traffic3 to the navigation menu, edit `MainLayout.tsx`:
 
 ## When to Use
 
-**Use Manual Schemas (Traffic3)** when:
+**Use Manual Schemas (Traffic)** when:
+
 - You need custom validation or form behavior
 - The schema is simple and stable
 - You want full control over the UI
@@ -264,28 +280,31 @@ To add Traffic3 to the navigation menu, edit `MainLayout.tsx`:
 - Auto-generated schemas don't fit your needs
 
 **Use Auto-Generated Schemas (Traffic)** when:
+
 - You have complex, frequently changing schemas
 - You want guaranteed schema/type consistency
 - You need to support many resource types
 - You prefer automation over control
 
 **Use TypeScript Forms (Traffic2)** when:
+
 - You want table-based CRUD interface
 - You need full-page edit forms
 - You prefer flat navigation over hierarchy
 
 ## Testing
 
-To test Traffic3:
+To test Traffic:
 
 ```bash
 cd ui
 yarn dev
 ```
 
-Then navigate to http://localhost:5173/traffic3
+Then navigate to http://localhost:5173/traffic
 
 Test scenarios:
+
 - [ ] Metrics display correctly
 - [ ] Tree expands/collapses
 - [ ] Validation badges appear for warnings
@@ -296,6 +315,7 @@ Test scenarios:
 ## Future Enhancements
 
 Potential additions:
+
 - [ ] Add CRUD operations (create, edit, delete)
 - [ ] Detail view pages for each node
 - [ ] Form modals using the manual schemas
@@ -308,7 +328,7 @@ Potential additions:
 
 - **Traffic**: [ui/src/pages/Traffic/](../ui/src/pages/Traffic/) - Auto-generated schemas
 - **Traffic2**: [ui/src/pages/Traffic2/](../ui/src/pages/Traffic2/) - TypeScript typed forms
-- **Traffic3**: [ui/src/pages/Traffic3/](../ui/src/pages/Traffic3/) - Manual schemas (this)
+- **Traffic**: [ui/src/pages/Traffic/](../ui/src/pages/Traffic/) - Manual schemas (this)
 - **API**: [ui/src/api/crud.ts](../ui/src/api/crud.ts) - CRUD operations
 - **Types**: [ui/src/config.d.ts](../ui/src/config.d.ts) - Generated TypeScript types
 

@@ -12,6 +12,8 @@ binds:
           pathPrefix: /
       backends: []
       name: route
+      policies:
+        cors: {}
     - hostnames:
       - asdf
       matches:
@@ -25,6 +27,12 @@ binds:
           pathPrefix: /
       backends:
       - dynamic: {}
+        weight: 1
+      - service:
+          name:
+            namespace: default
+            hostname: service
+          port: 8080
         weight: 1
       name: route
     - hostnames: []

@@ -40,8 +40,6 @@ const pathLabels: Record<string, string> = {
   llm: "LLM",
   mcp: "MCP",
   traffic: "Traffic",
-  traffic2: "Traffic",
-  traffic3: "Traffic",
   models: "Models",
   logs: "Logs",
   metrics: "Metrics",
@@ -78,8 +76,11 @@ export function Breadcrumbs() {
     // We want breadcrumbs: Traffic → Create/Edit ResourceType
     if (pathSegments[0] === "traffic2" && pathSegments.length === 3) {
       const [_, resourceType, action] = pathSegments;
-      const resourceLabel = pathLabels[resourceType] || resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
-      const actionLabel = pathLabels[action] || action.charAt(0).toUpperCase() + action.slice(1);
+      const resourceLabel =
+        pathLabels[resourceType] ||
+        resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
+      const actionLabel =
+        pathLabels[action] || action.charAt(0).toUpperCase() + action.slice(1);
 
       return [
         {
@@ -91,18 +92,18 @@ export function Breadcrumbs() {
       ];
     }
 
-    // Special handling for traffic3 routes
-    // Traffic3 has structure: /traffic3/bind/:port/listener/:li/route/:ri/backend/:bi
+    // Special handling for traffic routes
+    // Traffic has structure: /traffic/bind/:port/listener/:li/route/:ri/backend/:bi
     // We want breadcrumbs: Traffic → Port X → Listener Y → Route Z → Backend N
-    if (pathSegments[0] === "traffic3" && pathSegments.length > 1) {
+    if (pathSegments[0] === "traffic" && pathSegments.length > 1) {
       const items = [
         {
-          title: <a onClick={() => navigate("/traffic3")}>Traffic</a>,
+          title: <a onClick={() => navigate("/traffic")}>Traffic</a>,
         },
       ];
 
       // Build breadcrumbs from path segments
-      let currentPath = "/traffic3";
+      let currentPath = "/traffic";
       for (let i = 1; i < pathSegments.length; i += 2) {
         const type = pathSegments[i];
         const value = pathSegments[i + 1];
@@ -128,7 +129,11 @@ export function Breadcrumbs() {
         }
 
         items.push({
-          title: isLast ? <span>{label}</span> : <a onClick={() => navigate(currentPath)}>{label}</a>,
+          title: isLast ? (
+            <span>{label}</span>
+          ) : (
+            <a onClick={() => navigate(currentPath)}>{label}</a>
+          ),
         });
       }
 
@@ -138,10 +143,16 @@ export function Breadcrumbs() {
     return pathSegments.map((segment, index) => {
       const path = `/${pathSegments.slice(0, index + 1).join("/")}`;
       const isLast = index === pathSegments.length - 1;
-      const label = pathLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+      const label =
+        pathLabels[segment] ||
+        segment.charAt(0).toUpperCase() + segment.slice(1);
 
       return {
-        title: isLast ? <span>{label}</span> : <a onClick={() => navigate(path)}>{label}</a>,
+        title: isLast ? (
+          <span>{label}</span>
+        ) : (
+          <a onClick={() => navigate(path)}>{label}</a>
+        ),
       };
     });
   }, [location.pathname, navigate]);

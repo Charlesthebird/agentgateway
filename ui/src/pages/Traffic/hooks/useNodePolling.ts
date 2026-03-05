@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useConfig } from "../../../api";
-import type { UrlParams } from "../Traffic3Page";
-import type { useTraffic3Hierarchy } from "./useTraffic3Hierarchy";
+import type { UrlParams } from "../TrafficPage";
+import type { useTrafficHierarchy } from "./useTrafficHierarchy";
 
 /**
  * Hook to handle polling for a newly created node.
@@ -10,9 +10,9 @@ import type { useTraffic3Hierarchy } from "./useTraffic3Hierarchy";
  * config until the node appears or a timeout is reached.
  */
 export function useNodePolling(
-  hierarchy: ReturnType<typeof useTraffic3Hierarchy>,
+  hierarchy: ReturnType<typeof useTrafficHierarchy>,
   urlParams: UrlParams,
-  isCreating: boolean = false
+  isCreating: boolean = false,
 ) {
   const { mutate } = useConfig();
   const [isPolling, setIsPolling] = useState(false);
@@ -47,7 +47,9 @@ export function useNodePolling(
       return;
     }
 
-    console.log(`[NodePolling] Attempt ${attempts + 1}/${MAX_ATTEMPTS} - node not found yet`);
+    console.log(
+      `[NodePolling] Attempt ${attempts + 1}/${MAX_ATTEMPTS} - node not found yet`,
+    );
     setIsPolling(true);
 
     const timeoutId = setTimeout(async () => {
@@ -55,7 +57,7 @@ export function useNodePolling(
         // Wait for the config to actually refresh
         await mutate();
         // Give React a tick to update the hierarchy
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         setAttempts((prev) => prev + 1);
       } catch (error) {
         console.error("Error during polling mutate:", error);
@@ -67,7 +69,8 @@ export function useNodePolling(
   }, [isCreating, hierarchy, urlParams, attempts, mutate]);
 
   // Check if we've timed out
-  const hasTimedOut = attempts >= MAX_ATTEMPTS && !checkNodeExists(hierarchy, urlParams);
+  const hasTimedOut =
+    attempts >= MAX_ATTEMPTS && !checkNodeExists(hierarchy, urlParams);
 
   return {
     isPolling,
@@ -79,10 +82,11 @@ export function useNodePolling(
  * Check if a node exists in the hierarchy based on URL params
  */
 function checkNodeExists(
-  hierarchy: ReturnType<typeof useTraffic3Hierarchy>,
-  urlParams: UrlParams
+  hierarchy: ReturnType<typeof useTrafficHierarchy>,
+  urlParams: UrlParams,
 ): boolean {
-  const { port, li, ri, bi, isTcpRoute, policyType, modelIndex, topLevelType } = urlParams;
+  const { port, li, ri, bi, isTcpRoute, policyType, modelIndex, topLevelType } =
+    urlParams;
 
   // Handle model nodes
   if (modelIndex !== undefined) {
@@ -122,7 +126,9 @@ function checkNodeExists(
   // Handle bind/listener/route/backend/policy nodes
   // These require a port
   if (port === undefined) {
-    console.log(`[checkNodeExists] No port, modelIndex, or topLevelType - cannot check node`);
+    console.log(
+      `[checkNodeExists] No port, modelIndex, or topLevelType - cannot check node`,
+    );
     return false;
   }
 
@@ -147,10 +153,18 @@ function checkNodeExists(
   if (ri === undefined) return true;
 
   // Check route exists
-  console.log(`[checkNodeExists] Looking for route: isTcp=${isTcpRoute}, categoryIndex=${ri}`);
-  console.log(`[checkNodeExists] Available routes:`, listenerNode.routes.map(r => ({ isTcp: r.isTcp, categoryIndex: r.categoryIndex })));
+  console.log(
+    `[checkNodeExists] Looking for route: isTcp=${isTcpRoute}, categoryIndex=${ri}`,
+  );
+  console.log(
+    `[checkNodeExists] Available routes:`,
+    listenerNode.routes.map((r) => ({
+      isTcp: r.isTcp,
+      categoryIndex: r.categoryIndex,
+    })),
+  );
   const routeNode = listenerNode.routes.find(
-    (rn) => rn.isTcp === isTcpRoute && rn.categoryIndex === ri
+    (rn) => rn.isTcp === isTcpRoute && rn.categoryIndex === ri,
   );
   if (!routeNode) {
     console.log(`[checkNodeExists] Route not found`);
@@ -162,7 +176,9 @@ function checkNodeExists(
 
   // Check policy exists
   if (policyType) {
-    const policyNode = routeNode.policies.find((p) => p.policyType === policyType);
+    const policyNode = routeNode.policies.find(
+      (p) => p.policyType === policyType,
+    );
     return !!policyNode;
   }
 
