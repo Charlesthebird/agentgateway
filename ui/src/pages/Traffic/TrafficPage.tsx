@@ -1,13 +1,6 @@
 import { CodeOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { Button, Card, Spin, Statistic } from "antd";
-import {
-  AlertTriangle,
-  CheckCircle,
-  Headphones,
-  Network,
-  Route,
-} from "lucide-react";
+import { Button, Spin } from "antd";
 import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { StyledAlert } from "../../components/StyledAlert";
@@ -19,14 +12,7 @@ import { useTrafficHierarchy } from "./hooks/useTrafficHierarchy";
 // Styled components
 // ---------------------------------------------------------------------------
 
-const FullContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl);
-`;
-
-const SplitRoot = styled.div`
+const PageRoot = styled.div`
   display: flex;
   flex-direction: column;
   height: calc(100vh - 64px);
@@ -39,12 +25,6 @@ const MetricsHeader = styled.div`
   background: var(--color-bg-layout);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-`;
-
-const AllMetrics = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: var(--spacing-md);
 `;
 
@@ -96,13 +76,6 @@ const PlaceholderContent = styled.div`
   }
 `;
 
-const OverviewContent = styled.div`
-  display: grid;
-  grid-template-columns: 450px 1fr;
-  gap: var(--spacing-xl);
-  align-items: start;
-`;
-
 const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -120,29 +93,6 @@ const Description = styled.p`
   color: var(--color-text-secondary);
   margin: 0;
   font-size: 14px;
-`;
-
-const MetricCard = styled(Card)`
-  &.ant-card {
-    background: var(--color-bg-container);
-    border: 1px solid var(--color-border);
-  }
-
-  .ant-card-body {
-    padding: var(--spacing-lg);
-  }
-`;
-
-const MetricIcon = styled.div<{ color: string }>`
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: ${(props) => props.color}15;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--spacing-md);
-  color: ${(props) => props.color};
 `;
 
 // ---------------------------------------------------------------------------
@@ -217,36 +167,49 @@ export function TrafficPage() {
   // ---------------------------------------------------------------------------
   if (hierarchy.error) {
     return (
-      <FullContainer>
-        <PageHeader>
-          <div>
-            <PageTitle>Traffic Configuration (Manual Schemas)</PageTitle>
-            <Description>
-              Manage your gateway routing with manually configured TypeScript
-              schemas
-            </Description>
-          </div>
-        </PageHeader>
-        <StyledAlert
-          message="Error Loading Configuration"
-          description={hierarchy.error.message ?? "Failed to load config"}
-          type="error"
-          showIcon
-        />
-      </FullContainer>
+      <PageRoot>
+        <MetricsHeader>
+          <PageHeader>
+            <div>
+              <PageTitle>Traffic Configuration (Manual Schemas)</PageTitle>
+              <Description>
+                Manage your gateway routing with manually configured TypeScript
+                schemas
+              </Description>
+            </div>
+          </PageHeader>
+          <StyledAlert
+            message="Error Loading Configuration"
+            description={hierarchy.error.message ?? "Failed to load config"}
+            type="error"
+            showIcon
+          />
+        </MetricsHeader>
+      </PageRoot>
     );
   }
 
   if (hierarchy.isLoading) {
     return (
-      <FullContainer>
-        <div style={{ textAlign: "center", padding: 50 }}>
+      <PageRoot>
+        <MetricsHeader>
+          <PageHeader>
+            <div>
+              <PageTitle>Traffic Configuration (Manual Schemas)</PageTitle>
+              <Description>
+                Manage your gateway routing with manually configured TypeScript
+                schemas
+              </Description>
+            </div>
+          </PageHeader>
+        </MetricsHeader>
+        <div style={{ textAlign: "center", padding: 50, flex: 1 }}>
           <Spin size="large" />
           <div style={{ marginTop: 16, color: "var(--color-text-secondary)" }}>
             Loading traffic configuration…
           </div>
         </div>
-      </FullContainer>
+      </PageRoot>
     );
   }
 
@@ -258,86 +221,32 @@ export function TrafficPage() {
   // Show detail if we have a bind (port) or any sub-resource selected
   const shouldShowDetail = urlParams !== null;
 
-  const alertContent = (
-    <StyledAlert
-      message="Manual TypeScript Schemas"
-      description="This page uses manually configured TypeScript form schemas (not auto-generated JSON). Forms are defined in traffic/forms/ and use config.d.ts types directly for compile-time safety."
-      type="info"
-      showIcon
-      closable
-    />
-  );
-
-  const metricsCards = (
-    <AllMetrics>
-      <MetricCard>
-        <MetricIcon color="var(--color-primary)">
-          <Network size={20} />
-        </MetricIcon>
-        <Statistic
-          title="Binds"
-          value={hierarchy.stats.totalBinds}
-          suffix="ports"
+  return (
+    <PageRoot>
+      <MetricsHeader>
+        <PageHeader>
+          <div>
+            <PageTitle>Traffic Configuration (Manual Schemas)</PageTitle>
+            <Description>
+              Manage your gateway routing with manually configured TypeScript
+              schemas
+            </Description>
+          </div>
+          <Button
+            icon={<CodeOutlined />}
+            onClick={() => navigate("/traffic/raw-config")}
+          >
+            Config Editor
+          </Button>
+        </PageHeader>
+        <StyledAlert
+          message="Manual TypeScript Schemas"
+          description="This page uses manually configured TypeScript form schemas (not auto-generated JSON). Forms are defined in traffic/forms/ and use config.d.ts types directly for compile-time safety."
+          type="info"
+          showIcon
+          closable
         />
-      </MetricCard>
-
-      <MetricCard>
-        <MetricIcon color="var(--color-success)">
-          <Headphones size={20} />
-        </MetricIcon>
-        <Statistic
-          title="Listeners"
-          value={hierarchy.stats.totalListeners}
-          suffix="configured"
-        />
-      </MetricCard>
-
-      <MetricCard>
-        <MetricIcon color="var(--color-info)">
-          <Route size={20} />
-        </MetricIcon>
-        <Statistic
-          title="Routes"
-          value={hierarchy.stats.totalRoutes}
-          suffix="active"
-        />
-      </MetricCard>
-
-      <MetricCard>
-        <MetricIcon
-          color={
-            hierarchy.stats.totalValidationErrors > 0
-              ? "var(--color-warning)"
-              : "var(--color-success)"
-          }
-        >
-          {hierarchy.stats.totalValidationErrors > 0 ? (
-            <AlertTriangle size={20} />
-          ) : (
-            <CheckCircle size={20} />
-          )}
-        </MetricIcon>
-        <Statistic
-          title="Validation Issues"
-          value={hierarchy.stats.totalValidationErrors}
-          suffix={
-            hierarchy.stats.totalValidationErrors === 1 ? "issue" : "issues"
-          }
-          valueStyle={{
-            color:
-              hierarchy.stats.totalValidationErrors > 0
-                ? "var(--color-warning)"
-                : "var(--color-success)",
-          }}
-        />
-      </MetricCard>
-    </AllMetrics>
-  );
-
-  return urlParams ? (
-    /* Split layout: tree on left, detail/placeholder on right */
-    <SplitRoot>
-      <MetricsHeader>{alertContent}</MetricsHeader>
+      </MetricsHeader>
       <SplitBody>
         <Sidebar>
           <HierarchyTree hierarchy={hierarchy} />
@@ -350,7 +259,7 @@ export function TrafficPage() {
               <PlaceholderContent>
                 <h3>Select an Item</h3>
                 <p>
-                  Choose a listener, route, backend, or policy from the
+                  Choose a bind, listener, route, backend, or policy from the
                   hierarchy tree on the left to view and edit its configuration.
                 </p>
               </PlaceholderContent>
@@ -358,41 +267,6 @@ export function TrafficPage() {
           )}
         </DetailPanel>
       </SplitBody>
-    </SplitRoot>
-  ) : (
-    /* Full-width overview */
-    <FullContainer>
-      <PageHeader>
-        <div>
-          <PageTitle>Traffic Configuration (Manual Schemas)</PageTitle>
-          <Description>
-            Manage your gateway routing with manually configured TypeScript
-            schemas
-          </Description>
-        </div>
-        <Button
-          icon={<CodeOutlined />}
-          onClick={() => navigate("/traffic/raw-config")}
-        >
-          Config Editor
-        </Button>
-      </PageHeader>
-
-      {alertContent}
-      {metricsCards}
-
-      <OverviewContent>
-        <HierarchyTree hierarchy={hierarchy} />
-        <PlaceholderContainer>
-          <PlaceholderContent>
-            <h3>Select an Item</h3>
-            <p>
-              Choose a bind, listener, route, backend, or policy from the
-              hierarchy tree on the left to view and edit its configuration.
-            </p>
-          </PlaceholderContent>
-        </PlaceholderContainer>
-      </OverviewContent>
-    </FullContainer>
+    </PageRoot>
   );
 }

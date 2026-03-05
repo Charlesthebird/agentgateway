@@ -394,11 +394,6 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
       children: [
         {
           key: "/traffic",
-          icon: <Workflow size={18} />,
-          label: "Traffic (Overview)",
-        },
-        {
-          key: "/traffic/routing",
           icon: <Route size={18} />,
           label: "Routing",
         },
@@ -436,7 +431,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
   const selectedKeys = useMemo(() => {
     const knownPaths = [
-      "/traffic/routing",
+      "/traffic",
       "/traffic/logs",
       "/traffic/metrics",
       "/llm/models",
