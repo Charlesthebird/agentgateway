@@ -76,6 +76,10 @@ export type SimpleLocalBackend =
        */
       backend: string;
     };
+/**
+ * Namespaced hostname in format 'namespace/hostname'
+ */
+export type NamespacedHostname = string;
 export type Bytes = number[] | string;
 export type McpIDP =
   | {
@@ -973,11 +977,6 @@ export interface UrlRewrite {
 export interface RequestMirror {
   backend: SimpleLocalBackend;
   percentage: number;
-}
-export interface NamespacedHostname {
-  namespace: string;
-  hostname: string;
-  [k: string]: unknown;
 }
 export interface DirectResponse {
   body: Bytes;

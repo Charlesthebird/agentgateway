@@ -21,7 +21,6 @@ use crate::types::proto::{ProtoError, workload};
 use crate::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
-#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub struct NamespacedHostname {
 	pub namespace: Strng,
 	pub hostname: Strng,
@@ -81,6 +80,21 @@ impl<'de> Deserialize<'de> for NamespacedHostname {
 impl fmt::Display for NamespacedHostname {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		write!(f, "{}/{}", self.namespace, self.hostname)
+	}
+}
+
+#[cfg(feature = "schema")]
+impl schemars::JsonSchema for NamespacedHostname {
+	fn schema_name() -> std::borrow::Cow<'static, str> {
+		"NamespacedHostname".into()
+	}
+
+	fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
+		schemars::json_schema!({
+			"type": "string",
+			"format": "namespace/hostname",
+			"description": "Namespaced hostname in format 'namespace/hostname'"
+		})
 	}
 }
 

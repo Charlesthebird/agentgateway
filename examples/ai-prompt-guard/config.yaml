@@ -2,57 +2,31 @@ binds:
 - port: 3001
   listeners:
   - protocol: HTTP
-    name: test
+    name: listener1
+    namespace: default1
     hostname: '*'
     routes:
-    - backends:
-      - ai:
-          name: openai
-          provider:
-            openAI:
-              model: gpt-4o-mini
-      policies:
-        ai:
-          promptGuard:
-            request:
-            - regex:
-                action: reject
-                rules:
-                - pattern: SSN
-                - pattern: Social Security
-              rejection:
-                status: 400
-                headers:
-                  set:
-                    content-type: application/json
-                body: |
-                  {
-                    "error": {
-                      "message": "Request rejected: Content contains sensitive information",
-                      "type": "invalid_request_error",
-                      "code": "content_policy_violation"
-                    }
-                  }
-            - regex:
-                action: reject
-                rules:
-                - builtin: email
-              rejection:
-                status: 400
-                headers:
-                  set:
-                    content-type: application/json
-                body: |-
-                  {
-                    "error": {
-                      "message": "Response blocked: Contains email",
-                      "type": "invalid_request_error",
-                      "code": "pii_detected"
-                    }
-                  }
+    - hostnames: []
+      matches:
+      - path:
+          pathPrefix: /asdf
+      backends:
+      - service:
+          name: asdfsdaf/ddd
+          port: 8080
+        weight: 1
+      name: route
     - hostnames: []
       matches:
       - path:
           pathPrefix: /
-      backends: []
+      backends:
+      - service:
+          name: default/service
+          port: 8080
+        weight: 1
       name: route
+  - protocol: HTTP
+    name: listener
+    hostname: '*'
+    routes: []

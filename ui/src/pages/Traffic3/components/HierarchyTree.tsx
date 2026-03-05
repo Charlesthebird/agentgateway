@@ -1060,7 +1060,7 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
       // Find the index of the newly created listener from fresh data
       const bind = freshConfig?.binds?.find((b: any) => b.port === port);
       const listenerIndex = bind ? bind.listeners.length - 1 : 0;
-      navigate(`/traffic3/bind/${port}/listener/${listenerIndex}?edit=true`);
+      navigate(`/traffic3/bind/${port}/listener/${listenerIndex}?edit=true&creating=true`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to create listener");
     }
@@ -1116,7 +1116,7 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
         ? (freshListener?.tcpRoutes?.length ?? 1) - 1
         : (freshListener?.routes?.length ?? 1) - 1;
       const routeSeg = isTcp ? "tcproute" : "route";
-      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${routeIndex}?edit=true`);
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${routeIndex}?edit=true&creating=true`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to create route");
     }
@@ -1146,40 +1146,37 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
 
       // Create new backend WITHOUT backendType - that's a UI-only field
       // The backend needs the actual backend type field (service, host, etc.)
+      // Note: service.name must be a string in format "namespace/hostname"
       const newBackend = {
         service: {
-          name: {
-            namespace: "default",
-            hostname: "service",
-          },
+          name: "default/service",
           port: 8080,
         },
         weight: 1,
       };
 
-      // Add backend to route
-      const updatedRoute = { ...route };
-      if (!updatedRoute.backends) {
-        updatedRoute.backends = [];
-      }
+      // Construct a clean route object with only the necessary fields
+      // This avoids sending any extra hierarchy metadata to the API
+      const existingBackends = route.backends || [];
+      const updatedBackends = [...existingBackends, newBackend];
 
-      // Clean all existing backends by applying backend transform
-      // This removes UI-only fields like backendType and invalid fields like tls on service backends
-      const cleanedBackends = (updatedRoute.backends || []).map((backend: any) => {
-        // Import the transform function from backendForm
-        const { transformBeforeSubmit } = forms.backend;
-        return transformBeforeSubmit ? transformBeforeSubmit(backend) : backend;
-      });
+      const updatedRoute: Record<string, unknown> = {
+        hostnames: route.hostnames,
+        backends: updatedBackends,
+      };
 
-      // Add the new backend to the cleaned list
-      cleanedBackends.push(newBackend);
-      updatedRoute.backends = cleanedBackends as any;
+      // Add optional fields if they exist
+      if ('matches' in route) updatedRoute.matches = route.matches;
+      if ('name' in route) updatedRoute.name = route.name;
+      if ('namespace' in route) updatedRoute.namespace = route.namespace;
+      if ('ruleName' in route) updatedRoute.ruleName = route.ruleName;
+      if ('policies' in route) updatedRoute.policies = route.policies;
 
       // Update the route
       if (isTcp) {
-        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute as any);
+        await api.updateTCPRouteByIndex(port, li, ri, updatedRoute);
       } else {
-        await api.updateRouteByIndex(port, li, ri, updatedRoute as any);
+        await api.updateRouteByIndex(port, li, ri, updatedRoute);
       }
 
       toast.success("Backend created successfully");
@@ -1195,7 +1192,7 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
         : freshListener?.routes?.[ri];
       const backendIndex = (freshRoute?.backends?.length ?? 1) - 1;
       const routeSeg = isTcp ? "tcproute" : "route";
-      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/backend/${backendIndex}?edit=true`);
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/backend/${backendIndex}?edit=true&creating=true`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to create backend");
     }
@@ -1258,7 +1255,7 @@ export function HierarchyTree({ hierarchy }: HierarchyTreeProps) {
 
       // Navigate to the policy edit page
       const routeSeg = isTcp ? "tcproute" : "route";
-      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/policy/${policyType}?edit=true`);
+      navigate(`/traffic3/bind/${port}/listener/${li}/${routeSeg}/${ri}/policy/${policyType}?edit=true&creating=true`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to create policy");
     }

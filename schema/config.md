@@ -124,9 +124,7 @@
 |`binds[].listeners[].routes[].policies.requestMirror`|Mirror incoming requests to another destination.|
 |`binds[].listeners[].routes[].policies.requestMirror.backend`||
 |`binds[].listeners[].routes[].policies.requestMirror.backend.(1)service`||
-|`binds[].listeners[].routes[].policies.requestMirror.backend.(1)service.name`||
-|`binds[].listeners[].routes[].policies.requestMirror.backend.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].policies.requestMirror.backend.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].policies.requestMirror.backend.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].policies.requestMirror.backend.(1)service.port`||
 |`binds[].listeners[].routes[].policies.requestMirror.backend.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].policies.requestMirror.backend.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -170,9 +168,7 @@
 |`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook`||
 |`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target`||
 |`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].policies.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -438,9 +434,7 @@
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook`||
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target`||
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].policies.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -677,9 +671,7 @@
 |`binds[].listeners[].routes[].policies.localRateLimit[].type`||
 |`binds[].listeners[].routes[].policies.remoteRateLimit`|Rate limit incoming requests. State is managed by a remote server.|
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)service`||
-|`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)service.name`||
-|`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)service.name.namespace`||
-|`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)service.name.hostname`||
+|`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)service.port`||
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].policies.remoteRateLimit.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -797,9 +789,7 @@
 |`binds[].listeners[].routes[].policies.apiKey.mode`|Validation mode for API keys|
 |`binds[].listeners[].routes[].policies.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`binds[].listeners[].routes[].policies.extAuthz.(any)(1)service`||
-|`binds[].listeners[].routes[].policies.extAuthz.(any)(1)service.name`||
-|`binds[].listeners[].routes[].policies.extAuthz.(any)(1)service.name.namespace`||
-|`binds[].listeners[].routes[].policies.extAuthz.(any)(1)service.name.hostname`||
+|`binds[].listeners[].routes[].policies.extAuthz.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].policies.extAuthz.(any)(1)service.port`||
 |`binds[].listeners[].routes[].policies.extAuthz.(any)(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].policies.extAuthz.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -899,9 +889,7 @@
 |`binds[].listeners[].routes[].policies.extAuthz.(any)includeRequestBody.packAsBytes`|If true, pack body as raw bytes in gRPC|
 |`binds[].listeners[].routes[].policies.extProc`|Extend agentgateway with an external processor|
 |`binds[].listeners[].routes[].policies.extProc.(any)(1)service`||
-|`binds[].listeners[].routes[].policies.extProc.(any)(1)service.name`||
-|`binds[].listeners[].routes[].policies.extProc.(any)(1)service.name.namespace`||
-|`binds[].listeners[].routes[].policies.extProc.(any)(1)service.name.hostname`||
+|`binds[].listeners[].routes[].policies.extProc.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].policies.extProc.(any)(1)service.port`||
 |`binds[].listeners[].routes[].policies.extProc.(any)(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].policies.extProc.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -1008,9 +996,7 @@
 |`binds[].listeners[].routes[].policies.retry.codes`||
 |`binds[].listeners[].routes[].backends`||
 |`binds[].listeners[].routes[].backends[].(1)service`||
-|`binds[].listeners[].routes[].backends[].(1)service.name`||
-|`binds[].listeners[].routes[].backends[].(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].(1)service.port`||
 |`binds[].listeners[].routes[].backends[].(1)host`||
 |`binds[].listeners[].routes[].backends[].(1)dynamic`||
@@ -1233,9 +1219,7 @@
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -1501,9 +1485,7 @@
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)policies.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -1815,9 +1797,7 @@
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -2083,9 +2063,7 @@
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].backends[].(1)ai.(any)groups[].providers[].policies.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -2372,9 +2350,7 @@
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook`||
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target`||
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -2640,9 +2616,7 @@
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook`||
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target`||
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`binds[].listeners[].routes[].backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -2854,9 +2828,7 @@
 |`binds[].listeners[].tcpRoutes[].policies.backendTLS.subjectAltNames`||
 |`binds[].listeners[].tcpRoutes[].backends`||
 |`binds[].listeners[].tcpRoutes[].backends[].(1)service`||
-|`binds[].listeners[].tcpRoutes[].backends[].(1)service.name`||
-|`binds[].listeners[].tcpRoutes[].backends[].(1)service.name.namespace`||
-|`binds[].listeners[].tcpRoutes[].backends[].(1)service.name.hostname`||
+|`binds[].listeners[].tcpRoutes[].backends[].(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].tcpRoutes[].backends[].(1)service.port`||
 |`binds[].listeners[].tcpRoutes[].backends[].(1)host`|Hostname or IP address|
 |`binds[].listeners[].tcpRoutes[].backends[].(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -2892,9 +2864,7 @@
 |`binds[].listeners[].policies.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`binds[].listeners[].policies.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`binds[].listeners[].policies.extAuthz.(any)(1)service`||
-|`binds[].listeners[].policies.extAuthz.(any)(1)service.name`||
-|`binds[].listeners[].policies.extAuthz.(any)(1)service.name.namespace`||
-|`binds[].listeners[].policies.extAuthz.(any)(1)service.name.hostname`||
+|`binds[].listeners[].policies.extAuthz.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].policies.extAuthz.(any)(1)service.port`||
 |`binds[].listeners[].policies.extAuthz.(any)(1)host`|Hostname or IP address|
 |`binds[].listeners[].policies.extAuthz.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -2994,9 +2964,7 @@
 |`binds[].listeners[].policies.extAuthz.(any)includeRequestBody.packAsBytes`|If true, pack body as raw bytes in gRPC|
 |`binds[].listeners[].policies.extProc`|Extend agentgateway with an external processor|
 |`binds[].listeners[].policies.extProc.(any)(1)service`||
-|`binds[].listeners[].policies.extProc.(any)(1)service.name`||
-|`binds[].listeners[].policies.extProc.(any)(1)service.name.namespace`||
-|`binds[].listeners[].policies.extProc.(any)(1)service.name.hostname`||
+|`binds[].listeners[].policies.extProc.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`binds[].listeners[].policies.extProc.(any)(1)service.port`||
 |`binds[].listeners[].policies.extProc.(any)(1)host`|Hostname or IP address|
 |`binds[].listeners[].policies.extProc.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -3131,9 +3099,7 @@
 |`frontendPolicies.accessLog.remove`||
 |`frontendPolicies.tracing`||
 |`frontendPolicies.tracing.(any)(1)service`||
-|`frontendPolicies.tracing.(any)(1)service.name`||
-|`frontendPolicies.tracing.(any)(1)service.name.namespace`||
-|`frontendPolicies.tracing.(any)(1)service.name.hostname`||
+|`frontendPolicies.tracing.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`frontendPolicies.tracing.(any)(1)service.port`||
 |`frontendPolicies.tracing.(any)(1)host`|Hostname or IP address|
 |`frontendPolicies.tracing.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -3275,9 +3241,7 @@
 |`policies[].policy.requestMirror`|Mirror incoming requests to another destination.|
 |`policies[].policy.requestMirror.backend`||
 |`policies[].policy.requestMirror.backend.(1)service`||
-|`policies[].policy.requestMirror.backend.(1)service.name`||
-|`policies[].policy.requestMirror.backend.(1)service.name.namespace`||
-|`policies[].policy.requestMirror.backend.(1)service.name.hostname`||
+|`policies[].policy.requestMirror.backend.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`policies[].policy.requestMirror.backend.(1)service.port`||
 |`policies[].policy.requestMirror.backend.(1)host`|Hostname or IP address|
 |`policies[].policy.requestMirror.backend.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -3321,9 +3285,7 @@
 |`policies[].policy.ai.promptGuard.request[].(1)webhook`||
 |`policies[].policy.ai.promptGuard.request[].(1)webhook.target`||
 |`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`policies[].policy.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -3589,9 +3551,7 @@
 |`policies[].policy.ai.promptGuard.response[].(1)webhook`||
 |`policies[].policy.ai.promptGuard.response[].(1)webhook.target`||
 |`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`policies[].policy.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -3828,9 +3788,7 @@
 |`policies[].policy.localRateLimit[].type`||
 |`policies[].policy.remoteRateLimit`|Rate limit incoming requests. State is managed by a remote server.|
 |`policies[].policy.remoteRateLimit.(any)(1)service`||
-|`policies[].policy.remoteRateLimit.(any)(1)service.name`||
-|`policies[].policy.remoteRateLimit.(any)(1)service.name.namespace`||
-|`policies[].policy.remoteRateLimit.(any)(1)service.name.hostname`||
+|`policies[].policy.remoteRateLimit.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`policies[].policy.remoteRateLimit.(any)(1)service.port`||
 |`policies[].policy.remoteRateLimit.(any)(1)host`|Hostname or IP address|
 |`policies[].policy.remoteRateLimit.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -3948,9 +3906,7 @@
 |`policies[].policy.apiKey.mode`|Validation mode for API keys|
 |`policies[].policy.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`policies[].policy.extAuthz.(any)(1)service`||
-|`policies[].policy.extAuthz.(any)(1)service.name`||
-|`policies[].policy.extAuthz.(any)(1)service.name.namespace`||
-|`policies[].policy.extAuthz.(any)(1)service.name.hostname`||
+|`policies[].policy.extAuthz.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`policies[].policy.extAuthz.(any)(1)service.port`||
 |`policies[].policy.extAuthz.(any)(1)host`|Hostname or IP address|
 |`policies[].policy.extAuthz.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -4050,9 +4006,7 @@
 |`policies[].policy.extAuthz.(any)includeRequestBody.packAsBytes`|If true, pack body as raw bytes in gRPC|
 |`policies[].policy.extProc`|Extend agentgateway with an external processor|
 |`policies[].policy.extProc.(any)(1)service`||
-|`policies[].policy.extProc.(any)(1)service.name`||
-|`policies[].policy.extProc.(any)(1)service.name.namespace`||
-|`policies[].policy.extProc.(any)(1)service.name.hostname`||
+|`policies[].policy.extProc.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`policies[].policy.extProc.(any)(1)service.port`||
 |`policies[].policy.extProc.(any)(1)host`|Hostname or IP address|
 |`policies[].policy.extProc.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -4253,9 +4207,7 @@
 |`backends[].policies.ai.promptGuard.request[].(1)webhook`||
 |`backends[].policies.ai.promptGuard.request[].(1)webhook.target`||
 |`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`backends[].policies.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -4521,9 +4473,7 @@
 |`backends[].policies.ai.promptGuard.response[].(1)webhook`||
 |`backends[].policies.ai.promptGuard.response[].(1)webhook.target`||
 |`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`backends[].policies.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -4748,9 +4698,7 @@
 |`llm.models[].guardrails.request[].(1)webhook`||
 |`llm.models[].guardrails.request[].(1)webhook.target`||
 |`llm.models[].guardrails.request[].(1)webhook.target.(1)service`||
-|`llm.models[].guardrails.request[].(1)webhook.target.(1)service.name`||
-|`llm.models[].guardrails.request[].(1)webhook.target.(1)service.name.namespace`||
-|`llm.models[].guardrails.request[].(1)webhook.target.(1)service.name.hostname`||
+|`llm.models[].guardrails.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`llm.models[].guardrails.request[].(1)webhook.target.(1)service.port`||
 |`llm.models[].guardrails.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`llm.models[].guardrails.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -5016,9 +4964,7 @@
 |`llm.models[].guardrails.response[].(1)webhook`||
 |`llm.models[].guardrails.response[].(1)webhook.target`||
 |`llm.models[].guardrails.response[].(1)webhook.target.(1)service`||
-|`llm.models[].guardrails.response[].(1)webhook.target.(1)service.name`||
-|`llm.models[].guardrails.response[].(1)webhook.target.(1)service.name.namespace`||
-|`llm.models[].guardrails.response[].(1)webhook.target.(1)service.name.hostname`||
+|`llm.models[].guardrails.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`llm.models[].guardrails.response[].(1)webhook.target.(1)service.port`||
 |`llm.models[].guardrails.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`llm.models[].guardrails.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -5223,9 +5169,7 @@
 |`llm.policies.jwtAuth.(any)(any)jwtValidationOptions.requiredClaims`|Claims that must be present in the token before validation.<br>Only "exp", "nbf", "aud", "iss", "sub" are enforced; others<br>(including "iat" and "jti") are ignored.<br>Defaults to ["exp"]. Use an empty list to require no claims.|
 |`llm.policies.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`llm.policies.extAuthz.(any)(1)service`||
-|`llm.policies.extAuthz.(any)(1)service.name`||
-|`llm.policies.extAuthz.(any)(1)service.name.namespace`||
-|`llm.policies.extAuthz.(any)(1)service.name.hostname`||
+|`llm.policies.extAuthz.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`llm.policies.extAuthz.(any)(1)service.port`||
 |`llm.policies.extAuthz.(any)(1)host`|Hostname or IP address|
 |`llm.policies.extAuthz.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -5325,9 +5269,7 @@
 |`llm.policies.extAuthz.(any)includeRequestBody.packAsBytes`|If true, pack body as raw bytes in gRPC|
 |`llm.policies.extProc`|Extend agentgateway with an external processor|
 |`llm.policies.extProc.(any)(1)service`||
-|`llm.policies.extProc.(any)(1)service.name`||
-|`llm.policies.extProc.(any)(1)service.name.namespace`||
-|`llm.policies.extProc.(any)(1)service.name.hostname`||
+|`llm.policies.extProc.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`llm.policies.extProc.(any)(1)service.port`||
 |`llm.policies.extProc.(any)(1)host`|Hostname or IP address|
 |`llm.policies.extProc.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -5569,9 +5511,7 @@
 |`mcp.policies.requestMirror`|Mirror incoming requests to another destination.|
 |`mcp.policies.requestMirror.backend`||
 |`mcp.policies.requestMirror.backend.(1)service`||
-|`mcp.policies.requestMirror.backend.(1)service.name`||
-|`mcp.policies.requestMirror.backend.(1)service.name.namespace`||
-|`mcp.policies.requestMirror.backend.(1)service.name.hostname`||
+|`mcp.policies.requestMirror.backend.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`mcp.policies.requestMirror.backend.(1)service.port`||
 |`mcp.policies.requestMirror.backend.(1)host`|Hostname or IP address|
 |`mcp.policies.requestMirror.backend.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -5615,9 +5555,7 @@
 |`mcp.policies.ai.promptGuard.request[].(1)webhook`||
 |`mcp.policies.ai.promptGuard.request[].(1)webhook.target`||
 |`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)service`||
-|`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`||
-|`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.namespace`||
-|`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name.hostname`||
+|`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)service.port`||
 |`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`mcp.policies.ai.promptGuard.request[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -5883,9 +5821,7 @@
 |`mcp.policies.ai.promptGuard.response[].(1)webhook`||
 |`mcp.policies.ai.promptGuard.response[].(1)webhook.target`||
 |`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)service`||
-|`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`||
-|`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.namespace`||
-|`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name.hostname`||
+|`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)service.port`||
 |`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)host`|Hostname or IP address|
 |`mcp.policies.ai.promptGuard.response[].(1)webhook.target.(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -6122,9 +6058,7 @@
 |`mcp.policies.localRateLimit[].type`||
 |`mcp.policies.remoteRateLimit`|Rate limit incoming requests. State is managed by a remote server.|
 |`mcp.policies.remoteRateLimit.(any)(1)service`||
-|`mcp.policies.remoteRateLimit.(any)(1)service.name`||
-|`mcp.policies.remoteRateLimit.(any)(1)service.name.namespace`||
-|`mcp.policies.remoteRateLimit.(any)(1)service.name.hostname`||
+|`mcp.policies.remoteRateLimit.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`mcp.policies.remoteRateLimit.(any)(1)service.port`||
 |`mcp.policies.remoteRateLimit.(any)(1)host`|Hostname or IP address|
 |`mcp.policies.remoteRateLimit.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -6242,9 +6176,7 @@
 |`mcp.policies.apiKey.mode`|Validation mode for API keys|
 |`mcp.policies.extAuthz`|Authenticate incoming requests by calling an external authorization server.|
 |`mcp.policies.extAuthz.(any)(1)service`||
-|`mcp.policies.extAuthz.(any)(1)service.name`||
-|`mcp.policies.extAuthz.(any)(1)service.name.namespace`||
-|`mcp.policies.extAuthz.(any)(1)service.name.hostname`||
+|`mcp.policies.extAuthz.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`mcp.policies.extAuthz.(any)(1)service.port`||
 |`mcp.policies.extAuthz.(any)(1)host`|Hostname or IP address|
 |`mcp.policies.extAuthz.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|
@@ -6344,9 +6276,7 @@
 |`mcp.policies.extAuthz.(any)includeRequestBody.packAsBytes`|If true, pack body as raw bytes in gRPC|
 |`mcp.policies.extProc`|Extend agentgateway with an external processor|
 |`mcp.policies.extProc.(any)(1)service`||
-|`mcp.policies.extProc.(any)(1)service.name`||
-|`mcp.policies.extProc.(any)(1)service.name.namespace`||
-|`mcp.policies.extProc.(any)(1)service.name.hostname`||
+|`mcp.policies.extProc.(any)(1)service.name`|Namespaced hostname in format 'namespace/hostname'|
 |`mcp.policies.extProc.(any)(1)service.port`||
 |`mcp.policies.extProc.(any)(1)host`|Hostname or IP address|
 |`mcp.policies.extProc.(any)(1)backend`|Explicit backend reference. Backend must be defined in the top level backends list|

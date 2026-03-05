@@ -21,6 +21,7 @@ import type {
 import type { useTraffic3Hierarchy } from "../hooks/useTraffic3Hierarchy";
 import type { UrlParams } from "../Traffic3Page";
 import * as api from "../../../api/crud";
+import { useNodePolling } from "../hooks/useNodePolling";
 
 // ---------------------------------------------------------------------------
 // Styled components
@@ -185,12 +186,17 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
   const { mutate } = useConfig();
 
   // Edit mode is URL-driven
-  const isEditing = new URLSearchParams(location.search).get("edit") === "true";
+  const searchParams = new URLSearchParams(location.search);
+  const isEditing = searchParams.get("edit") === "true";
+  const isCreating = searchParams.get("creating") === "true";
 
   const [formData, setFormData] = useState<Record<string, unknown> | null>(
     null,
   );
   const [saving, setSaving] = useState(false);
+
+  // Poll for the node if we're in creating mode
+  const { isPolling, hasTimedOut } = useNodePolling(hierarchy, urlParams, isCreating);
 
   const selected = useMemo(() => {
     const sel = findSelectedNode(hierarchy, urlParams);
@@ -199,11 +205,21 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       if (sel.type === "bind") {
         setFormData(sel.node.bind as unknown as Record<string, unknown>);
       } else if (sel.type === "listener") {
-        setFormData(sel.node.listener as unknown as Record<string, unknown>);
+        // Filter out routes and tcpRoutes - they're managed separately via the tree
+        const { routes, tcpRoutes, ...listenerData } = sel.node.listener as Record<string, unknown>;
+        setFormData(listenerData);
       } else if (sel.type === "route") {
-        setFormData(sel.node.route as unknown as Record<string, unknown>);
+        // Filter out backends - they're managed separately via the tree
+        const { backends, ...routeData } = sel.node.route as Record<string, unknown>;
+        setFormData(routeData);
       } else if (sel.type === "backend") {
-        setFormData(sel.node.backend as Record<string, unknown>);
+        // Transform backend data from API format to form format
+        const form = forms.backend as any;
+        const backendData = sel.node.backend as Record<string, unknown>;
+        const transformedData = form?.transformForForm
+          ? form.transformForForm(backendData)
+          : backendData;
+        setFormData(transformedData as Record<string, unknown>);
       } else if (sel.type === "policy") {
         setFormData(sel.node.policy as Record<string, unknown>);
       }
@@ -218,22 +234,37 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       if (selected.type === "bind") {
         setFormData(selected.node.bind as unknown as Record<string, unknown>);
       } else if (selected.type === "listener") {
-        setFormData(selected.node.listener as unknown as Record<string, unknown>);
+        // Filter out routes and tcpRoutes - they're managed separately via the tree
+        const { routes, tcpRoutes, ...listenerData } = selected.node.listener as Record<string, unknown>;
+        setFormData(listenerData);
       } else if (selected.type === "route") {
-        setFormData(selected.node.route as unknown as Record<string, unknown>);
+        // Filter out backends - they're managed separately via the tree
+        const { backends, ...routeData } = selected.node.route as Record<string, unknown>;
+        setFormData(routeData);
       } else if (selected.type === "backend") {
-        setFormData(selected.node.backend as Record<string, unknown>);
+        // Transform backend data from API format to form format
+        const form = forms.backend as any;
+        const backendData = selected.node.backend as Record<string, unknown>;
+        const transformedData = form?.transformForForm
+          ? form.transformForForm(backendData)
+          : backendData;
+        setFormData(transformedData as Record<string, unknown>);
       } else if (selected.type === "policy") {
         setFormData(selected.node.policy as Record<string, unknown>);
       }
     }
   }, [isEditing, selected]);
 
-  if (hierarchy.isLoading) {
+  if (hierarchy.isLoading || isPolling) {
     return (
       <Container>
         <div style={{ textAlign: "center", padding: 50 }}>
           <Spin size="large" />
+          {isPolling && (
+            <p style={{ marginTop: 16, color: "var(--color-text-secondary)" }}>
+              Loading node...
+            </p>
+          )}
         </div>
       </Container>
     );
@@ -245,7 +276,11 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
         <StyledAlert
           type="warning"
           message="Node Not Found"
-          description="The selected node could not be found in the current configuration."
+          description={
+            hasTimedOut
+              ? "The node was created but could not be loaded in time. Please refresh the page or navigate to it from the tree."
+              : "The selected node could not be found in the current configuration."
+          }
           showIcon
         />
       </Container>
@@ -267,12 +302,23 @@ export function NodeDetailView({ hierarchy, urlParams }: NodeDetailViewProps) {
       if (selected.type === "bind") {
         await api.updateBind(port, dataToSave);
       } else if (selected.type === "listener") {
-        await api.updateListenerByIndex(port, li!, dataToSave);
+        // Merge back the routes/tcpRoutes that we filtered out from the form
+        const listenerWithRoutes = {
+          ...dataToSave,
+          routes: selected.node.listener.routes,
+          tcpRoutes: selected.node.listener.tcpRoutes,
+        };
+        await api.updateListenerByIndex(port, li!, listenerWithRoutes);
       } else if (selected.type === "route") {
+        // Merge back the backends that we filtered out from the form
+        const routeWithBackends = {
+          ...dataToSave,
+          backends: selected.node.route.backends,
+        };
         if (isTcpRoute) {
-          await api.updateTCPRouteByIndex(port, li!, ri!, dataToSave);
+          await api.updateTCPRouteByIndex(port, li!, ri!, routeWithBackends);
         } else {
-          await api.updateRouteByIndex(port, li!, ri!, dataToSave);
+          await api.updateRouteByIndex(port, li!, ri!, routeWithBackends);
         }
       } else if (selected.type === "backend") {
         if (isTcpRoute) {

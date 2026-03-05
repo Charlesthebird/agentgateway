@@ -319,6 +319,49 @@ export function isLocalRouteBackend(data: unknown): data is LocalRouteBackend {
 }
 
 /**
+ * Transform function to convert API format to form format when loading data
+ * Converts service.name from string "namespace/hostname" to object { namespace, hostname }
+ */
+export function transformForForm(data: unknown): unknown {
+  if (typeof data !== "object" || data === null) {
+    return data;
+  }
+
+  const backendData = data as Record<string, unknown>;
+  const result: Record<string, unknown> = { ...backendData };
+
+  // Determine backendType based on which field is present
+  if ("service" in backendData && backendData.service !== null && backendData.service !== undefined) {
+    result.backendType = "service";
+    const service = backendData.service as Record<string, unknown>;
+
+    // Convert service.name from string to object format if needed
+    if (typeof service.name === "string") {
+      const parts = service.name.split("/");
+      if (parts.length === 2) {
+        result.service = {
+          ...service,
+          name: {
+            namespace: parts[0],
+            hostname: parts[1],
+          },
+        };
+      }
+    }
+  } else if ("host" in backendData) {
+    result.backendType = "host";
+  } else if ("dynamic" in backendData) {
+    result.backendType = "dynamic";
+  } else if ("mcp" in backendData) {
+    result.backendType = "mcp";
+  } else if ("ai" in backendData) {
+    result.backendType = "ai";
+  }
+
+  return result;
+}
+
+/**
  * Transform function to strip UI-only fields before submission
  * The backendType field is used in the form for UI purposes but should not be submitted.
  * Also strips out all the unused backend type fields (only keeping the selected one).
@@ -345,7 +388,20 @@ export function transformBeforeSubmit(data: unknown): unknown {
 
   // Add the selected backend type field
   if (backendType === "service" && service !== undefined && service !== null) {
-    result.service = service;
+    // Convert service.name from object to string format "namespace/hostname"
+    const svc = service as Record<string, unknown>;
+    const serviceName = svc.name as Record<string, unknown> | undefined;
+
+    if (serviceName && typeof serviceName === "object" && "namespace" in serviceName && "hostname" in serviceName) {
+      // Convert object format to string format
+      result.service = {
+        ...svc,
+        name: `${serviceName.namespace}/${serviceName.hostname}`,
+      };
+    } else {
+      // Already in string format or invalid
+      result.service = service;
+    }
   } else if (backendType === "host" && host !== undefined && host !== null) {
     result.host = host;
     if (tls !== undefined && tls !== null) {
