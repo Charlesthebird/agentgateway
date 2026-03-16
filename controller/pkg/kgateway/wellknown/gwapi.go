@@ -75,7 +75,7 @@ var (
 	}
 	TLSRouteGVR = schema.GroupVersionResource{
 		Group:    GatewayGroup,
-		Version:  gwv1a2.GroupVersion.Version,
+		Version:  gwv1.GroupVersion.Version,
 		Resource: "tlsroutes",
 	}
 	TCPRouteGVK = schema.GroupVersionKind{
@@ -146,3 +146,18 @@ var (
 		Resource: "listenersets",
 	}
 )
+
+var KnownGvkByKind = map[string]schema.GroupVersionKind{
+	GatewayGVK.Kind:          GatewayGVK,
+	GatewayClassGVK.Kind:     GatewayClassGVK,
+	HTTPRouteGVK.Kind:        HTTPRouteGVK,
+	TLSRouteGVK.Kind:         TLSRouteGVK,
+	TCPRouteGVK.Kind:         TCPRouteGVK,
+	GRPCRouteGVK.Kind:        GRPCRouteGVK,
+	ReferenceGrantGVK.Kind:   ReferenceGrantGVK,
+	BackendTLSPolicyGVK.Kind: BackendTLSPolicyGVK,
+	InferencePoolGVK.Kind:    InferencePoolGVK,
+	ListenerSetGVK.Kind:      ListenerSetGVK,
+	ServiceEntryGVK.Kind:     ServiceEntryGVK,
+	HostnameGVK.Kind:         HostnameGVK,
+}

@@ -2,7 +2,6 @@ use std::cmp;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{Display, Formatter};
-use std::io::Cursor;
 use std::net::{IpAddr, SocketAddr};
 use std::num::NonZeroU16;
 use std::sync::{Arc, RwLock};
@@ -18,14 +17,15 @@ use prometheus_client::encoding::EncodeLabelValue;
 use rustls::ServerConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use rustls::server::danger::ClientCertVerifier;
-use rustls_pemfile::Item;
+use rustls_pki_types::pem::{PemObject, SectionKind};
 use serde::{Serialize, Serializer};
 use serde_json::Value;
 
 use crate::http::auth::BackendAuth;
 use crate::http::authorization::RuleSet;
 use crate::http::{
-	HeaderOrPseudo, HeaderValue, ext_authz, ext_proc, filters, remoteratelimit, retry, timeout,
+	HeaderOrPseudo, HeaderValue, ext_authz, ext_proc, filters, health, remoteratelimit, retry,
+	timeout,
 };
 use crate::mcp::McpAuthorization;
 use crate::telemetry::log::OrderedStringMap;
@@ -322,8 +322,7 @@ impl ServerTLSConfig {
 
 		let scb = if let Some(root) = &inputs.root_pem {
 			let mut roots_store = rustls::RootCertStore::empty();
-			let mut reader = std::io::BufReader::new(Cursor::new(root.as_slice()));
-			let certs = rustls_pemfile::certs(&mut reader).collect::<Result<Vec<_>, _>>()?;
+			let certs = CertificateDer::pem_slice_iter(root).collect::<Result<Vec<_>, _>>()?;
 			roots_store.add_parsable_certificates(certs);
 			let verify = rustls::server::WebPkiClientVerifier::builder_with_provider(
 				Arc::new(roots_store),
@@ -399,28 +398,32 @@ impl serde::Serialize for ServerTLSConfig {
 	}
 }
 
-pub fn parse_cert(mut cert: &[u8]) -> Result<Vec<CertificateDer<'static>>, anyhow::Error> {
-	let mut reader = std::io::BufReader::new(Cursor::new(&mut cert));
-	let parsed: Result<Vec<_>, _> = rustls_pemfile::read_all(&mut reader).collect();
-	parsed?
+pub fn parse_cert(cert: &[u8]) -> Result<Vec<CertificateDer<'static>>, anyhow::Error> {
+	let parsed = <(SectionKind, Vec<u8>)>::pem_slice_iter(cert).collect::<Result<Vec<_>, _>>()?;
+	if parsed.is_empty() {
+		return Err(anyhow!("no certificate"));
+	}
+
+	parsed
 		.into_iter()
-		.map(|p| {
-			let Item::X509Certificate(der) = p else {
+		.map(|(kind, der)| {
+			if kind != SectionKind::Certificate {
 				return Err(anyhow!("no certificate"));
-			};
-			Ok(der)
+			}
+			Ok(CertificateDer::from(der))
 		})
-		.collect::<Result<Vec<_>, _>>()
+		.collect()
 }
 
-pub fn parse_key(mut key: &[u8]) -> Result<PrivateKeyDer<'static>, anyhow::Error> {
-	let mut reader = std::io::BufReader::new(Cursor::new(&mut key));
-	let parsed = rustls_pemfile::read_one(&mut reader)?;
-	let parsed = parsed.ok_or_else(|| anyhow!("no key"))?;
-	match parsed {
-		Item::Pkcs8Key(c) => Ok(PrivateKeyDer::Pkcs8(c)),
-		Item::Pkcs1Key(c) => Ok(PrivateKeyDer::Pkcs1(c)),
-		Item::Sec1Key(c) => Ok(PrivateKeyDer::Sec1(c)),
+pub fn parse_key(key: &[u8]) -> Result<PrivateKeyDer<'static>, anyhow::Error> {
+	let (kind, der) = <(SectionKind, Vec<u8>)>::from_pem_slice(key).map_err(|e| match e {
+		rustls_pki_types::pem::Error::NoItemsFound => anyhow!("no key"),
+		_ => anyhow!(e),
+	})?;
+	match kind {
+		SectionKind::PrivateKey => Ok(PrivateKeyDer::Pkcs8(der.into())),
+		SectionKind::RsaPrivateKey => Ok(PrivateKeyDer::Pkcs1(der.into())),
+		SectionKind::EcPrivateKey => Ok(PrivateKeyDer::Sec1(der.into())),
 		_ => Err(anyhow!("unsupported key")),
 	}
 }
@@ -914,6 +917,8 @@ pub enum Backend {
 	MCP(ResourceName, McpBackend),
 	#[serde(rename = "ai", serialize_with = "serialize_backend_tuple")]
 	AI(ResourceName, crate::llm::AIBackend),
+	#[serde(rename = "aws", serialize_with = "serialize_backend_tuple")]
+	Aws(ResourceName, crate::aws::AwsBackendConfig),
 	#[serde(serialize_with = "serialize_backend_tuple")]
 	Dynamic(ResourceName, ()),
 	Invalid,
@@ -1092,6 +1097,7 @@ impl Backend {
 			Backend::Opaque(name, _)
 			| Backend::MCP(name, _)
 			| Backend::AI(name, _)
+			| Backend::Aws(name, _)
 			| Backend::Dynamic(name, _) => BackendTarget::Backend {
 				name: name.name.clone(),
 				namespace: name.namespace.clone(),
@@ -1111,6 +1117,7 @@ impl Backend {
 			Backend::Opaque(name, _)
 			| Backend::MCP(name, _)
 			| Backend::AI(name, _)
+			| Backend::Aws(name, _)
 			| Backend::Dynamic(name, _) => BackendTargetRef::Backend {
 				name: name.name.as_ref(),
 				namespace: name.namespace.as_ref(),
@@ -1126,7 +1133,14 @@ impl Backend {
 			Backend::Opaque(name, _)
 			| Backend::MCP(name, _)
 			| Backend::AI(name, _)
-			| Backend::Dynamic(name, _) => strng::format!("{}", name),
+			| Backend::Aws(name, _)
+			| Backend::Dynamic(name, _) => {
+				let mut s = String::with_capacity(name.namespace.len() + name.name.len() + 1);
+				s.push_str(&name.namespace);
+				s.push('/');
+				s.push_str(&name.name);
+				strng::new(&s)
+			},
 			Backend::Invalid => strng::literal!("invalid"),
 		}
 	}
@@ -1137,7 +1151,8 @@ impl Backend {
 			Backend::Opaque(_, _) => cel::BackendType::Static,
 			Backend::MCP(_, _) => cel::BackendType::MCP,
 			Backend::AI(_, _) => cel::BackendType::AI,
-			Backend::Dynamic { .. } => cel::BackendType::Dynamic,
+			Backend::Aws(_, _) => cel::BackendType::Unknown,
+			Backend::Dynamic(_, _) => cel::BackendType::Dynamic,
 			Backend::Invalid => cel::BackendType::Unknown,
 		}
 	}
@@ -1792,6 +1807,39 @@ impl TracingPolicy {
 	}
 }
 
+#[derive(Clone, Debug)]
+pub struct AccessLogPolicy {
+	pub config: crate::types::frontend::OtlpLoggingConfig,
+	pub logger: once_cell::sync::OnceCell<Arc<crate::telemetry::log::OtelAccessLogger>>,
+}
+
+impl AccessLogPolicy {
+	pub fn get_or_init(
+		&self,
+		policy_client: crate::proxy::httpproxy::PolicyClient,
+	) -> anyhow::Result<&Arc<crate::telemetry::log::OtelAccessLogger>> {
+		self.logger.get_or_try_init(|| {
+			let logger = crate::telemetry::log::OtelAccessLogger::new(
+				policy_client,
+				self.config.provider_backend.clone(),
+				self.config.policies.clone(),
+				self.config.protocol,
+				self.config.path.clone(),
+			)?;
+			Ok(Arc::new(logger))
+		})
+	}
+}
+
+impl serde::Serialize for AccessLogPolicy {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		self.config.serialize(serializer)
+	}
+}
+
 impl From<BackendPolicy> for PolicyType {
 	fn from(value: BackendPolicy) -> Self {
 		Self::Backend(value)
@@ -1967,6 +2015,7 @@ pub enum BackendPolicy {
 	HTTP(backend::HTTP),
 	#[serde(rename = "tcp")]
 	TCP(backend::TCP),
+	Tunnel(backend::Tunnel),
 	#[serde(rename = "backendTLS")]
 	BackendTLS(http::backendtls::BackendTLS),
 	BackendAuth(BackendAuth),
@@ -1975,6 +2024,7 @@ pub enum BackendPolicy {
 	AI(Arc<llm::Policy>),
 	SessionPersistence(http::sessionpersistence::Policy),
 	Transformation(crate::http::transformation_cel::Transformation),
+	Health(health::Policy),
 
 	RequestHeaderModifier(filters::HeaderModifier),
 	ResponseHeaderModifier(filters::HeaderModifier),
@@ -2378,13 +2428,8 @@ InvalidKeyData
 
 		let result = parse_key(invalid_key);
 		assert!(result.is_err());
-		// Check for actual error message that rustls_pemfile returns
 		let error_msg = result.unwrap_err().to_string();
-		assert!(
-			error_msg.contains("failed to fill whole buffer")
-				|| error_msg.contains("no key")
-				|| error_msg.contains("unsupported key")
-		);
+		assert!(error_msg.contains("base64 decode error") || error_msg.contains("no key"));
 	}
 
 	#[test]
@@ -2430,6 +2475,12 @@ InvalidKeyData
 		// Ensure hostname:port still works
 		let target = Target::try_from("example.com:443").unwrap();
 		assert!(matches!(target, Target::Hostname(h, 443) if h.as_str() == "example.com"));
+	}
+
+	#[test]
+	fn test_target_deserializes_from_json_value() {
+		let target: Target = serde_json::from_value(serde_json::json!("127.0.0.1:8080")).unwrap();
+		assert!(matches!(target, Target::Address(addr) if addr.to_string() == "127.0.0.1:8080"));
 	}
 
 	#[test]

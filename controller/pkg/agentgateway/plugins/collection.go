@@ -48,7 +48,7 @@ type AgwCollections struct {
 	HTTPRoutes         krt.Collection[*gwv1.HTTPRoute]
 	GRPCRoutes         krt.Collection[*gwv1.GRPCRoute]
 	TCPRoutes          krt.Collection[*gwv1a2.TCPRoute]
-	TLSRoutes          krt.Collection[*gwv1a2.TLSRoute]
+	TLSRoutes          krt.Collection[*gwv1.TLSRoute]
 	ReferenceGrants    krt.Collection[*gwv1b1.ReferenceGrant]
 	BackendTLSPolicies krt.Collection[*gwv1.BackendTLSPolicy]
 	ListenerSets       krt.Collection[*gwv1.ListenerSet]
@@ -62,7 +62,7 @@ type AgwCollections struct {
 
 	// ControllerName is the name of the Gateway controller.
 	ControllerName string
-	// SystemNamespace is control plane system namespace (default is kgateway-system)
+	// SystemNamespace is control plane system namespace (default is agentgateway-system)
 	SystemNamespace string
 	// IstioNamespace is the Istio control plane namespace (default is istio-system)
 	IstioNamespace string
@@ -131,12 +131,12 @@ func NewAgwCollections(
 		Gateways:           krt.WrapClient(kclient.NewFilteredDelayed[*gwv1.Gateway](commoncol.Client, wellknown.GatewayGVR, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/Gateways")...),
 		HTTPRoutes:         krt.WrapClient(kclient.NewFilteredDelayed[*gwv1.HTTPRoute](commoncol.Client, wellknown.HTTPRouteGVR, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/HTTPRoutes")...),
 		GRPCRoutes:         krt.WrapClient(kclient.NewFilteredDelayed[*gwv1.GRPCRoute](commoncol.Client, wellknown.GRPCRouteGVR, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/GRPCRoutes")...),
+		TLSRoutes:          krt.WrapClient(kclient.NewDelayedInformer[*gwv1.TLSRoute](commoncol.Client, gvr.TLSRoute, kubetypes.StandardInformer, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/TLSRoutes")...),
 		BackendTLSPolicies: krt.WrapClient(kclient.NewDelayedInformer[*gwv1.BackendTLSPolicy](commoncol.Client, gvr.BackendTLSPolicy, kubetypes.StandardInformer, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/BackendTLSPolicies")...),
 		ListenerSets:       krt.WrapClient(kclient.NewDelayedInformer[*gwv1.ListenerSet](commoncol.Client, gvr.ListenerSet, kubetypes.StandardInformer, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/ListenerSets")...),
 
 		// Gateway API alpha
 		TCPRoutes:       krt.WrapClient(kclient.NewDelayedInformer[*gwv1a2.TCPRoute](commoncol.Client, gvr.TCPRoute, kubetypes.StandardInformer, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/TCPRoutes")...),
-		TLSRoutes:       krt.WrapClient(kclient.NewDelayedInformer[*gwv1a2.TLSRoute](commoncol.Client, gvr.TLSRoute, kubetypes.StandardInformer, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/TLSRoutes")...),
 		ReferenceGrants: krt.WrapClient(kclient.NewFilteredDelayed[*gwv1b1.ReferenceGrant](commoncol.Client, wellknown.ReferenceGrantGVR, kubetypes.Filter{ObjectFilter: commoncol.Client.ObjectFilter()}), commoncol.KrtOpts.ToOptions("informer/ReferenceGrants")...),
 		// BackendTrafficPolicy?
 

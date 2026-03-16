@@ -317,7 +317,8 @@ impl opentelemetry_sdk::trace::SpanExporter for PolicyGrpcSpanExporter {
 				.await
 				.map_err(|e| OTelSdkError::InternalFailure(e.to_string()))?
 				.map(|_| ())
-				.map_err(|e| OTelSdkError::InternalFailure(e.to_string())) as OTelSdkResult
+				.map_err(|e: tonic::Status| OTelSdkError::InternalFailure(e.message().to_string()))
+				as OTelSdkResult
 		}
 	}
 
@@ -331,7 +332,7 @@ impl opentelemetry_sdk::trace::SpanExporter for PolicyGrpcSpanExporter {
 	}
 }
 
-fn to_otel(v: &ValueBag) -> opentelemetry::Value {
+pub(crate) fn to_otel(v: &ValueBag) -> opentelemetry::Value {
 	if let Some(b) = v.to_str() {
 		opentelemetry::Value::String(b.to_string().into())
 	} else if let Some(b) = v.to_i64() {
@@ -344,11 +345,11 @@ fn to_otel(v: &ValueBag) -> opentelemetry::Value {
 }
 
 #[derive(Clone, Debug)]
-struct PolicyOtelHttpClient {
-	policy_client: crate::proxy::httpproxy::PolicyClient,
-	backend_ref: SimpleBackendReference,
-	runtime: tokio::runtime::Handle,
-	policies: Vec<BackendPolicy>,
+pub(crate) struct PolicyOtelHttpClient {
+	pub(crate) policy_client: crate::proxy::httpproxy::PolicyClient,
+	pub(crate) backend_ref: SimpleBackendReference,
+	pub(crate) runtime: tokio::runtime::Handle,
+	pub(crate) policies: Vec<BackendPolicy>,
 }
 
 #[async_trait::async_trait]
@@ -388,12 +389,16 @@ impl opentelemetry_http::HttpClient for PolicyOtelHttpClient {
 }
 
 #[derive(Clone, Debug)]
-struct GlobalResourceDefaults {
-	service_name: Option<String>,
-	attrs: Vec<KeyValue>,
+pub(crate) struct GlobalResourceDefaults {
+	pub(crate) service_name: Option<String>,
+	pub(crate) attrs: Vec<KeyValue>,
 }
 
 static GLOBAL_RESOURCE_DEFAULTS: OnceCell<GlobalResourceDefaults> = OnceCell::new();
+
+pub(crate) fn global_resource_defaults() -> Option<&'static GlobalResourceDefaults> {
+	GLOBAL_RESOURCE_DEFAULTS.get()
+}
 
 /// Build a tonic ResourceSpans payload from SDK SpanData.
 /// Unblock exports for our custom exporter until https://github.com/open-telemetry/opentelemetry-rust/issues/3147 is addressed.
@@ -468,10 +473,8 @@ pub fn set_resource_defaults_from_config(cfg: &crate::Config) {
 	if !pm.node_id.is_empty() && !pm.pod_name.is_empty() && !pm.pod_namespace.is_empty() {
 		attrs.push(KeyValue::new("service.instance.id", pm.node_id.clone()));
 	}
-	if let Some(host) = cfg.self_addr.as_deref()
-		&& !host.is_empty()
-	{
-		attrs.push(KeyValue::new("host.name", host.to_string()));
+	if let Some(ref self_id) = cfg.self_addr {
+		attrs.push(KeyValue::new("host.name", self_id.hostname().to_string()));
 	}
 	// Use gateway name/namespace as authoritative service identity
 	let service_name = cfg.xds.gateway.to_string();

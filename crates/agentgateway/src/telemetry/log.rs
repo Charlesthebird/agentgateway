@@ -9,7 +9,7 @@ use std::time::{Duration, Instant, SystemTime};
 use agent_core::metrics::CustomField;
 use agent_core::strng;
 use agent_core::strng::{RichStrng, Strng};
-use agent_core::telemetry::{OptionExt, ValueBag, debug, display};
+use agent_core::telemetry::{OptionExt, OtelLogSink, ValueBag, debug, display};
 use bytes::Buf;
 use crossbeam::atomic::AtomicCell;
 use frozen_collections::{FzHashSet, FzStringMap};
@@ -26,6 +26,7 @@ use tracing::{Level, trace};
 
 use crate::cel::{ContextBuilder, Expression, LLMContext};
 use crate::http::Request;
+use crate::http::health;
 use crate::llm::InputFormat;
 use crate::mcp::{MCPOperation, ResourceId, ResourceType};
 use crate::proxy::ProxyResponseReason;
@@ -38,6 +39,12 @@ use crate::transport::stream::{TCPConnectionInfo, TLSConnectionInfo};
 use crate::types::agent::{BackendInfo, BindKey, ListenerName, RouteName, Target};
 use crate::types::loadbalancer::ActiveHandle;
 use crate::{cel, llm, mcp};
+
+use opentelemetry::logs::{AnyValue, LogRecord as _, Logger, LoggerProvider as _, Severity};
+use opentelemetry::{Key, KeyValue};
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
+use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::logs::SdkLoggerProvider;
 
 /// AsyncLog is a wrapper around an item that can be atomically set.
 /// The intent is to provide additional info to the log after we have lost the RequestLog reference,
@@ -395,7 +402,7 @@ impl CelLogging {
 		resp: Option<&'a cel::ResponseSnapshot>,
 		llm_response: Option<&'a LLMContext>,
 		mcp: Option<&'a ResourceType>,
-		end_time: Option<&'a str>,
+		end_time: Option<&'a cel::RequestTime>,
 		source_context: Option<&'a cel::SourceContext>,
 	) -> Result<CelLoggingExecutor<'a>, cel::Error> {
 		let CelLogging {
@@ -438,6 +445,45 @@ impl DropOnLog {
 		}
 	}
 
+	/// Computes (health, eviction_duration, restore_health) for finish_request.
+	/// `unhealthy` should already be evaluated (preferably with the shared CEL executor when available).
+	/// When no CEL expression is set, the default treats 4xx, 5xx, or connection failures as unhealthy.
+	fn eviction_unhealthy(log: &RequestLog, cel_exec: Option<&CelLoggingExecutor<'_>>) -> bool {
+		let default_unhealthy = log.status.is_none_or(|s| s.is_server_error());
+		let Some(policy) = &log.health_policy else {
+			return default_unhealthy;
+		};
+		let Some(expr) = &policy.unhealthy_expression else {
+			return default_unhealthy;
+		};
+		match cel_exec {
+			Some(cel_exec) => cel_exec.executor.eval_bool(expr.as_ref()),
+			None => default_unhealthy,
+		}
+	}
+
+	/// Returns (health, eviction_duration, restore_health).
+	fn eviction_decision(
+		log: &RequestLog,
+		current_health: f64,
+		consecutive_failure_count: u64,
+		times_ejected: u64,
+		unhealthy: bool,
+	) -> (bool, Option<Duration>, Option<f64>) {
+		let Some(policy) = &log.health_policy else {
+			let health = !unhealthy;
+			return (health, None, None);
+		};
+		let fallback_duration = log.retry_after.or(log.retry_backoff);
+		policy.eviction_decision(
+			current_health,
+			consecutive_failure_count,
+			times_ejected,
+			unhealthy,
+			fallback_duration,
+		)
+	}
+
 	fn add_llm_metrics(
 		log: &RequestLog,
 		route_identifier: &RouteIdentifier,
@@ -474,6 +520,26 @@ impl DropOnLog {
 						common: gen_ai_labels.clone().into(),
 					})
 					.observe(ot as f64)
+			}
+			if let Some(crt) = llm_response.cached_input_tokens {
+				log
+					.metrics
+					.gen_ai_token_usage
+					.get_or_create(&GenAILabelsTokenUsage {
+						gen_ai_token_type: strng::literal!("input_cache_read").into(),
+						common: gen_ai_labels.clone().into(),
+					})
+					.observe(crt as f64)
+			}
+			if let Some(cwt) = llm_response.cache_creation_input_tokens {
+				log
+					.metrics
+					.gen_ai_token_usage
+					.get_or_create(&GenAILabelsTokenUsage {
+						gen_ai_token_type: strng::literal!("input_cache_write").into(),
+						common: gen_ai_labels.clone().into(),
+					})
+					.observe(cwt as f64)
 			}
 			log
 				.metrics
@@ -525,6 +591,7 @@ impl RequestLog {
 			tls_info: None,
 			tracer: None,
 			trace_spans: Arc::new(Mutex::new(Default::default())),
+			otel_logger: None,
 			endpoint: None,
 			bind_name: None,
 			listener_name: None,
@@ -539,6 +606,8 @@ impl RequestLog {
 			status: None,
 			reason: None,
 			retry_after: None,
+			health_policy: None,
+			retry_backoff: None,
 			jwt_sub: None,
 			retry_attempt: None,
 			error: None,
@@ -592,6 +661,9 @@ pub struct RequestLog {
 	/// These are flushed on drop when tracing is enabled.
 	pub trace_spans: Arc<Mutex<Vec<SpanBuilder>>>,
 
+	// Set only if OTLP logging is configured
+	pub otel_logger: Option<std::sync::Arc<OtelAccessLogger>>,
+
 	pub endpoint: Option<Target>,
 
 	pub bind_name: Option<BindKey>,
@@ -609,6 +681,11 @@ pub struct RequestLog {
 	pub reason: Option<ProxyResponseReason>,
 	pub retry_after: Option<Duration>,
 
+	/// Health policy for backend (e.g. AI provider) failover. Set from route policies when request_handle is used.
+	pub health_policy: Option<health::Policy>,
+	/// Retry backoff from route policy; used as fallback eviction duration when health_policy has no explicit duration.
+	pub retry_backoff: Option<Duration>,
+
 	pub jwt_sub: Option<String>,
 
 	pub retry_attempt: Option<u8>,
@@ -623,7 +700,7 @@ pub struct RequestLog {
 	pub llm_request: Option<llm::LLMRequest>,
 	pub llm_response: AsyncLog<llm::LLMInfo>,
 
-	pub a2a_method: Option<&'static str>,
+	pub a2a_method: Option<Strng>,
 
 	pub inference_pool: Option<SocketAddr>,
 
@@ -676,31 +753,13 @@ impl Drop for DropOnLog {
 
 		let enable_custom_metrics = !log.cel.metric_fields.add.is_empty();
 
+		// Always run request_handle/finish_request first so LLM provider eviction (failover) runs
+		// even when logging/tracing/metrics are disabled.
+		let end_time = Instant::now();
+		let duration = end_time - log.start;
 		let enable_trace = log.tracer.is_some();
 		// We will later check it also matches a filter, but filter is slower
 		let maybe_enable_log = agent_core::telemetry::enabled("request", &Level::INFO);
-		if !maybe_enable_log && !enable_trace && !enable_custom_metrics {
-			// Report our non-customized metrics
-			if !is_tcp {
-				log.metrics.requests.get_or_create(&http_labels).inc();
-			}
-			return;
-		}
-
-		let end_time = Instant::now();
-		// TODO!
-		// log
-		// 	.cel
-		// 	.cel_context
-		// 	.with_request_completion(agent_core::telemetry::render_current_time());
-		let duration = end_time - log.start;
-		if let Some(rh) = log.request_handle.take() {
-			let status = log
-				.status
-				.unwrap_or(crate::http::StatusCode::INTERNAL_SERVER_ERROR);
-			let health = !status.is_server_error() && !status.is_client_error();
-			rh.finish_request(health, duration, log.retry_after);
-		}
 
 		let llm_response = log.llm_response.take().map(Into::into);
 
@@ -717,15 +776,51 @@ impl Drop for DropOnLog {
 				_ => None,
 			}
 		});
-		let end_time_str = agent_core::telemetry::render_current_time();
-		let Ok(cel_exec) = log.cel.build(
-			log.request_snapshot.as_ref(),
-			log.response_snapshot.as_ref(),
-			llm_response.as_ref(),
-			mcp_cel.as_ref(),
-			Some(&end_time_str),
-			log.source_context.as_ref(),
-		) else {
+		let needs_cel_for_outputs = maybe_enable_log || enable_trace || enable_custom_metrics;
+		let needs_cel_for_eviction = log
+			.health_policy
+			.as_ref()
+			.is_some_and(|p| p.unhealthy_expression.is_some());
+		let cel_end_time = (needs_cel_for_outputs || needs_cel_for_eviction)
+			.then(|| cel::RequestTime(chrono::Utc::now().fixed_offset()));
+		let cel_exec = if needs_cel_for_outputs || needs_cel_for_eviction {
+			log
+				.cel
+				.build(
+					log.request_snapshot.as_ref(),
+					log.response_snapshot.as_ref(),
+					llm_response.as_ref(),
+					mcp_cel.as_ref(),
+					cel_end_time.as_ref(),
+					log.source_context.as_ref(),
+				)
+				.ok()
+		} else {
+			None
+		};
+
+		if let Some(rh) = log.request_handle.take() {
+			let current_health = rh.health_score();
+			let consecutive_failures = rh.consecutive_failures();
+			let times_ejected = rh.times_ejected();
+			let unhealthy = Self::eviction_unhealthy(&log, cel_exec.as_ref());
+			let (health, eviction_duration, restore_health) = Self::eviction_decision(
+				&log,
+				current_health,
+				consecutive_failures,
+				times_ejected,
+				unhealthy,
+			);
+			rh.finish_request(health, duration, eviction_duration, restore_health);
+		}
+		if !maybe_enable_log && !enable_trace && !enable_custom_metrics {
+			// Report our non-customized metrics
+			if !is_tcp {
+				log.metrics.requests.get_or_create(&http_labels).inc();
+			}
+			return;
+		}
+		let Some(cel_exec) = cel_exec else {
 			tracing::warn!("failed to build CEL context");
 			return;
 		};
@@ -1010,6 +1105,10 @@ impl Drop for DropOnLog {
 			}
 
 			agent_core::telemetry::log("info", "request", &kv);
+
+			if let Some(otel) = &log.otel_logger {
+				otel.emit("info", "request", &kv);
+			}
 		}
 	}
 }
@@ -1069,6 +1168,263 @@ where
 
 	fn size_hint(&self) -> SizeHint {
 		self.body.size_hint()
+	}
+}
+
+pub struct OtelAccessLogger {
+	provider: SdkLoggerProvider,
+	logger: opentelemetry_sdk::logs::SdkLogger,
+}
+
+impl std::fmt::Debug for OtelAccessLogger {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("OtelAccessLogger").finish()
+	}
+}
+
+fn to_any_value(v: &ValueBag) -> AnyValue {
+	if let Some(b) = v.to_str() {
+		AnyValue::String(b.to_string().into())
+	} else if let Some(b) = v.to_i64() {
+		AnyValue::Int(b)
+	} else if let Some(b) = v.to_f64() {
+		AnyValue::Double(b)
+	} else if let Some(b) = v.to_bool() {
+		AnyValue::Boolean(b)
+	} else {
+		AnyValue::String(v.to_string().into())
+	}
+}
+
+/// Policy-aware OTLP gRPC log exporter that routes via `GrpcReferenceChannel`, ensuring
+/// backend policies are looked up and applied by `PolicyClient::call_reference`.
+#[derive(Clone)]
+struct PolicyGrpcLogExporter {
+	tonic_client:
+		opentelemetry_proto::tonic::collector::logs::v1::logs_service_client::LogsServiceClient<
+			crate::http::ext_proc::GrpcReferenceChannel,
+		>,
+	is_shutdown: Arc<bool>,
+	resource: Resource,
+	runtime: tokio::runtime::Handle,
+}
+
+impl std::fmt::Debug for PolicyGrpcLogExporter {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("PolicyGrpcLogExporter").finish()
+	}
+}
+
+impl PolicyGrpcLogExporter {
+	fn new(
+		inputs: Arc<crate::ProxyInputs>,
+		target: Arc<crate::types::agent::SimpleBackendReference>,
+		policies: Vec<crate::types::agent::BackendPolicy>,
+		runtime: tokio::runtime::Handle,
+	) -> Self {
+		use crate::http::ext_proc::GrpcReferenceChannel;
+		let channel = GrpcReferenceChannel {
+			target,
+			policies: Arc::new(policies),
+			client: crate::proxy::httpproxy::PolicyClient { inputs },
+		};
+		let tonic_client =
+			opentelemetry_proto::tonic::collector::logs::v1::logs_service_client::LogsServiceClient::new(
+				channel,
+			);
+		Self {
+			tonic_client,
+			is_shutdown: Arc::new(false),
+			resource: Resource::builder().build(),
+			runtime,
+		}
+	}
+}
+
+impl opentelemetry_sdk::logs::LogExporter for PolicyGrpcLogExporter {
+	fn export(
+		&self,
+		batch: opentelemetry_sdk::logs::LogBatch<'_>,
+	) -> impl std::future::Future<Output = opentelemetry_sdk::error::OTelSdkResult> + Send {
+		use opentelemetry_proto::transform::logs::tonic::group_logs_by_resource_and_scope;
+		use opentelemetry_sdk::error::{OTelSdkError, OTelSdkResult};
+
+		let is_shutdown = self.is_shutdown.clone();
+		let mut client = self.tonic_client.clone();
+		let resource: opentelemetry_proto::transform::common::tonic::ResourceAttributesWithSchema =
+			(&self.resource).into();
+		let resource_logs = group_logs_by_resource_and_scope(batch, &resource);
+		let handle = self.runtime.clone();
+
+		async move {
+			if *is_shutdown {
+				return Err(OTelSdkError::AlreadyShutdown);
+			}
+			let req =
+				opentelemetry_proto::tonic::collector::logs::v1::ExportLogsServiceRequest { resource_logs };
+			handle
+				.spawn(async move { client.export(req).await })
+				.await
+				.map_err(|e| OTelSdkError::InternalFailure(e.to_string()))?
+				.map(|_| ())
+				.map_err(|e: tonic::Status| OTelSdkError::InternalFailure(e.message().to_string()))
+				as OTelSdkResult
+		}
+	}
+
+	fn shutdown(&self) -> opentelemetry_sdk::error::OTelSdkResult {
+		Ok(())
+	}
+
+	fn set_resource(&mut self, resource: &opentelemetry_sdk::Resource) {
+		self.resource = resource.clone();
+	}
+}
+
+fn build_resource(defaults: Option<&trc::GlobalResourceDefaults>) -> Resource {
+	let mut resource_builder = Resource::builder();
+	if let Some(d) = defaults {
+		for kv in &d.attrs {
+			resource_builder = resource_builder.with_attribute(kv.clone());
+		}
+	}
+	resource_builder = resource_builder.with_service_name(
+		defaults
+			.and_then(|d| d.service_name.clone())
+			.unwrap_or_else(|| "agentgateway".to_string()),
+	);
+	resource_builder = resource_builder.with_attribute(KeyValue::new(
+		"service.version",
+		agent_core::version::BuildInfo::new().version,
+	));
+	resource_builder.build()
+}
+
+impl OtelAccessLogger {
+	pub fn new(
+		policy_client: crate::proxy::httpproxy::PolicyClient,
+		backend_ref: crate::types::agent::SimpleBackendReference,
+		policies: Vec<crate::types::agent::BackendPolicy>,
+		protocol: crate::types::agent::TracingProtocol,
+		path: String,
+	) -> anyhow::Result<Self> {
+		let defaults = trc::global_resource_defaults();
+		let resource = build_resource(defaults);
+
+		let exporter_runtime = policy_client
+			.inputs
+			.cfg
+			.admin_runtime_handle
+			.clone()
+			.unwrap_or_else(tokio::runtime::Handle::current);
+
+		let provider = if protocol == crate::types::agent::TracingProtocol::Grpc {
+			let exporter = PolicyGrpcLogExporter::new(
+				policy_client.inputs.clone(),
+				Arc::new(backend_ref),
+				policies,
+				exporter_runtime,
+			);
+			SdkLoggerProvider::builder()
+				.with_resource(resource)
+				.with_batch_exporter(exporter)
+				.build()
+		} else {
+			let http_client = trc::PolicyOtelHttpClient {
+				policy_client,
+				backend_ref,
+				policies,
+				runtime: exporter_runtime,
+			};
+			let exporter = opentelemetry_otlp::LogExporter::builder()
+				.with_http()
+				.with_http_client(http_client)
+				.with_endpoint(path)
+				.build()?;
+			SdkLoggerProvider::builder()
+				.with_resource(resource)
+				.with_batch_exporter(exporter)
+				.build()
+		};
+
+		let logger = provider.logger("agentgateway.access");
+
+		Ok(Self { provider, logger })
+	}
+
+	pub fn shutdown(&self) {
+		let _ = self.provider.shutdown();
+	}
+}
+
+impl OtelLogSink for OtelAccessLogger {
+	fn emit<'v>(&self, level: &str, target: &str, kv: &[(&str, Option<ValueBag<'v>>)]) {
+		let severity = match level {
+			"error" => Severity::Error,
+			"warn" => Severity::Warn,
+			"info" => Severity::Info,
+			"debug" => Severity::Debug,
+			"trace" => Severity::Trace,
+			_ => Severity::Info,
+		};
+		let severity_text: &'static str = match level {
+			"error" => "ERROR",
+			"warn" => "WARN",
+			"info" => "INFO",
+			"debug" => "DEBUG",
+			"trace" => "TRACE",
+			_ => "INFO",
+		};
+
+		let mut record = self.logger.create_log_record();
+		record.set_severity_number(severity);
+		record.set_severity_text(severity_text);
+		record.set_target(target.to_string());
+
+		let mut trace_id_val: Option<u128> = None;
+		let mut span_id_val: Option<u64> = None;
+
+		for &(k, ref v) in kv {
+			let Some(v) = v else { continue };
+
+			match k {
+				"trace.id" => {
+					if let Some(s) = v.to_str()
+						&& let Ok(id) = u128::from_str_radix(&s, 16)
+					{
+						trace_id_val = Some(id);
+					}
+					record.add_attribute(Key::new(k.to_string()), to_any_value(v));
+				},
+				"span.id" => {
+					if let Some(s) = v.to_str()
+						&& let Ok(id) = u64::from_str_radix(&s, 16)
+					{
+						span_id_val = Some(id);
+					}
+					record.add_attribute(Key::new(k.to_string()), to_any_value(v));
+				},
+				_ => {
+					record.add_attribute(Key::new(k.to_string()), to_any_value(v));
+				},
+			}
+		}
+
+		if let Some(tid) = trace_id_val {
+			record.set_trace_context(
+				opentelemetry::trace::TraceId::from(tid),
+				span_id_val
+					.map(opentelemetry::trace::SpanId::from)
+					.unwrap_or(opentelemetry::trace::SpanId::INVALID),
+				None,
+			);
+		}
+
+		self.logger.emit(record);
+	}
+
+	fn shutdown(&self) {
+		let _ = self.provider.shutdown();
 	}
 }
 

@@ -9,15 +9,13 @@ publish = { workspace = true }
 path = "src/lib.rs"
 
 [features]
-default = ["tls-ring"]
+default = []
 jemalloc = ["dep:tikv-jemallocator", "dep:jemalloc_pprof"]
 ui = []
 schema = ["schemars"]
-tls-ring = ["rustls/ring", "tokio-rustls/ring"]
 internal_benches = ["divan"]
 
 [dependencies]
-a2a-sdk.workspace = true
 agent-core.workspace = true
 agent-celx.workspace = true
 agent-hbone.workspace = true
@@ -95,6 +93,7 @@ prost-types.workspace = true
 prost-wkt-types.workspace = true
 prost.workspace = true
 rand.workspace = true
+libc.workspace = true
 rcgen.workspace = true
 regex.workspace = true
 
@@ -105,7 +104,6 @@ rmcp = { version = "0.16", features = [
     "transport-child-process",
 ] }
 rustls-native-certs.workspace = true
-rustls-pemfile.workspace = true
 rustls-pki-types.workspace = true
 rustls.workspace = true
 schemars = { workspace = true, optional = true }

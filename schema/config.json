@@ -247,7 +247,7 @@
       "type": "object",
       "properties": {
         "key": {
-          "description": "The signing key to be used. If not set, sessions will not be encrypted.\nFor example, generated via `openssl rand -hex 32`.",
+          "description": "The AES-256-GCM session protection key to be used for session tokens.\nIf not set, sessions will not be encrypted.\nFor example, generated via `openssl rand -hex 32`.",
           "type": "string"
         }
       },
@@ -1106,6 +1106,18 @@
               "type": "null"
             }
           ]
+        },
+        "backendTunnel": {
+          "description": "Tunnel to the backend.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tunnel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "backendAuth": {
           "description": "Authenticate to the backend.",
@@ -2153,6 +2165,30 @@
             }
           ],
           "default": null
+        },
+        "health": {
+          "description": "Health policy for backend outlier detection; evicts on unhealthy responses based on CEL condition and configurable duration.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalHealthPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "backendTunnel": {
+          "description": "Specify a tunnel to use when connecting to the backend",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tunnel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "additionalProperties": false
@@ -2213,6 +2249,13 @@
             "null"
           ],
           "default": null
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
         }
       },
       "additionalProperties": false
@@ -2640,6 +2683,77 @@
         "nanos"
       ]
     },
+    "LocalHealthPolicy": {
+      "description": "Local/config health policy with CEL as string; converted to Policy by compiling the expression.\nMirrors the proto `Health` message structure.",
+      "type": "object",
+      "properties": {
+        "unhealthyExpression": {
+          "description": "CEL expression; `true` means unhealthy (evict). E.g. `response.code >= 500`.\nWhen unset, any 5xx or connection failure is treated as unhealthy.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "eviction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalEviction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LocalEviction": {
+      "description": "Local/config eviction sub-policy with duration as string; mirrors `Eviction`.",
+      "type": "object",
+      "properties": {
+        "duration": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "restoreHealth": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "consecutiveFailures": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
+        "healthThreshold": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Tunnel": {
+      "type": "object",
+      "properties": {
+        "proxy": {
+          "description": "Reference to the proxy address",
+          "$ref": "#/$defs/SimpleLocalBackend"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "proxy"
+      ]
+    },
     "BedrockGuardrails": {
       "description": "Configuration for AWS Bedrock Guardrails integration.",
       "type": "object",
@@ -2858,6 +2972,11 @@
           "description": "Send the request to the upstream LLM provider as-is",
           "type": "string",
           "const": "passthrough"
+        },
+        {
+          "description": "Send the request to the upstream LLM provider as-is but attempt to extract information from it\nand apply a subset of policies (rate limit and telemetry; no guardrails).",
+          "type": "string",
+          "const": "detect"
         },
         {
           "description": "OpenAI /responses",
@@ -3769,6 +3888,17 @@
         {
           "type": "object",
           "properties": {
+            "backend": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "backend"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "host": {
               "type": "string"
             }
@@ -3809,6 +3939,17 @@
           },
           "required": [
             "ai"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "aws": {
+              "$ref": "#/$defs/LocalAwsBackend"
+            }
+          },
+          "required": [
+            "aws"
           ]
         }
       ]
@@ -4097,6 +4238,30 @@
           "anyOf": [
             {
               "$ref": "#/$defs/TCP"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "health": {
+          "description": "Health policy for backend outlier detection; evicts on unhealthy responses based on CEL condition and configurable duration.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalHealthPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "backendTunnel": {
+          "description": "Specify a tunnel to use when connecting to the backend",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tunnel"
             },
             {
               "type": "null"
@@ -4484,6 +4649,30 @@
           ],
           "default": null
         },
+        "health": {
+          "description": "Health policy for backend outlier detection; evicts on unhealthy responses based on CEL condition and configurable duration.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalHealthPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "backendTunnel": {
+          "description": "Specify a tunnel to use when connecting to the backend",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tunnel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "mcpAuthorization": {
           "description": "Authorization policies for MCP access.",
           "anyOf": [
@@ -4536,6 +4725,41 @@
       "additionalProperties": false,
       "required": [
         "providers"
+      ]
+    },
+    "LocalAwsBackend": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "agentCore": {
+              "$ref": "#/$defs/LocalAgentCoreBackend"
+            }
+          },
+          "required": [
+            "agentCore"
+          ]
+        }
+      ]
+    },
+    "LocalAgentCoreBackend": {
+      "type": "object",
+      "properties": {
+        "agentRuntimeArn": {
+          "type": "string"
+        },
+        "qualifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "agentRuntimeArn"
       ]
     },
     "LocalTCPRoute": {
@@ -4700,6 +4924,18 @@
               "type": "null"
             }
           ]
+        },
+        "backendTunnel": {
+          "description": "Tunnel to the backend.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tunnel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "additionalProperties": false
@@ -5012,9 +5248,110 @@
           "items": {
             "type": "string"
           }
+        },
+        "otlp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OtlpLoggingConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
+    },
+    "OtlpLoggingConfig": {
+      "type": "object",
+      "properties": {
+        "policies": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SimpleLocalBackendPolicies"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protocol": {
+          "$ref": "#/$defs/TracingProtocol",
+          "default": "grpc"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "invalid"
+          ]
+        },
+        {
+          "description": "Service reference. Service must be defined in the top level services list.",
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/NamespacedHostname"
+                },
+                "port": {
+                  "type": "integer",
+                  "format": "uint16",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "port"
+              ]
+            }
+          },
+          "required": [
+            "service"
+          ]
+        },
+        {
+          "description": "Hostname or IP address",
+          "type": "object",
+          "properties": {
+            "host": {
+              "description": "Hostname or IP address",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "description": "Explicit backend reference. Backend must be defined in the top level backends list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "backend"
+          ]
+        }
+      ]
+    },
+    "TracingProtocol": {
+      "type": "string",
+      "enum": [
+        "grpc",
+        "http"
+      ]
     },
     "TracingConfig": {
       "description": "Configuration for dynamic tracing policy",
@@ -5150,13 +5487,6 @@
       "additionalProperties": {
         "$ref": "#/$defs/Expression"
       }
-    },
-    "TracingProtocol": {
-      "type": "string",
-      "enum": [
-        "grpc",
-        "http"
-      ]
     },
     "LocalPolicy": {
       "type": "object",
@@ -5486,6 +5816,53 @@
           ],
           "default": null
         },
+        "responseHeaders": {
+          "description": "responseHeaders modifies headers in responses from the LLM provider.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeaderModifier"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "backendTLS": {
+          "description": "backendTLS configures TLS when connecting to the LLM provider.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalBackendTLS"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "health": {
+          "description": "health configures outlier detection for this model backend.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalHealthPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "backendTunnel": {
+          "description": "backendTunnel configures tunneling when connecting to the LLM provider.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tunnel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "guardrails": {
           "description": "guardrails to apply to the request or response",
           "anyOf": [
@@ -5561,6 +5938,27 @@
             "string",
             "null"
           ]
+        },
+        "hostOverride": {
+          "description": "Override the upstream host for this provider.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "pathOverride": {
+          "description": "Override the upstream path for this provider.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "tokenize": {
+          "description": "Whether to tokenize the request before forwarding it upstream.",
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false

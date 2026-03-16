@@ -1,7 +1,7 @@
 package testutils
 
 import (
-	"context"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -102,7 +102,7 @@ var timestampRegex = regexp.MustCompile(`lastTransitionTime:.*`)
 //
 // The output is generally created by running the test with `REFRESH_GOLDEN=true`.
 func RunForDirectory[Status any, Output any](t *testing.T, base string, run func(t *testing.T, ctx plugins.PolicyCtx) (Status, []Output)) {
-	val := apitests.NewKgatewayValidator(t)
+	val := apitests.NewAgentgatewayValidator(t)
 	val.SkipMissing = true
 	defaults, defaultsErr := file.AsString(filepath.Join(base, "_defaults.yaml"))
 	for _, f := range file.ReadDirOrFail(t, base) {
@@ -110,7 +110,12 @@ func RunForDirectory[Status any, Output any](t *testing.T, base string, run func
 		if name == "_defaults.yaml" {
 			continue
 		}
+		runOnly := os.Getenv("GOLDEN_TEST")
 		t.Run(name, func(t *testing.T) {
+			if runOnly != "" && name != runOnly+".yaml" {
+				t.Skipf("only running %v, skipped", runOnly)
+				return
+			}
 			data := file.AsStringOrFail(t, f)
 			inputData := data
 			idx := strings.Index(data, "---\n# Output")
@@ -157,7 +162,6 @@ func Syncer(t *testing.T, ctx plugins.PolicyCtx, includeStatusKinds ...string) (
 		}
 	})
 	syncer := agentgatewaysyncer.NewAgwSyncer(
-		context.Background(),
 		wellknown.DefaultAgwControllerName,
 		// Only used for NACK, so no need to do anything special here.
 		fc,
@@ -215,7 +219,7 @@ func BuildMockCollection(t test.Failer, inputs []any) *plugins.AgwCollections {
 		HTTPRoutes:           krttest.GetMockCollection[*gwv1.HTTPRoute](mock),
 		GRPCRoutes:           krttest.GetMockCollection[*gwv1.GRPCRoute](mock),
 		TCPRoutes:            krttest.GetMockCollection[*gwv1a2.TCPRoute](mock),
-		TLSRoutes:            krttest.GetMockCollection[*gwv1a2.TLSRoute](mock),
+		TLSRoutes:            krttest.GetMockCollection[*gwv1.TLSRoute](mock),
 		ReferenceGrants:      krttest.GetMockCollection[*gwv1b1.ReferenceGrant](mock),
 		BackendTLSPolicies:   krttest.GetMockCollection[*gwv1.BackendTLSPolicy](mock),
 		ListenerSets:         krttest.GetMockCollection[*gwv1.ListenerSet](mock),
@@ -223,7 +227,7 @@ func BuildMockCollection(t test.Failer, inputs []any) *plugins.AgwCollections {
 		Backends:             krttest.GetMockCollection[*agwv1alpha1.AgentgatewayBackend](mock),
 		AgentgatewayPolicies: krttest.GetMockCollection[*agwv1alpha1.AgentgatewayPolicy](mock),
 		ControllerName:       wellknown.DefaultAgwControllerName,
-		SystemNamespace:      "kgateway-system",
+		SystemNamespace:      "agentgateway-system",
 		IstioNamespace:       "istio-system",
 		ClusterID:            "Kubernetes",
 	}
