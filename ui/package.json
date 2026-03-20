@@ -9,11 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-config-schema": "yarn run json2ts ../schema/config.json > src/config.d.ts",
-    "generate-cel-schema": "yarn run json2ts ../schema/cel.json > src/cel.d.ts",
-    "generate:schemas": "node scripts/form-generation/index.cjs && yarn run copy:schemas",
-    "copy:schemas": "rm -rf public/schema-forms && cp -r schema-forms public/schema-forms",
-    "prebuild": "yarn run generate:schemas",
-    "predev": "yarn run copy:schemas"
+    "generate-cel-schema": "yarn run json2ts ../schema/cel.json > src/cel.d.ts"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",

@@ -305,4 +305,10 @@ export interface ExecutorSerde {
   extproc?: {
     [k: string]: unknown;
   } | null;
+  /**
+   * `metadata` contains values set by transformation metadata expressions.
+   */
+  metadata?: {
+    [k: string]: unknown;
+  } | null;
 }

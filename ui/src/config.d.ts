@@ -233,6 +233,7 @@ export type RouteType =
   | "messages"
   | "models"
   | "passthrough"
+  | "detect"
   | "responses"
   | "embeddings"
   | "realtime"
@@ -455,6 +456,10 @@ export type LocalRouteBackend1 =
       [k: string]: unknown;
     }
   | {
+      backend: string;
+      [k: string]: unknown;
+    }
+  | {
       host: string;
       [k: string]: unknown;
     }
@@ -468,6 +473,10 @@ export type LocalRouteBackend1 =
     }
   | {
       ai: LocalAIBackend;
+      [k: string]: unknown;
+    }
+  | {
+      aws: LocalAwsBackend;
       [k: string]: unknown;
     };
 export type LocalMcpTarget = {
@@ -537,12 +546,45 @@ export type AIProvider =
   | {
       azureOpenAI: Provider6;
     };
+export type LocalAwsBackend = {
+  agentCore: LocalAgentCoreBackend;
+  [k: string]: unknown;
+};
 export type LocalTCPRouteBackend = {
   weight?: number;
   policies?: LocalTCPBackendPolicies | null;
   [k: string]: unknown;
 } & LocalTCPRouteBackend1;
 export type LocalTCPRouteBackend1 =
+  | "invalid"
+  | {
+      service: {
+        name: NamespacedHostname;
+        port: number;
+      };
+      [k: string]: unknown;
+    }
+  | {
+      /**
+       * Hostname or IP address
+       */
+      host: string;
+      [k: string]: unknown;
+    }
+  | {
+      /**
+       * Explicit backend reference. Backend must be defined in the top level backends list
+       */
+      backend: string;
+      [k: string]: unknown;
+    };
+export type OtlpLoggingConfig = {
+  policies?: SimpleLocalBackendPolicies | null;
+  protocol?: "grpc" | "http";
+  path?: string;
+  [k: string]: unknown;
+} & OtlpLoggingConfig1;
+export type OtlpLoggingConfig1 =
   | "invalid"
   | {
       service: {
@@ -708,7 +750,8 @@ export interface RawConfig {
 }
 export interface RawSession {
   /**
-   * The signing key to be used. If not set, sessions will not be encrypted.
+   * The AES-256-GCM session protection key to be used for session tokens.
+   * If not set, sessions will not be encrypted.
    * For example, generated via `openssl rand -hex 32`.
    */
   key: string;
@@ -902,6 +945,10 @@ export interface FilterOrPolicy {
    * Send TLS to the backend.
    */
   backendTLS?: LocalBackendTLS | null;
+  /**
+   * Tunnel to the backend.
+   */
+  backendTunnel?: Tunnel | null;
   /**
    * Authenticate to the backend.
    */
@@ -1111,6 +1158,14 @@ export interface SimpleLocalBackendPolicies {
    * Specify TCP settings for the backend
    */
   tcp?: TCP | null;
+  /**
+   * Health policy for backend outlier detection; evicts on unhealthy responses based on CEL condition and configurable duration.
+   */
+  health?: LocalHealthPolicy | null;
+  /**
+   * Specify a tunnel to use when connecting to the backend
+   */
+  backendTunnel?: Tunnel | null;
 }
 export interface LocalTransformationConfig {
   request?: LocalTransform | null;
@@ -1125,6 +1180,9 @@ export interface LocalTransform {
   };
   remove?: string[];
   body?: string | null;
+  metadata?: {
+    [k: string]: string;
+  };
 }
 export interface LocalBackendTLS {
   cert?: string | null;
@@ -1154,6 +1212,52 @@ export interface Duration {
   secs: number;
   nanos: number;
   [k: string]: unknown;
+}
+/**
+ * Local/config health policy with CEL as string; converted to Policy by compiling the expression.
+ * Mirrors the proto `Health` message structure.
+ */
+export interface LocalHealthPolicy {
+  /**
+   * CEL expression; `true` means unhealthy (evict). E.g. `response.code >= 500`.
+   * When unset, any 5xx or connection failure is treated as unhealthy.
+   */
+  unhealthyExpression?: string | null;
+  eviction?: LocalEviction | null;
+}
+/**
+ * Local/config eviction sub-policy with duration as string; mirrors `Eviction`.
+ */
+export interface LocalEviction {
+  duration?: string | null;
+  restoreHealth?: number | null;
+  consecutiveFailures?: number | null;
+  healthThreshold?: number | null;
+}
+export interface Tunnel {
+  /**
+   * Reference to the proxy address
+   */
+  proxy:
+    | "invalid"
+    | {
+        service: {
+          name: NamespacedHostname;
+          port: number;
+        };
+      }
+    | {
+        /**
+         * Hostname or IP address
+         */
+        host: string;
+      }
+    | {
+        /**
+         * Explicit backend reference. Backend must be defined in the top level backends list
+         */
+        backend: string;
+      };
 }
 /**
  * Configuration for AWS Bedrock Guardrails integration.
@@ -1384,6 +1488,14 @@ export interface LocalBackendPolicies {
    */
   tcp?: TCP | null;
   /**
+   * Health policy for backend outlier detection; evicts on unhealthy responses based on CEL condition and configurable duration.
+   */
+  health?: LocalHealthPolicy | null;
+  /**
+   * Specify a tunnel to use when connecting to the backend
+   */
+  backendTunnel?: Tunnel | null;
+  /**
    * Authorization policies for MCP access.
    */
   mcpAuthorization?: RuleSet | null;
@@ -1435,6 +1547,14 @@ export interface MCPLocalBackendPolicies {
    */
   tcp?: TCP | null;
   /**
+   * Health policy for backend outlier detection; evicts on unhealthy responses based on CEL condition and configurable duration.
+   */
+  health?: LocalHealthPolicy | null;
+  /**
+   * Specify a tunnel to use when connecting to the backend
+   */
+  backendTunnel?: Tunnel | null;
+  /**
    * Authorization policies for MCP access.
    */
   mcpAuthorization?: RuleSet | null;
@@ -1482,6 +1602,10 @@ export interface Provider6 {
 export interface LocalAIProviders {
   providers: LocalNamedAIProvider[];
 }
+export interface LocalAgentCoreBackend {
+  agentRuntimeArn: string;
+  qualifier?: string | null;
+}
 export interface LocalTCPRoute {
   name?: string | null;
   namespace?: string | null;
@@ -1501,6 +1625,10 @@ export interface LocalTCPBackendPolicies {
    * Send TLS to the backend.
    */
   backendTLS?: LocalBackendTLS | null;
+  /**
+   * Tunnel to the backend.
+   */
+  backendTunnel?: Tunnel | null;
 }
 export interface LocalGatewayPolicy {
   /**
@@ -1577,6 +1705,7 @@ export interface LoggingPolicy {
     [k: string]: string;
   };
   remove?: string[];
+  otlp?: OtlpLoggingConfig | null;
 }
 /**
  * Span attributes to add, keyed by attribute name.
@@ -1672,6 +1801,22 @@ export interface LocalLLMModels {
    */
   requestHeaders?: HeaderModifier | null;
   /**
+   * responseHeaders modifies headers in responses from the LLM provider.
+   */
+  responseHeaders?: HeaderModifier | null;
+  /**
+   * backendTLS configures TLS when connecting to the LLM provider.
+   */
+  backendTLS?: LocalBackendTLS | null;
+  /**
+   * health configures outlier detection for this model backend.
+   */
+  health?: LocalHealthPolicy | null;
+  /**
+   * backendTunnel configures tunneling when connecting to the LLM provider.
+   */
+  backendTunnel?: Tunnel | null;
+  /**
    * guardrails to apply to the request or response
    */
   guardrails?: PromptGuard | null;
@@ -1705,6 +1850,18 @@ export interface LocalLLMParams {
    * For Azure: the API version to use
    */
   azureApiVersion?: string | null;
+  /**
+   * Override the upstream host for this provider.
+   */
+  hostOverride?: string | null;
+  /**
+   * Override the upstream path for this provider.
+   */
+  pathOverride?: string | null;
+  /**
+   * Whether to tokenize the request before forwarding it upstream.
+   */
+  tokenize?: boolean;
 }
 export interface LLMRouteMatch {
   headers?: HeaderMatch[];
