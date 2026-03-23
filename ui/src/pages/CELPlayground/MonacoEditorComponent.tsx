@@ -1,6 +1,6 @@
 import { type OnMount } from "@monaco-editor/react";
-import { useCallback } from "react";
 import { configureMonacoYaml } from "monaco-yaml";
+import { useCallback } from "react";
 import { MonacoEditorWithSettings } from "../../components/MonacoEditor";
 import { assetUrl } from "../../utils/assetUrl";
 
@@ -47,25 +47,13 @@ export const MonacoEditorComponent = ({
             let celTypes = await response.text();
 
             // Remove 'export' keyword to make ExecutorSerde globally available
-            celTypes = celTypes.replace(/export interface/g, 'interface');
+            celTypes = celTypes.replace(/export interface/g, "interface");
 
             // Add CEL type definitions and context variables
             // CEL variables are available globally in the expression
             monaco.languages.typescript.javascriptDefaults.addExtraLib(
-              celTypes + `\n\n` +
-              `declare const request: ExecutorSerde['request'];
-declare const response: ExecutorSerde['response'];
-declare const jwt: ExecutorSerde['jwt'];
-declare const apiKey: ExecutorSerde['apiKey'];
-declare const basicAuth: ExecutorSerde['basicAuth'];
-declare const llm: ExecutorSerde['llm'];
-declare const llmRequest: ExecutorSerde['llmRequest'];
-declare const source: ExecutorSerde['source'];
-declare const mcp: ExecutorSerde['mcp'];
-declare const backend: ExecutorSerde['backend'];
-declare const extauthz: ExecutorSerde['extauthz'];
-declare const extproc: ExecutorSerde['extproc'];`,
-              "file:///cel-types.d.ts"
+              celTypes,
+              "file:///cel-types.d.ts",
             );
           }
         } catch (error) {

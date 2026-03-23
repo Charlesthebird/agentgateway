@@ -91,8 +91,6 @@ export function RawConfigEditor({ onClose }: RawConfigEditorProps) {
           throw new Error(`Failed to fetch config-schema.json: ${response.statusText}`);
         }
         const schema = await response.json();
-
-        // Configure JSON language with the schema
         monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
           validate: true,
           allowComments: false,
@@ -104,20 +102,6 @@ export function RawConfigEditor({ onClose }: RawConfigEditorProps) {
             },
           ],
           enableSchemaRequest: true,
-        });
-
-        // Enable hover support
-        monaco.languages.json.jsonDefaults.setModeConfiguration({
-          documentFormattingEdits: true,
-          documentRangeFormattingEdits: true,
-          completionItems: true,
-          hovers: true,
-          documentSymbols: true,
-          tokens: true,
-          colors: true,
-          foldingRanges: true,
-          diagnostics: true,
-          selectionRanges: true,
         });
       } catch (error) {
         console.error("Failed to load config schema:", error);

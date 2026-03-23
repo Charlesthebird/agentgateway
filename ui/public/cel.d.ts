@@ -312,3 +312,36 @@ export interface ExecutorSerde {
     [k: string]: unknown;
   } | null;
 }
+
+// The following declarations are appended post-generation.
+// Each ExecutorSerde property is declared as a global const so that Monaco's
+// JS language service can provide type hints for the bare variable names
+// (e.g. `request`, `jwt`) used in CEL expressions.
+
+/** `request` contains attributes about the incoming HTTP request */
+declare const request: ExecutorSerde['request'];
+/** `response` contains attributes about the HTTP response */
+declare const response: ExecutorSerde['response'];
+/** `jwt` contains the claims from a verified JWT token. This is only present if the JWT policy is enabled. */
+declare const jwt: ExecutorSerde['jwt'];
+/** `apiKey` contains the claims from a verified API Key. This is only present if the API Key policy is enabled. */
+declare const apiKey: ExecutorSerde['apiKey'];
+/** `basicAuth` contains the claims from a verified basic authentication Key. This is only present if the Basic authentication policy is enabled. */
+declare const basicAuth: ExecutorSerde['basicAuth'];
+/** `llm` contains attributes about an LLM request or response. This is only present when using an `ai` backend. */
+declare const llm: ExecutorSerde['llm'];
+/** `llm_request` contains the raw LLM request before processing. This is only present *during* LLM policies;
+policies occurring after the LLM policy, such as logs, will not have this field present even for LLM requests. */
+declare const llmRequest: ExecutorSerde['llmRequest'];
+/** `source` contains attributes about the source of the request. */
+declare const source: ExecutorSerde['source'];
+/** `mcp` contains attributes about the MCP request. */
+declare const mcp: ExecutorSerde['mcp'];
+/** `backend` contains information about the backend being used. */
+declare const backend: ExecutorSerde['backend'];
+/** `extauthz` contains dynamic metadata from ext_authz filters */
+declare const extauthz: ExecutorSerde['extauthz'];
+/** `extproc` contains dynamic metadata from ext_proc filters */
+declare const extproc: ExecutorSerde['extproc'];
+/** `metadata` contains values set by transformation metadata expressions. */
+declare const metadata: ExecutorSerde['metadata'];
