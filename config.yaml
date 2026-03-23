@@ -1,77 +1,25 @@
 binds:
-- port: 3003
-  tunnelProtocol: direct
-  listeners:
-  - protocol: HTTP
-    name: my-listener-123
-    hostname: '*'
-    routes:
-    - hostnames: []
-      matches: []
-      backends:
-      - dynamic: {}
-        weight: 1
-      name: yui
-      policies:
-        cors:
-          allowHeaders:
-          - mcp-protocol-version
-          - content-type
-          - cache-control
-          allowMethods: []
-          allowOrigins:
-          - '*'
-          exposeHeaders:
-          - Mcp-Session-Id
-        responseHeaderModifier:
-          remove: []
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends:
-      - service:
-          name:
-            namespace: default
-            hostname: service
-          port: 8080
-        weight: 26
-      name: route
-      policies:
-        cors:
-          allowCredentials: true
-          allowHeaders:
-          - Authorization
-          allowMethods: []
-          allowOrigins: []
-          exposeHeaders: []
-        requestHeaderModifier:
-          remove:
-          - asdf
-- port: 8080
-  tunnelProtocol: direct
-  listeners:
-  - protocol: HTTP
-    name: listenerlkjjklkjl
-    hostname: '*'
-    routes:
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-      policies:
-        cors: {}
-        requestHeaderModifier: {}
-        responseHeaderModifier: {}
-    - hostnames: []
-      matches:
-      - path:
-          pathPrefix: /
-      backends: []
-      name: route
-      policies:
-        cors: {}
-mcp:
-  targets: []
+  - port: 3002
+    listeners:
+      - routes:
+          - backends:
+              - mcp:
+                  targets:
+                    - name: time
+                      stdio:
+                        cmd: uvx
+                        args:
+                          - mcp-server-time
+                    - name: everything
+                      stdio:
+                        cmd: npx
+                        args:
+                          - "@modelcontextprotocol/server-everything"
+            policies:
+              cors:
+                allowOrigins:
+                  - "*"
+                allowHeaders:
+                  - mcp-protocol-version
+                  - content-type
+                  - cache-control
